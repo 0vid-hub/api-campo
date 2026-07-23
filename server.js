@@ -4,9 +4,9 @@ const app = express();
 
 app.get('/gerar-campo', async (req, res) => {
     try {
-        // Criar um fundo branco retangular de 800x1000
-        const width = 800;
-        const height = 1000;
+        // Fundo Vertical Em Pé (700 largura x 1100 altura)
+        const width = 700;
+        const height = 1100;
         const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
@@ -14,23 +14,31 @@ app.get('/gerar-campo', async (req, res) => {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
 
-        // Borda preta em volta para ver os limites
+        // Borda preta em volta do retângulo
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 6;
         ctx.strokeRect(0, 0, width, height);
 
+        // Posições ajustadas perfeitamente de cima para baixo
         const posicoes = {
-            gr:  { x: 350, y: 800 },
-            ld:  { x: 620, y: 620 },
-            dc1: { x: 440, y: 650 },
-            dc2: { x: 260, y: 650 },
-            le:  { x: 80,  y: 620 },
-            mc:  { x: 350, y: 480 },
-            mo1: { x: 500, y: 380 },
-            mo2: { x: 200, y: 380 },
-            ee:  { x: 80,  y: 200 },
-            ed:  { x: 620, y: 200 },
-            pl:  { x: 350, y: 150 }
+            // ATAQUE (Topo)
+            ee:  { x: 80,  y: 100 },
+            pl:  { x: 305, y: 80  },
+            ed:  { x: 530, y: 100 },
+
+            // MEIO-CAMPO (Meio)
+            mo1: { x: 170, y: 300 },
+            mo2: { x: 440, y: 300 },
+            mc:  { x: 305, y: 460 },
+
+            // DEFESA (Baixo)
+            le:  { x: 60,  y: 650 },
+            dc1: { x: 210, y: 680 },
+            dc2: { x: 400, y: 680 },
+            ld:  { x: 550, y: 650 },
+
+            // GOLERIO (Fundo)
+            gr:  { x: 305, y: 880 }
         };
 
         const larguraCarta = 90;
@@ -38,17 +46,17 @@ app.get('/gerar-campo', async (req, res) => {
 
         // Desenhar retângulos guia e nomes de cada posição
         for (const [pos, coords] of Object.entries(posicoes)) {
-            // Desenha caixa tracejada
-            ctx.strokeStyle = '#888888';
+            // Caixa cinza para marcar o espaço da carta
+            ctx.strokeStyle = '#666666';
             ctx.lineWidth = 2;
             ctx.strokeRect(coords.x, coords.y, larguraCarta, alturaCarta);
 
-            // Escreve a sigla da posição
-            ctx.fillStyle = '#333333';
+            // Nome da posição no topo da caixa
+            ctx.fillStyle = '#000000';
             ctx.font = 'bold 16px sans-serif';
-            ctx.fillText(pos.toUpperCase(), coords.x + 10, coords.y + 25);
+            ctx.fillText(pos.toUpperCase(), coords.x + 8, coords.y + 22);
 
-            // Se for passado o link de uma imagem via URL, cola por cima!
+            // Desenhar a carta se o link for enviado na URL
             const imgUrl = req.query[pos];
             if (imgUrl && imgUrl !== 'ninguém' && imgUrl !== 'Ninguém' && imgUrl !== '') {
                 try {
