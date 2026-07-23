@@ -4,11 +4,20 @@ const app = express();
 
 app.get('/gerar-campo', async (req, res) => {
     try {
-        const campo = await loadImage('https://i.ibb.co/QFHkJ1qP/time.png');
-        const canvas = createCanvas(campo.width, campo.height);
+        // Criar um fundo branco retangular de 800x1000
+        const width = 800;
+        const height = 1000;
+        const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
 
-        ctx.drawImage(campo, 0, 0);
+        // Preencher o fundo de branco
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        // Borda preta em volta para ver os limites
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(0, 0, width, height);
 
         const posicoes = {
             gr:  { x: 350, y: 800 },
@@ -27,9 +36,21 @@ app.get('/gerar-campo', async (req, res) => {
         const larguraCarta = 90;
         const alturaCarta = 130;
 
+        // Desenhar retângulos guia e nomes de cada posição
         for (const [pos, coords] of Object.entries(posicoes)) {
+            // Desenha caixa tracejada
+            ctx.strokeStyle = '#888888';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(coords.x, coords.y, larguraCarta, alturaCarta);
+
+            // Escreve a sigla da posição
+            ctx.fillStyle = '#333333';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(pos.toUpperCase(), coords.x + 10, coords.y + 25);
+
+            // Se for passado o link de uma imagem via URL, cola por cima!
             const imgUrl = req.query[pos];
-            if (imgUrl && imgUrl !== 'ninguém' && imgUrl !== '') {
+            if (imgUrl && imgUrl !== 'ninguém' && imgUrl !== 'Ninguém' && imgUrl !== '') {
                 try {
                     const cartaImg = await loadImage(imgUrl);
                     ctx.drawImage(cartaImg, coords.x, coords.y, larguraCarta, alturaCarta);
