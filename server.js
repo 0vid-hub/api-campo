@@ -136,25 +136,24 @@ app.get('/gerar-campo', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // 2. DIMENSÕES DAS CARTAS (Tamanho ideal para caber dentro das linhas da arte)
-    const cardWidth = 125;
-    const cardHeight = 175;
+// 2. DIMENSÕES DAS CARTAS (Aumentadas para dar mais destaque)
+    const cardWidth = 135;
+    const cardHeight = 185;
 
-    // 3. POSIÇÕES AJUSTADAS
+    // 3. POSIÇÕES AJUSTADAS COM PRECISÃO
     const POSICOES = {
-      gr:  { x: 400, y: 675 }, // Subiu para y: 675 para encaixar na área sem cortar no rodapé
-      le:  { x: 105, y: 550 },
-      dc1: { x: 300, y: 565 },
-      dc2: { x: 500, y: 565 },
-      ld:  { x: 695, y: 550 },
-      mc:  { x: 400, y: 400 }, // No centro perfeito do meio-campo
-      mo1: { x: 235, y: 280 },
-      mo2: { x: 565, y: 280 },
-      ee:  { x: 135, y: 125 },
-      pl:  { x: 400, y: 105 },
-      ed:  { x: 665, y: 125 }
+      gr:  { x: 400, y: 705 }, // Recuado pra dentro da baliza (borda inferior faceando o limite)
+      le:  { x: 105, y: 530 }, // Subiu 20px
+      dc1: { x: 300, y: 535 }, // Subiu 30px pra dar respiro ao GR
+      dc2: { x: 500, y: 535 }, // Subiu 30px pra dar respiro ao GR
+      ld:  { x: 695, y: 530 }, // Subiu 20px
+      mc:  { x: 400, y: 380 }, // Centralizado sobre o círculo do meio-campo
+      mo1: { x: 235, y: 260 },
+      mo2: { x: 565, y: 260 },
+      ee:  { x: 135, y: 115 },
+      pl:  { x: 400, y: 95 },
+      ed:  { x: 665, y: 115 }
     };
-
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const nomeJogador = (req.query[pos] || 'vazio').toLowerCase().trim();
 
