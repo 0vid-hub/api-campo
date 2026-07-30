@@ -119,7 +119,6 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// Nomes bonitos para exibir nas etiquetas de cada posição
 const NOMES_POSICOES = {
   ee: "EE",
   pl: "PL",
@@ -141,7 +140,7 @@ app.get('/gerar-campo', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 1. CARREGAR A SUA IMAGEM DE FUNDO DO IMGBB
+    // 1. CARREGAR IMAGEM DE FUNDO
     try {
       const bgImg = await loadImage(URL_FUNDO);
       ctx.drawImage(bgImg, 0, 0, width, height);
@@ -151,23 +150,23 @@ app.get('/gerar-campo', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // 2. DIMENSÕES DAS CARTAS COM JOGADOR
-    const cardWidth = 135;
-    const cardHeight = 185;
+    // AUMENTADO LIGEIRAMENTE O TAMANHO DAS CARTAS (De 135x185 para 145x195)
+    const cardWidth = 145;
+    const cardHeight = 195;
 
-    // 3. POSIÇÕES AJUSTADAS
+    // POSIÇÕES LIGEIRAMENTE REAJUSTADAS PARA DAR ESPAÇO
     const POSICOES = {
-      gr:  { x: 400, y: 705 },
-      le:  { x: 105, y: 530 },
-      dc1: { x: 300, y: 535 },
-      dc2: { x: 500, y: 535 },
-      ld:  { x: 695, y: 530 },
-      mc:  { x: 400, y: 380 },
-      mo1: { x: 235, y: 260 },
-      mo2: { x: 565, y: 260 },
-      ee:  { x: 135, y: 115 },
-      pl:  { x: 400, y: 95 },
-      ed:  { x: 665, y: 115 }
+      gr:  { x: 400, y: 700 },
+      le:  { x: 105, y: 525 },
+      dc1: { x: 300, y: 530 },
+      dc2: { x: 500, y: 530 },
+      ld:  { x: 695, y: 525 },
+      mc:  { x: 400, y: 375 },
+      mo1: { x: 235, y: 255 },
+      mo2: { x: 565, y: 255 },
+      ee:  { x: 135, y: 110 },
+      pl:  { x: 400, y: 90 },
+      ed:  { x: 665, y: 110 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -191,13 +190,20 @@ app.get('/gerar-campo', async (req, res) => {
         }
       }
 
-      // Se a posição estiver vazia, desenha o slot transparente
+      // Altura onde a etiqueta deve ficar (varia se for carta ou placeholder)
+      let labelYPos;
+
       if (!desenhou) {
+        // Se estiver vazio, desenha o placeholder limpo
+        const placeholderH = 120;
         desenharPlaceholder(ctx, coord.x, coord.y);
+        labelYPos = coord.y + (placeholderH / 2) + 14;
+      } else {
+        labelYPos = coord.y + (cardHeight / 2) + 12;
       }
 
-      // Desenha a etiqueta preta com a sigla da posição em baixo de cada carta/slot
-      desenharEtiquetaPosicao(ctx, coord.x, coord.y + (cardHeight / 2) + 12, labelPosicao);
+      // Desenha a etiqueta de texto com compatibilidade garantida
+      desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
     res.setHeader('Content-Type', 'image/png');
@@ -209,27 +215,30 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// Desenha a caixa de texto/etiqueta em baixo da carta estilo Dream Team
+// Função compatível com qualquer versão do Canvas
 function desenharEtiquetaPosicao(ctx, x, y, texto) {
-  const boxWidth = 52;
+  const boxWidth = 46;
   const boxHeight = 22;
-  const radius = 5;
 
   ctx.save();
 
-  // Caixinha preta com opacidade estilo Dream Team
-  ctx.fillStyle = 'rgba(10, 10, 12, 0.85)';
-  ctx.strokeStyle = '#222';
+  // Fundo escuro com borda sutil
+  ctx.fillStyle = 'rgba(12, 12, 15, 0.9)';
+  ctx.strokeStyle = '#333333';
   ctx.lineWidth = 1;
 
+  // Retângulo com cantos levemente chanfrados/arredondados compatível
+  const left = x - boxWidth / 2;
+  const top = y - boxHeight / 2;
+  
   ctx.beginPath();
-  ctx.roundRect(x - boxWidth / 2, y - boxHeight / 2, boxWidth, boxHeight, radius);
+  ctx.rect(left, top, boxWidth, boxHeight);
   ctx.fill();
   ctx.stroke();
 
-  // Texto da Posição em Branco/Verde Neon
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 13px Arial';
+  // Texto nítido com fontes universais de fallback
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 13px sans-serif, Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(texto, x, y);
@@ -237,7 +246,7 @@ function desenharEtiquetaPosicao(ctx, x, y, texto) {
   ctx.restore();
 }
 
-// Desenha um slot transparente e discreto quando a posição está vazia
+// Desenha o placeholder vazado e limpo (sem fundo preto total)
 function desenharPlaceholder(ctx, x, y) {
   const width = 90;
   const height = 120;
@@ -246,7 +255,6 @@ function desenharPlaceholder(ctx, x, y) {
 
   ctx.save();
 
-  // Formato de escudo/carta
   ctx.beginPath();
   ctx.moveTo(left + width * 0.2, top);
   ctx.lineTo(left + width * 0.8, top);
@@ -257,11 +265,11 @@ function desenharPlaceholder(ctx, x, y) {
   ctx.lineTo(left, top + height * 0.2);
   ctx.closePath();
 
-  // Preenchimento transparente suave
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  // Fundo semi-transparente
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
   ctx.fill();
 
-  // Borda tracejada verde neon discreta
+  // Borda tracejada sutil
   ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 4]);
