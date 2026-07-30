@@ -153,19 +153,19 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // Coordenadas perfeitamente alinhadas no eixo X e Y
+    // Coordenadas milimetricamente centralizadas
     const POSICOES = {
-      gr:  { x: 400, y: 665 },
-      le:  { x: 105, y: 505 },
-      dc1: { x: 300, y: 505 },
-      dc2: { x: 500, y: 505 },
-      ld:  { x: 695, y: 505 },
-      mc:  { x: 400, y: 355 },
-      mo1: { x: 235, y: 220 },
-      mo2: { x: 565, y: 220 },
-      ee:  { x: 105, y: 90 },
-      pl:  { x: 400, y: 85 },
-      ed:  { x: 695, y: 90 }
+      gr:  { x: 400, y: 650 },
+      le:  { x: 105, y: 495 },
+      dc1: { x: 300, y: 495 },
+      dc2: { x: 500, y: 495 },
+      ld:  { x: 695, y: 495 },
+      mc:  { x: 400, y: 345 },
+      mo1: { x: 235, y: 215 },
+      mo2: { x: 565, y: 215 },
+      ee:  { x: 105, y: 85 },
+      pl:  { x: 400, y: 80 },
+      ed:  { x: 695, y: 85 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -189,16 +189,17 @@ app.get('/gerar-campo', async (req, res) => {
         }
       }
 
+      // Define a posição vertical do texto
       let labelYPos;
       if (!desenhou) {
-        const placeholderH = 120;
-        desenharPlaceholder(ctx, coord.x, coord.y);
-        labelYPos = coord.y + (placeholderH / 2) + 16;
+        // Se a posição estiver vazia, coloca o texto exatamente no centro das coordenadas da posição
+        labelYPos = coord.y;
       } else {
-        labelYPos = coord.y + (cardHeight / 2) + 16;
+        // Se houver jogador, coloca a sigla logo abaixo da carta
+        labelYPos = coord.y + (cardHeight / 2) + 15;
       }
 
-      // Desenha o texto destacado
+      // Desenha o texto da posição em BRANCO com contorno preto
       desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
@@ -214,48 +215,19 @@ app.get('/gerar-campo', async (req, res) => {
 function desenharEtiquetaPosicao(ctx, x, y, texto) {
   ctx.save();
 
-  // Fonte maior e em negrito para fácil leitura
+  // Configuração da fonte (Branca, em negrito e com contorno escuro)
   ctx.font = 'bold 22px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Contorno preto espesso para destacá-lo de qualquer fundo
+  // Contorno preto fino/médio para dar contraste em qualquer fundo
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 4;
   ctx.strokeText(texto, x, y);
 
-  // Preenchimento em branco puro
+  // Preenchimento Branco Puro
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText(texto, x, y);
-
-  ctx.restore();
-}
-
-function desenharPlaceholder(ctx, x, y) {
-  const width = 90;
-  const height = 120;
-  const left = x - width / 2;
-  const top = y - height / 2;
-
-  ctx.save();
-
-  ctx.beginPath();
-  ctx.moveTo(left + width * 0.2, top);
-  ctx.lineTo(left + width * 0.8, top);
-  ctx.lineTo(left + width, top + height * 0.2);
-  ctx.lineTo(left + width, top + height * 0.75);
-  ctx.lineTo(left + width / 2, top + height);
-  ctx.lineTo(left, top + height * 0.75);
-  ctx.lineTo(left, top + height * 0.2);
-  ctx.closePath();
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-  ctx.fill();
-
-  ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([4, 4]);
-  ctx.stroke();
 
   ctx.restore();
 }
