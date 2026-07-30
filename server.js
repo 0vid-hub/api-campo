@@ -153,18 +153,19 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
+    // Coordenadas perfeitamente alinhadas no eixo X e Y
     const POSICOES = {
-      gr:  { x: 400, y: 700 },
-      le:  { x: 105, y: 525 },
-      dc1: { x: 300, y: 530 },
-      dc2: { x: 500, y: 530 },
-      ld:  { x: 695, y: 525 },
-      mc:  { x: 400, y: 370 },
-      mo1: { x: 235, y: 240 },
-      mo2: { x: 565, y: 240 },
-      ee:  { x: 115, y: 105 },
-      pl:  { x: 400, y: 90 },
-      ed:  { x: 685, y: 105 }
+      gr:  { x: 400, y: 665 },
+      le:  { x: 105, y: 505 },
+      dc1: { x: 300, y: 505 },
+      dc2: { x: 500, y: 505 },
+      ld:  { x: 695, y: 505 },
+      mc:  { x: 400, y: 355 },
+      mo1: { x: 235, y: 220 },
+      mo2: { x: 565, y: 220 },
+      ee:  { x: 105, y: 90 },
+      pl:  { x: 400, y: 85 },
+      ed:  { x: 695, y: 90 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -192,12 +193,12 @@ app.get('/gerar-campo', async (req, res) => {
       if (!desenhou) {
         const placeholderH = 120;
         desenharPlaceholder(ctx, coord.x, coord.y);
-        labelYPos = coord.y + (placeholderH / 2) + 14;
+        labelYPos = coord.y + (placeholderH / 2) + 16;
       } else {
-        labelYPos = coord.y + (cardHeight / 2) + 12;
+        labelYPos = coord.y + (cardHeight / 2) + 16;
       }
 
-      // Desenha o texto limpo com contorno escuro
+      // Desenha o texto destacado
       desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
@@ -213,16 +214,17 @@ app.get('/gerar-campo', async (req, res) => {
 function desenharEtiquetaPosicao(ctx, x, y, texto) {
   ctx.save();
 
-  ctx.font = 'bold 16px sans-serif';
+  // Fonte maior e em negrito para fácil leitura
+  ctx.font = 'bold 22px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Contorno preto em volta das letras para destaque total
+  // Contorno preto espesso para destacá-lo de qualquer fundo
   ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 4;
   ctx.strokeText(texto, x, y);
 
-  // Texto em branco puro por cima
+  // Preenchimento em branco puro
   ctx.fillStyle = '#FFFFFF';
   ctx.fillText(texto, x, y);
 
