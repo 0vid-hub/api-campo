@@ -119,20 +119,6 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-const NOMES_POSICOES = {
-  ee: "EE",
-  pl: "PL",
-  ed: "ED",
-  mo1: "MO",
-  mo2: "MO",
-  mc: "MC",
-  le: "LE",
-  dc1: "DC",
-  dc2: "DC",
-  ld: "LD",
-  gr: "GR"
-};
-
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -153,26 +139,24 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // Coordenadas milimetricamente centralizadas
+    // Posições ajustadas: Defesa e GR recuados para um espaçamento impecável
     const POSICOES = {
-      gr:  { x: 400, y: 650 },
-      le:  { x: 105, y: 495 },
-      dc1: { x: 300, y: 495 },
-      dc2: { x: 500, y: 495 },
-      ld:  { x: 695, y: 495 },
-      mc:  { x: 400, y: 345 },
-      mo1: { x: 235, y: 215 },
-      mo2: { x: 565, y: 215 },
-      ee:  { x: 105, y: 85 },
-      pl:  { x: 400, y: 80 },
-      ed:  { x: 695, y: 85 }
+      gr:  { x: 400, y: 685 },
+      le:  { x: 105, y: 535 },
+      dc1: { x: 300, y: 535 },
+      dc2: { x: 500, y: 535 },
+      ld:  { x: 695, y: 535 },
+      mc:  { x: 400, y: 375 },
+      mo1: { x: 235, y: 235 },
+      mo2: { x: 565, y: 235 },
+      ee:  { x: 105, y: 100 },
+      pl:  { x: 400, y: 90 },
+      ed:  { x: 695, y: 100 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const nomeJogador = (req.query[pos] || 'vazio').toLowerCase().trim();
-      const labelPosicao = NOMES_POSICOES[pos] || pos.toUpperCase();
 
-      let desenhou = false;
       if (nomeJogador !== 'vazio' && BANCO_DE_CARTAS[nomeJogador]) {
         try {
           const cardImg = await loadImage(BANCO_DE_CARTAS[nomeJogador]);
@@ -183,24 +167,10 @@ app.get('/gerar-campo', async (req, res) => {
             cardWidth, 
             cardHeight
           );
-          desenhou = true;
         } catch (err) {
           console.error(`Erro ao carregar ${nomeJogador}:`, err.message);
         }
       }
-
-      // Define a posição vertical do texto
-      let labelYPos;
-      if (!desenhou) {
-        // Se a posição estiver vazia, coloca o texto exatamente no centro das coordenadas da posição
-        labelYPos = coord.y;
-      } else {
-        // Se houver jogador, coloca a sigla logo abaixo da carta
-        labelYPos = coord.y + (cardHeight / 2) + 15;
-      }
-
-      // Desenha o texto da posição em BRANCO com contorno preto
-      desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
     res.setHeader('Content-Type', 'image/png');
@@ -211,25 +181,5 @@ app.get('/gerar-campo', async (req, res) => {
     res.status(500).send('Erro ao gerar imagem.');
   }
 });
-
-function desenharEtiquetaPosicao(ctx, x, y, texto) {
-  ctx.save();
-
-  // Configuração da fonte (Branca, em negrito e com contorno escuro)
-  ctx.font = 'bold 22px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  // Contorno preto fino/médio para dar contraste em qualquer fundo
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 4;
-  ctx.strokeText(texto, x, y);
-
-  // Preenchimento Branco Puro
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(texto, x, y);
-
-  ctx.restore();
-}
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
