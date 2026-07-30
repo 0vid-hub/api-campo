@@ -153,14 +153,13 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // COORDENADAS: MC de volta à posição original (y: 370)
     const POSICOES = {
       gr:  { x: 400, y: 700 },
       le:  { x: 105, y: 525 },
       dc1: { x: 300, y: 530 },
       dc2: { x: 500, y: 530 },
       ld:  { x: 695, y: 525 },
-      mc:  { x: 400, y: 370 }, // MC restaurado para cima
+      mc:  { x: 400, y: 370 },
       mo1: { x: 235, y: 240 },
       mo2: { x: 565, y: 240 },
       ee:  { x: 115, y: 105 },
@@ -198,7 +197,7 @@ app.get('/gerar-campo', async (req, res) => {
         labelYPos = coord.y + (cardHeight / 2) + 12;
       }
 
-      // Desenha a etiqueta da posição
+      // Desenha o texto limpo com contorno escuro
       desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
@@ -211,28 +210,23 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// Função simples e infalível para desenhar a etiqueta de posição com texto visível
 function desenharEtiquetaPosicao(ctx, x, y, texto) {
-  const boxWidth = 48;
-  const boxHeight = 22;
+  ctx.save();
 
-  const left = x - boxWidth / 2;
-  const top = y - boxHeight / 2;
-
-  // Retângulo preto com borda
-  ctx.fillStyle = '#0a0a0c';
-  ctx.strokeStyle = '#28282e';
-  ctx.lineWidth = 1;
-  ctx.fillRect(left, top, boxWidth, boxHeight);
-  ctx.strokeRect(left, top, boxWidth, boxHeight);
-
-  // Texto branco usando a fonte nativa do canvas (sans-serif)
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '14px sans-serif';
+  ctx.font = 'bold 16px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  
+
+  // Contorno preto em volta das letras para destaque total
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 3;
+  ctx.strokeText(texto, x, y);
+
+  // Texto em branco puro por cima
+  ctx.fillStyle = '#FFFFFF';
   ctx.fillText(texto, x, y);
+
+  ctx.restore();
 }
 
 function desenharPlaceholder(ctx, x, y) {
