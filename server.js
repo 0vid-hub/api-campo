@@ -4,6 +4,9 @@ const { createCanvas, loadImage } = require('canvas');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// URL direta da sua imagem de fundo no ImgBB
+const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
+
 // Dicionário de cartas (Mapeia o nome/termo para a imagem da carta)
 const BANCO_DE_CARTAS = {
   // 85 OVERALL
@@ -118,46 +121,38 @@ const BANCO_DE_CARTAS = {
 
 app.get('/gerar-campo', async (req, res) => {
   try {
-    // Canvas mais compacto e preenchido
     const width = 800;
-    const height = 1000;
+    const height = 800;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 1. Desenhar Fundo
-    ctx.fillStyle = '#1e5f22';
-    ctx.fillRect(0, 0, width, height);
+    // 1. CARREGAR A SUA IMAGEM DE FUNDO DO IMGBB
+    try {
+      const bgImg = await loadImage(URL_FUNDO);
+      ctx.drawImage(bgImg, 0, 0, width, height);
+    } catch (bgErr) {
+      console.error("Erro ao carregar fundo:", bgErr.message);
+      ctx.fillStyle = '#12141d';
+      ctx.fillRect(0, 0, width, height);
+    }
 
-    // Linhas do campo
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, width - 40, height - 40);
-    ctx.beginPath();
-    ctx.moveTo(20, height / 2);
-    ctx.lineTo(width - 20, height / 2);
-    ctx.stroke();
+    // 2. DIMENSÕES DAS CARTAS (Tamanho ideal para caber dentro das linhas da arte)
+    const cardWidth = 125;
+    const cardHeight = 175;
 
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 80, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 2. Dimensões Aumentadas das Cartas (~35% maiores)
-    const cardWidth = 150;
-    const cardHeight = 210;
-
-    // Coordenadas reajustadas para o novo tamanho
+    // 3. POSIÇÕES AJUSTADAS
     const POSICOES = {
-      gr:  { x: 400, y: 880 },
-      le:  { x: 110, y: 710 },
-      dc1: { x: 300, y: 730 },
-      dc2: { x: 500, y: 730 },
-      ld:  { x: 690, y: 710 },
-      mc:  { x: 400, y: 520 },
-      mo1: { x: 240, y: 390 },
-      mo2: { x: 560, y: 390 },
-      ee:  { x: 130, y: 170 },
-      pl:  { x: 400, y: 130 },
-      ed:  { x: 670, y: 170 }
+      gr:  { x: 400, y: 675 }, // Subiu para y: 675 para encaixar na área sem cortar no rodapé
+      le:  { x: 105, y: 550 },
+      dc1: { x: 300, y: 565 },
+      dc2: { x: 500, y: 565 },
+      ld:  { x: 695, y: 550 },
+      mc:  { x: 400, y: 400 }, // No centro perfeito do meio-campo
+      mo1: { x: 235, y: 280 },
+      mo2: { x: 565, y: 280 },
+      ee:  { x: 135, y: 125 },
+      pl:  { x: 400, y: 105 },
+      ed:  { x: 665, y: 125 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -197,16 +192,16 @@ app.get('/gerar-campo', async (req, res) => {
 function desenharPlaceholder(ctx, x, y, texto) {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
   ctx.beginPath();
-  ctx.arc(x, y, 40, 0, Math.PI * 2);
+  ctx.arc(x, y, 32, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#ffffff';
+  ctx.strokeStyle = '#00ff66';
   ctx.lineWidth = 2;
   ctx.stroke();
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 16px Arial';
+  ctx.font = 'bold 13px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(texto.substring(0, 10), x, y + 60);
+  ctx.fillText(texto.substring(0, 10), x, y + 50);
 }
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
