@@ -150,23 +150,22 @@ app.get('/gerar-campo', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // AUMENTADO LIGEIRAMENTE O TAMANHO DAS CARTAS (De 135x185 para 145x195)
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // POSIÇÕES LIGEIRAMENTE REAJUSTADAS PARA DAR ESPAÇO
+    // COORDENADAS REAJUSTADAS: MOs descidos e EE/ED afastados para não se sobreporem
     const POSICOES = {
       gr:  { x: 400, y: 700 },
       le:  { x: 105, y: 525 },
       dc1: { x: 300, y: 530 },
       dc2: { x: 500, y: 530 },
       ld:  { x: 695, y: 525 },
-      mc:  { x: 400, y: 375 },
-      mo1: { x: 235, y: 255 },
-      mo2: { x: 565, y: 255 },
-      ee:  { x: 135, y: 110 },
+      mc:  { x: 400, y: 400 },
+      mo1: { x: 235, y: 280 },
+      mo2: { x: 565, y: 280 },
+      ee:  { x: 115, y: 105 },
       pl:  { x: 400, y: 90 },
-      ed:  { x: 665, y: 110 }
+      ed:  { x: 685, y: 105 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -190,11 +189,8 @@ app.get('/gerar-campo', async (req, res) => {
         }
       }
 
-      // Altura onde a etiqueta deve ficar (varia se for carta ou placeholder)
       let labelYPos;
-
       if (!desenhou) {
-        // Se estiver vazio, desenha o placeholder limpo
         const placeholderH = 120;
         desenharPlaceholder(ctx, coord.x, coord.y);
         labelYPos = coord.y + (placeholderH / 2) + 14;
@@ -202,7 +198,7 @@ app.get('/gerar-campo', async (req, res) => {
         labelYPos = coord.y + (cardHeight / 2) + 12;
       }
 
-      // Desenha a etiqueta de texto com compatibilidade garantida
+      // Desenha a etiqueta
       desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
@@ -215,19 +211,18 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// Função compatível com qualquer versão do Canvas
+// Função ajustada para forçar o texto BRANCO e BOLD sem bugs de renderização
 function desenharEtiquetaPosicao(ctx, x, y, texto) {
-  const boxWidth = 46;
+  const boxWidth = 48;
   const boxHeight = 22;
 
   ctx.save();
 
-  // Fundo escuro com borda sutil
-  ctx.fillStyle = 'rgba(12, 12, 15, 0.9)';
-  ctx.strokeStyle = '#333333';
+  // Fundo da caixinha
+  ctx.fillStyle = '#0a0a0c';
+  ctx.strokeStyle = '#28282e';
   ctx.lineWidth = 1;
 
-  // Retângulo com cantos levemente chanfrados/arredondados compatível
   const left = x - boxWidth / 2;
   const top = y - boxHeight / 2;
   
@@ -236,17 +231,18 @@ function desenharEtiquetaPosicao(ctx, x, y, texto) {
   ctx.fill();
   ctx.stroke();
 
-  // Texto nítido com fontes universais de fallback
+  // Configuração explícita do texto em BRANCO e NEGRITO
+  ctx.font = 'bold 13px Arial';
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 13px sans-serif, Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(texto, x, y);
+  
+  // Desenha o texto branco por cima do retângulo
+  ctx.fillText(texto, x, y + 1);
 
   ctx.restore();
 }
 
-// Desenha o placeholder vazado e limpo (sem fundo preto total)
 function desenharPlaceholder(ctx, x, y) {
   const width = 90;
   const height = 120;
@@ -265,11 +261,9 @@ function desenharPlaceholder(ctx, x, y) {
   ctx.lineTo(left, top + height * 0.2);
   ctx.closePath();
 
-  // Fundo semi-transparente
   ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
   ctx.fill();
 
-  // Borda tracejada sutil
   ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 4]);
