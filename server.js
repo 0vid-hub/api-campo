@@ -139,13 +139,16 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // Posições ajustadas: Defesa e GR recuados para um espaçamento impecável
+    // Coordenadas das Posições:
+    // - GR recuado para y: 710
+    // - LE e LD recuados ligeiramente para y: 560
+    // - DCs mantidos em y: 535
     const POSICOES = {
-      gr:  { x: 400, y: 685 },
-      le:  { x: 105, y: 535 },
+      gr:  { x: 400, y: 710 },
+      le:  { x: 105, y: 560 },
       dc1: { x: 300, y: 535 },
       dc2: { x: 500, y: 535 },
-      ld:  { x: 695, y: 535 },
+      ld:  { x: 695, y: 560 },
       mc:  { x: 400, y: 375 },
       mo1: { x: 235, y: 235 },
       mo2: { x: 565, y: 235 },
