@@ -136,24 +136,25 @@ app.get('/gerar-campo', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-// 2. DIMENSÕES DAS CARTAS (Aumentadas para dar mais destaque)
+    // 2. DIMENSÕES DAS CARTAS (Tamanho ampliado)
     const cardWidth = 135;
     const cardHeight = 185;
 
-    // 3. POSIÇÕES AJUSTADAS COM PRECISÃO
+    // 3. POSIÇÕES AJUSTADAS
     const POSICOES = {
-      gr:  { x: 400, y: 705 }, // Recuado pra dentro da baliza (borda inferior faceando o limite)
-      le:  { x: 105, y: 530 }, // Subiu 20px
-      dc1: { x: 300, y: 535 }, // Subiu 30px pra dar respiro ao GR
-      dc2: { x: 500, y: 535 }, // Subiu 30px pra dar respiro ao GR
-      ld:  { x: 695, y: 530 }, // Subiu 20px
-      mc:  { x: 400, y: 380 }, // Centralizado sobre o círculo do meio-campo
+      gr:  { x: 400, y: 705 },
+      le:  { x: 105, y: 530 },
+      dc1: { x: 300, y: 535 },
+      dc2: { x: 500, y: 535 },
+      ld:  { x: 695, y: 530 },
+      mc:  { x: 400, y: 380 },
       mo1: { x: 235, y: 260 },
       mo2: { x: 565, y: 260 },
       ee:  { x: 135, y: 115 },
       pl:  { x: 400, y: 95 },
       ed:  { x: 665, y: 115 }
     };
+
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const nomeJogador = (req.query[pos] || 'vazio').toLowerCase().trim();
 
@@ -174,8 +175,9 @@ app.get('/gerar-campo', async (req, res) => {
         }
       }
 
+      // Se a posição estiver vazia, desenha a carta transparente com a sigla da posição (PL, ED, EE, etc.)
       if (!desenhou) {
-        desenharPlaceholder(ctx, coord.x, coord.y, req.query[pos] || 'Vazio');
+        desenharPlaceholder(ctx, coord.x, coord.y, pos);
       }
     }
 
@@ -188,19 +190,42 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-function desenharPlaceholder(ctx, x, y, texto) {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-  ctx.beginPath();
-  ctx.arc(x, y, 32, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#00ff66';
+// NOVA FUNÇÃO: Desenha uma "carta fantasma" transparente com a sigla da posição
+function desenharPlaceholder(ctx, x, y, posicaoSigla) {
+  const width = 135;
+  const height = 185;
+  const left = x - width / 2;
+  const top = y - height / 2;
+
+  ctx.save();
+
+  // Fundo escuro semi-transparente + borda verde neon suave
+  ctx.fillStyle = 'rgba(18, 20, 29, 0.55)';
+  ctx.strokeStyle = 'rgba(0, 255, 102, 0.45)';
   ctx.lineWidth = 2;
+
+  // Formato de escudo/carta de futebol
+  ctx.beginPath();
+  ctx.moveTo(left + width * 0.2, top);
+  ctx.lineTo(left + width * 0.8, top);
+  ctx.lineTo(left + width, top + height * 0.2);
+  ctx.lineTo(left + width, top + height * 0.75);
+  ctx.lineTo(left + width / 2, top + height);
+  ctx.lineTo(left, top + height * 0.75);
+  ctx.lineTo(left, top + height * 0.2);
+  ctx.closePath();
+
+  ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 13px Arial';
+  // Escreve a sigla da posição (ex: PL, EE, GR) em verde neon
+  ctx.fillStyle = '#00ff66';
+  ctx.font = 'bold 24px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(texto.substring(0, 10), x, y + 50);
+  ctx.textBaseline = 'middle';
+  ctx.fillText(posicaoSigla.toUpperCase(), x, y);
+
+  ctx.restore();
 }
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
