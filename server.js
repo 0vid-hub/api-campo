@@ -153,16 +153,16 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // COORDENADAS REAJUSTADAS: MOs descidos e EE/ED afastados para não se sobreporem
+    // COORDENADAS: MC de volta à posição original (y: 370)
     const POSICOES = {
       gr:  { x: 400, y: 700 },
       le:  { x: 105, y: 525 },
       dc1: { x: 300, y: 530 },
       dc2: { x: 500, y: 530 },
       ld:  { x: 695, y: 525 },
-      mc:  { x: 400, y: 400 },
-      mo1: { x: 235, y: 280 },
-      mo2: { x: 565, y: 280 },
+      mc:  { x: 400, y: 370 }, // MC restaurado para cima
+      mo1: { x: 235, y: 240 },
+      mo2: { x: 565, y: 240 },
       ee:  { x: 115, y: 105 },
       pl:  { x: 400, y: 90 },
       ed:  { x: 685, y: 105 }
@@ -198,7 +198,7 @@ app.get('/gerar-campo', async (req, res) => {
         labelYPos = coord.y + (cardHeight / 2) + 12;
       }
 
-      // Desenha a etiqueta
+      // Desenha a etiqueta da posição
       desenharEtiquetaPosicao(ctx, coord.x, labelYPos, labelPosicao);
     }
 
@@ -211,36 +211,28 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// Função ajustada para forçar o texto BRANCO e BOLD sem bugs de renderização
+// Função simples e infalível para desenhar a etiqueta de posição com texto visível
 function desenharEtiquetaPosicao(ctx, x, y, texto) {
   const boxWidth = 48;
   const boxHeight = 22;
 
-  ctx.save();
+  const left = x - boxWidth / 2;
+  const top = y - boxHeight / 2;
 
-  // Fundo da caixinha
+  // Retângulo preto com borda
   ctx.fillStyle = '#0a0a0c';
   ctx.strokeStyle = '#28282e';
   ctx.lineWidth = 1;
+  ctx.fillRect(left, top, boxWidth, boxHeight);
+  ctx.strokeRect(left, top, boxWidth, boxHeight);
 
-  const left = x - boxWidth / 2;
-  const top = y - boxHeight / 2;
-  
-  ctx.beginPath();
-  ctx.rect(left, top, boxWidth, boxHeight);
-  ctx.fill();
-  ctx.stroke();
-
-  // Configuração explícita do texto em BRANCO e NEGRITO
-  ctx.font = 'bold 13px Arial';
-  ctx.fillStyle = '#FFFFFF';
+  // Texto branco usando a fonte nativa do canvas (sans-serif)
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '14px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
-  // Desenha o texto branco por cima do retângulo
-  ctx.fillText(texto, x, y + 1);
-
-  ctx.restore();
+  ctx.fillText(texto, x, y);
 }
 
 function desenharPlaceholder(ctx, x, y) {
