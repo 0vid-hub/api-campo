@@ -1,12 +1,13 @@
 {
   "name": "api-campo-bot",
   "version": "1.0.0",
+  "description": "API para gerar imagens de campo do BDFD",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^0.1.44",
+    "canvas": "^2.11.2",
     "express": "^4.19.2"
   }
 }
