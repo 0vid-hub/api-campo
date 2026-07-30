@@ -116,55 +116,56 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// Coordenadas das 11 posições no campo (Tamanho do Canvas: 800x1200)
-const POSICOES = {
-  gr:  { x: 400, y: 1050 },
-  le:  { x: 120, y: 850 },
-  dc1: { x: 310, y: 870 },
-  dc2: { x: 490, y: 870 },
-  ld:  { x: 680, y: 850 },
-  mc:  { x: 400, y: 620 },
-  mo1: { x: 260, y: 480 },
-  mo2: { x: 540, y: 480 },
-  ee:  { x: 150, y: 250 },
-  pl:  { x: 400, y: 200 },
-  ed:  { x: 650, y: 250 }
-};
-
 app.get('/gerar-campo', async (req, res) => {
   try {
+    // Canvas mais compacto e preenchido
     const width = 800;
-    const height = 1200;
+    const height = 1000;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 1. Desenhar Fundo (Campo de Futebol)
-    ctx.fillStyle = '#2e7d32';
+    // 1. Desenhar Fundo
+    ctx.fillStyle = '#1e5f22';
     ctx.fillRect(0, 0, width, height);
 
     // Linhas do campo
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(40, 40, width - 80, height - 80); // Linha Lateral
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(20, 20, width - 40, height - 40);
     ctx.beginPath();
-    ctx.moveTo(40, height / 2);
-    ctx.lineTo(width - 40, height / 2); // Linha do Meio
+    ctx.moveTo(20, height / 2);
+    ctx.lineTo(width - 20, height / 2);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 100, 0, Math.PI * 2); // Círculo Central
+    ctx.arc(width / 2, height / 2, 80, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 2. Desenhar Jogadores/Cartas
-    const cardWidth = 110;
-    const cardHeight = 155;
+    // 2. Dimensões Aumentadas das Cartas (~35% maiores)
+    const cardWidth = 150;
+    const cardHeight = 210;
+
+    // Coordenadas reajustadas para o novo tamanho
+    const POSICOES = {
+      gr:  { x: 400, y: 880 },
+      le:  { x: 110, y: 710 },
+      dc1: { x: 300, y: 730 },
+      dc2: { x: 500, y: 730 },
+      ld:  { x: 690, y: 710 },
+      mc:  { x: 400, y: 520 },
+      mo1: { x: 240, y: 390 },
+      mo2: { x: 560, y: 390 },
+      ee:  { x: 130, y: 170 },
+      pl:  { x: 400, y: 130 },
+      ed:  { x: 670, y: 170 }
+    };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
-      const nomeJogador = (req.query[pos] || 'Vazio').toLowerCase().trim();
+      const nomeJogador = (req.query[pos] || 'vazio').toLowerCase().trim();
 
+      let desenhou = false;
       if (nomeJogador !== 'vazio' && BANCO_DE_CARTAS[nomeJogador]) {
         try {
-          // Carregar a imagem da carta
           const cardImg = await loadImage(BANCO_DE_CARTAS[nomeJogador]);
           ctx.drawImage(
             cardImg, 
@@ -173,11 +174,13 @@ app.get('/gerar-campo', async (req, res) => {
             cardWidth, 
             cardHeight
           );
+          desenhou = true;
         } catch (err) {
-          desenharPlaceholder(ctx, coord.x, coord.y, req.query[pos]);
+          console.error(`Erro ao carregar ${nomeJogador}:`, err.message);
         }
-      } else {
-        // Se a posição estiver vazia ou o jogador não tiver carta cadastrada
+      }
+
+      if (!desenhou) {
         desenharPlaceholder(ctx, coord.x, coord.y, req.query[pos] || 'Vazio');
       }
     }
@@ -194,16 +197,16 @@ app.get('/gerar-campo', async (req, res) => {
 function desenharPlaceholder(ctx, x, y, texto) {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
   ctx.beginPath();
-  ctx.arc(x, y, 35, 0, Math.PI * 2);
+  ctx.arc(x, y, 40, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 2;
   ctx.stroke();
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 14px Arial';
+  ctx.font = 'bold 16px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(texto.substring(0, 10), x, y + 50);
+  ctx.fillText(texto.substring(0, 10), x, y + 60);
 }
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
