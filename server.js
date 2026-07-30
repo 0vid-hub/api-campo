@@ -31,7 +31,7 @@ const BANCO_DE_CARTAS = {
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
   "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
   "diogo costa 83": "https://i.ibb.co/gLkfnyvc/diogocosta83.png",
-  "vitinha 82": "https://i.ibb.co/Kj1H62kH/vitinha82.png",
+  "vitinha 82": "https://i.ibb.co/Kj7B9f57/vitinha82.png",
   "joão neves 81": "https://i.ibb.co/mCvgB2hj/joaoneves81.png",
   "rafael leão 81": "https://i.ibb.co/CKjMSjtJ/rafaleao81.png",
   "bruno fernandes 80": "https://i.ibb.co/HpBJgxrb/brunofernandes80.png",
@@ -119,6 +119,21 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
+// Nomes bonitos para exibir nas etiquetas de cada posição
+const NOMES_POSICOES = {
+  ee: "EE",
+  pl: "PL",
+  ed: "ED",
+  mo1: "MO",
+  mo2: "MO",
+  mc: "MC",
+  le: "LE",
+  dc1: "DC",
+  dc2: "DC",
+  ld: "LD",
+  gr: "GR"
+};
+
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -136,7 +151,7 @@ app.get('/gerar-campo', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // 2. DIMENSÕES DAS CARTAS (Tamanho ampliado)
+    // 2. DIMENSÕES DAS CARTAS COM JOGADOR
     const cardWidth = 135;
     const cardHeight = 185;
 
@@ -157,6 +172,7 @@ app.get('/gerar-campo', async (req, res) => {
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const nomeJogador = (req.query[pos] || 'vazio').toLowerCase().trim();
+      const labelPosicao = NOMES_POSICOES[pos] || pos.toUpperCase();
 
       let desenhou = false;
       if (nomeJogador !== 'vazio' && BANCO_DE_CARTAS[nomeJogador]) {
@@ -175,10 +191,13 @@ app.get('/gerar-campo', async (req, res) => {
         }
       }
 
-      // Se a posição estiver vazia, desenha a carta transparente com a sigla da posição (PL, ED, EE, etc.)
+      // Se a posição estiver vazia, desenha o slot transparente
       if (!desenhou) {
-        desenharPlaceholder(ctx, coord.x, coord.y, pos);
+        desenharPlaceholder(ctx, coord.x, coord.y);
       }
+
+      // Desenha a etiqueta preta com a sigla da posição em baixo de cada carta/slot
+      desenharEtiquetaPosicao(ctx, coord.x, coord.y + (cardHeight / 2) + 12, labelPosicao);
     }
 
     res.setHeader('Content-Type', 'image/png');
@@ -190,21 +209,44 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// NOVA FUNÇÃO: Desenha uma "carta fantasma" transparente com a sigla da posição
-function desenharPlaceholder(ctx, x, y, posicaoSigla) {
-  const width = 135;
-  const height = 185;
+// Desenha a caixa de texto/etiqueta em baixo da carta estilo Dream Team
+function desenharEtiquetaPosicao(ctx, x, y, texto) {
+  const boxWidth = 52;
+  const boxHeight = 22;
+  const radius = 5;
+
+  ctx.save();
+
+  // Caixinha preta com opacidade estilo Dream Team
+  ctx.fillStyle = 'rgba(10, 10, 12, 0.85)';
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+
+  ctx.beginPath();
+  ctx.roundRect(x - boxWidth / 2, y - boxHeight / 2, boxWidth, boxHeight, radius);
+  ctx.fill();
+  ctx.stroke();
+
+  // Texto da Posição em Branco/Verde Neon
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 13px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(texto, x, y);
+
+  ctx.restore();
+}
+
+// Desenha um slot transparente e discreto quando a posição está vazia
+function desenharPlaceholder(ctx, x, y) {
+  const width = 90;
+  const height = 120;
   const left = x - width / 2;
   const top = y - height / 2;
 
   ctx.save();
 
-  // Fundo escuro semi-transparente + borda verde neon suave
-  ctx.fillStyle = 'rgba(18, 20, 29, 0.55)';
-  ctx.strokeStyle = 'rgba(0, 255, 102, 0.45)';
-  ctx.lineWidth = 2;
-
-  // Formato de escudo/carta de futebol
+  // Formato de escudo/carta
   ctx.beginPath();
   ctx.moveTo(left + width * 0.2, top);
   ctx.lineTo(left + width * 0.8, top);
@@ -215,15 +257,15 @@ function desenharPlaceholder(ctx, x, y, posicaoSigla) {
   ctx.lineTo(left, top + height * 0.2);
   ctx.closePath();
 
+  // Preenchimento transparente suave
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.fill();
-  ctx.stroke();
 
-  // Escreve a sigla da posição (ex: PL, EE, GR) em verde neon
-  ctx.fillStyle = '#00ff66';
-  ctx.font = 'bold 24px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(posicaoSigla.toUpperCase(), x, y);
+  // Borda tracejada verde neon discreta
+  ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
 
   ctx.restore();
 }
