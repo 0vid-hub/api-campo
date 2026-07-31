@@ -27,6 +27,17 @@ const BANCO_DE_CARTAS = {
   "dani olmo 85": "https://i.ibb.co/xqR2zjwq/daniolmo85.png",
   "lamine yamal 85": "https://i.ibb.co/DDn5tdCN/yamal85.png",
 
+    // 80 - 83 OVERALL
+"ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
+"lionel messi 84": "https://i.ibb.co/DDn5tdCN/yamal85.png",
+"bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
+"haaland 84": "https://i.ibb.co/yBS6Z4s0/haaland84.png",
+"harry kane 84": "https://i.ibb.co/mF5fFLHR/harrykane.png",
+"mbappé 84": "https://i.ibb.co/m5PjypFT/mbappe84.png",
+"neymar jr 84": "https://i.ibb.co/ZpdBqzxF/neymar84.png",
+"nuno mendes 84": "https://i.ibb.co/67yHcGp3/nunomendes84.png",
+"vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
+  
   // 80 - 83 OVERALL
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
   "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
