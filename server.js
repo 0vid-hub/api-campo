@@ -29,7 +29,7 @@ const BANCO_DE_CARTAS = {
 
     // 84 OVERALL
 "ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
-"lionel messi 84": "https://i.ibb.co/DDn5tdCN/yamal85.png",
+"lionel messi 84": "https://i.ibb.co/5XK1RhWz/messi84.png",
 "bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
 "haaland 84": "https://i.ibb.co/yBS6Z4s0/haaland84.png",
 "harry kane 84": "https://i.ibb.co/mF5fFLHR/harrykane.png",
