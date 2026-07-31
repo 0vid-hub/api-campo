@@ -27,7 +27,7 @@ const BANCO_DE_CARTAS = {
   "dani olmo 85": "https://i.ibb.co/xqR2zjwq/daniolmo85.png",
   "lamine yamal 85": "https://i.ibb.co/DDn5tdCN/yamal85.png",
 
-    // 80 - 83 OVERALL
+    // 84 OVERALL
 "ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
 "lionel messi 84": "https://i.ibb.co/DDn5tdCN/yamal85.png",
 "bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
