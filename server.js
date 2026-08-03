@@ -40,6 +40,7 @@ const BANCO_DE_CARTAS = {
   
   // 80 - 83 OVERALL
   
+  "vinicius júnior 83": "https://i.ibb.co/KMnsD2j/vini83.png",
   "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
   "michael lise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
