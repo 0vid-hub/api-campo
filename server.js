@@ -39,11 +39,13 @@ const BANCO_DE_CARTAS = {
 "vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
   
   // 80 - 83 OVERALL
-
+  
+  "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
   "michael lise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
   "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
   "diogo costa 83": "https://i.ibb.co/gLkfnyvc/diogocosta83.png",
+  "khvicha kvaratskhelia 82 82": "https://i.ibb.co/1GqXhm5N/kvara82.png",
   "vitinha 82": "https://i.ibb.co/Kj7B9f57/vitinha82.png",
   "joão neves 81": "https://i.ibb.co/mCvgB2hj/joaoneves81.png",
   "rafael leão 81": "https://i.ibb.co/CKjMSjtJ/rafaleao81.png",
