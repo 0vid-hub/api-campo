@@ -39,6 +39,8 @@ const BANCO_DE_CARTAS = {
 "vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
   
   // 80 - 83 OVERALL
+
+  "michael lise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
   "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
   "diogo costa 83": "https://i.ibb.co/gLkfnyvc/diogocosta83.png",
