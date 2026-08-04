@@ -9,11 +9,38 @@ const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 
 // Dicionário de cartas (Mapeia o nome/termo para a imagem da carta)
 const BANCO_DE_CARTAS = {
-  // 86-69 OVERALL
+  // 88-89 OVERALL
+ "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
+  "buffon 90": "https://i.ibb.co/KxxLnfWd/buffon.png",
+  "eusébio 90": "https://i.ibb.co/cSY6C7vP/eusebio.png",
+  "lev yashin 90": "https://i.ibb.co/WWxHcr1m/yashin.png",
+  "luis figo 89": "https://i.ibb.co/Vc7HpNjF/luisfigo.png",
+  "ronaldo nazário 89": "https://i.ibb.co/gLqzcW1C/r9.png",
+  "cafu 88": "https://i.ibb.co/wZhHw1Wq/cafu.png",
+  "carlos alberto 88": "https://i.ibb.co/WjN7z9r/carlosalberto.png",
+  "diogo jota 88": "https://i.ibb.co/HDwr4hNV/diogojota.png",
+  "garrincha 88": "https://i.ibb.co/HT8Mxhww/garrincha.png",
+  "gullit 88": "https://i.ibb.co/7NLWk27K/gullit.png",
+  "pepe 88": "https://i.ibb.co/bMYppmWJ/pepe.png",
+  "roberto carlos 88": "https://i.ibb.co/Ps3KFZ5h/robertocarlos.png",
+  "zidane 88": "https://i.ibb.co/wr45wSpS/zidane.png",
+
   "lionel messi 88": "https://i.ibb.co/SD9XC7KK/messi86.png",
   "martinez 87": "https://i.ibb.co/PsTNhDxT/martinez86.png",
   "mbappé 87": "https://i.ibb.co/wTzfxNN/mbappe86.png",
   "luka modric 87": "https://i.ibb.co/cXh7dVZ1/modric87.png",
+  "beckenbauer 87": "https://i.ibb.co/ZzzWHWk8/beckenbauer.png",
+  "george best 87": "https://i.ibb.co/Gf5nDHyc/best.png",
+  "iniesta 87": "https://i.ibb.co/JFBg47m5/iniest.png",
+  "kaká 87": "https://i.ibb.co/Y7BZskxC/kaka.png",
+  "paolo maldini 87": "https://i.ibb.co/GvXpVHYS/maldini.png",
+  "ronaldinho 87": "https://i.ibb.co/1G1Tqxhh/ronaldinho.png",
+  "xavi 87": "https://i.ibb.co/w8XTqG3/xavi.png",
+  "thierry henry 86": "https://i.ibb.co/kgQV7K0F/henry.png",
+  "maradona 86": "https://i.ibb.co/YFPPdqSb/maradona.png",
+  "ricardo quaresma 86": "https://i.ibb.co/k2HvS9V7/quaresma.png",
+  "zlatan ibrahimovic 86": "https://i.ibb.co/Mks18Nm9/zlatan.png",
+
   "amrabat 86": "https://i.ibb.co/VP0s2cc/amrabat86.png",
   "bruno fernandes 86": "https://i.ibb.co/QjHQkGFn/brunofernandes86.png",
   "griezmann 86": "https://i.ibb.co/V0KY5RzN/griezmann86.png",
