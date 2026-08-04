@@ -9,6 +9,18 @@ const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 
 // Dicionário de cartas (Mapeia o nome/termo para a imagem da carta)
 const BANCO_DE_CARTAS = {
+  // 86-69 OVERALL
+  "lionel messi 88": "https://i.ibb.co/SD9XC7KK/messi86.png",
+  "martinez 87": "https://i.ibb.co/PsTNhDxT/martinez86.png",
+  "mbappé 87": "https://i.ibb.co/wTzfxNN/mbappe86.png",
+  "luka modric 87": "https://i.ibb.co/cXh7dVZ1/modric87.png",
+  "amrabat 86": "https://i.ibb.co/VP0s2cc/amrabat86.png",
+  "bruno fernandes 86": "https://i.ibb.co/QjHQkGFn/brunofernandes86.png",
+  "griezmann 86": "https://i.ibb.co/V0KY5RzN/griezmann86.png",
+  "gvardiol 86": "https://i.ibb.co/3mt22NRP/gvardiol86.png",
+  "livakovic 86": "https://i.ibb.co/WvyKDQpK/livakovic86.png",
+  "pepe 86": "https://i.ibb.co/Rp9xf308/pepe86.png",
+  
   // 85 OVERALL
   "unai simón 85": "https://i.ibb.co/1tP6SR0K/unaisimon85.png",
   "rodri 85": "https://i.ibb.co/XrH16CKR/rodri85.png",
