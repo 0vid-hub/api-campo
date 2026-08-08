@@ -4,10 +4,8 @@ const { createCanvas, loadImage } = require('canvas');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// URL direta da sua imagem de fundo no ImgBB
 const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 
-// Dicionário de cartas (Mapeia o nome/termo para a imagem da carta)
 const BANCO_DE_CARTAS = {
   // 88-89 OVERALL
   "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
@@ -80,7 +78,7 @@ const BANCO_DE_CARTAS = {
   // 80 - 83 OVERALL
   "vinicius júnior 83": "https://i.ibb.co/KMnsD2j/vini83.png",
   "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
-  "michael lise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
+  "michael olise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
   "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
   "diogo costa 83": "https://i.ibb.co/gLkfnyvc/diogocosta83.png",
@@ -173,9 +171,20 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// Função utilitária para remover acentos
+// FUNÇÃO CORRIGIDA COM DECODE E TRATAMENTO DE ACENTOS ROBUSTO
 function removerAcentos(texto) {
-  return texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
+  if (!texto) return "";
+  try {
+    // Decodifica %20, %C3%A1, etc., vindos da URL
+    texto = decodeURIComponent(texto);
+  } catch (e) {
+    // Se der erro no decode, continua com o texto original
+  }
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 // -------------------------------------------------------------
@@ -247,7 +256,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (CORRIGIDA)
+// ROTA 2: BUSCAR JOGADORES (AGORA 100% BLINDADA)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   try {
@@ -257,14 +266,14 @@ app.get('/buscar-jogador', (req, res) => {
       return res.status(200).json({ sucesso: false, erro: "busca_vazia" });
     }
 
-    // Procura ignorando acentos
+    // Busca ignorando totalmente acentos, maiúsculas e caracteres de URL
     const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(buscaLimpa));
 
     if (!chaveEncontrada) {
       return res.status(200).json({ sucesso: false, erro: "nao_encontrado" });
     }
 
-    // Extrai o overall
+    // Extrai o overall do final do nome
     const partes = chaveEncontrada.split(' ');
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const imagem = BANCO_DE_CARTAS[chaveEncontrada];
@@ -288,7 +297,6 @@ app.get('/buscar-jogador', (req, res) => {
       preco: preco
     });
   } catch (error) {
-    // Garante que SEMPRE retorne um JSON se der erro genérico no servidor
     console.error("Erro interno no /buscar-jogador:", error);
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
