@@ -4,6 +4,10 @@ const { createCanvas, loadImage } = require('canvas');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Garante o parse de JSON e habilita cabeçalhos para o BDFD
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 
 const BANCO_DE_CARTAS = {
@@ -171,15 +175,11 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// FUNÇÃO CORRIGIDA COM DECODE E TRATAMENTO DE ACENTOS ROBUSTO
 function removerAcentos(texto) {
   if (!texto) return "";
   try {
-    // Decodifica %20, %C3%A1, etc., vindos da URL
     texto = decodeURIComponent(texto);
-  } catch (e) {
-    // Se der erro no decode, continua com o texto original
-  }
+  } catch (e) {}
   return texto
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -256,29 +256,40 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (AGORA 100% BLINDADA)
+// ROTA 2: BUSCAR JOGADORES (Garantia de JSON Válido)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
+  // Configura os cabeçalhos explicitamente para JSON
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
   try {
-    const buscaLimpa = removerAcentos(req.query.q);
+    const queryBruta = req.query.q || "";
+    const buscaLimpa = removerAcentos(queryBruta);
 
     if (!buscaLimpa) {
-      return res.status(200).json({ sucesso: false, erro: "busca_vazia" });
+      return res.status(200).json({ 
+        sucesso: false, 
+        erro: "busca_vazia",
+        imagem: "https://i.ibb.co/8ndDRbQt/negociar.png",
+        overall: 60 
+      });
     }
 
-    // Busca ignorando totalmente acentos, maiúsculas e caracteres de URL
     const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(buscaLimpa));
 
     if (!chaveEncontrada) {
-      return res.status(200).json({ sucesso: false, erro: "nao_encontrado" });
+      return res.status(200).json({ 
+        sucesso: false, 
+        erro: "nao_encontrado",
+        imagem: "https://i.ibb.co/8ndDRbQt/negociar.png",
+        overall: 60 
+      });
     }
 
-    // Extrai o overall do final do nome
     const partes = chaveEncontrada.split(' ');
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const imagem = BANCO_DE_CARTAS[chaveEncontrada];
 
-    // Cálculo do Preço por Tabela
     let preco = 1000;
     if (overall >= 99) preco = 30000;
     else if (overall >= 95) preco = 20000;
@@ -298,7 +309,12 @@ app.get('/buscar-jogador', (req, res) => {
     });
   } catch (error) {
     console.error("Erro interno no /buscar-jogador:", error);
-    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+    return res.status(200).json({ 
+      sucesso: false, 
+      erro: "erro_interno",
+      imagem: "https://i.ibb.co/8ndDRbQt/negociar.png",
+      overall: 60 
+    });
   }
 });
 
