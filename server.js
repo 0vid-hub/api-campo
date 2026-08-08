@@ -173,8 +173,13 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
+// Função utilitária para remover acentos
+function removerAcentos(texto) {
+  return texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
+}
+
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO (Sua rota antiga)
+// ROTA 1: GERAR IMAGEM DO CAMPO
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -210,20 +215,24 @@ app.get('/gerar-campo', async (req, res) => {
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
-      const nomeJogador = (req.query[pos] || 'vazio').toLowerCase().trim();
+      const busca = removerAcentos(req.query[pos]);
 
-      if (nomeJogador !== 'vazio' && BANCO_DE_CARTAS[nomeJogador]) {
-        try {
-          const cardImg = await loadImage(BANCO_DE_CARTAS[nomeJogador]);
-          ctx.drawImage(
-            cardImg, 
-            coord.x - cardWidth / 2, 
-            coord.y - cardHeight / 2, 
-            cardWidth, 
-            cardHeight
-          );
-        } catch (err) {
-          console.error(`Erro ao carregar ${nomeJogador}:`, err.message);
+      if (busca && busca !== 'vazio') {
+        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(busca));
+
+        if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
+          try {
+            const cardImg = await loadImage(BANCO_DE_CARTAS[chaveEncontrada]);
+            ctx.drawImage(
+              cardImg, 
+              coord.x - cardWidth / 2, 
+              coord.y - cardHeight / 2, 
+              cardWidth, 
+              cardHeight
+            );
+          } catch (err) {
+            console.error(`Erro ao carregar imagem para ${busca}:`, err.message);
+          }
         }
       }
     }
@@ -238,45 +247,51 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: NOVA ROTA PARA BUSCAR JOGADORES (Otimização do -contratar)
+// ROTA 2: BUSCAR JOGADORES (CORRIGIDA)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
-  const busca = req.query.q ? req.query.q.toLowerCase().trim() : '';
+  try {
+    const buscaLimpa = removerAcentos(req.query.q);
 
-  if (!busca) {
-    return res.json({ sucesso: false, erro: "busca_vazia" });
+    if (!buscaLimpa) {
+      return res.status(200).json({ sucesso: false, erro: "busca_vazia" });
+    }
+
+    // Procura ignorando acentos
+    const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(buscaLimpa));
+
+    if (!chaveEncontrada) {
+      return res.status(200).json({ sucesso: false, erro: "nao_encontrado" });
+    }
+
+    // Extrai o overall
+    const partes = chaveEncontrada.split(' ');
+    const overall = parseInt(partes[partes.length - 1]) || 60;
+    const imagem = BANCO_DE_CARTAS[chaveEncontrada];
+
+    // Cálculo do Preço por Tabela
+    let preco = 1000;
+    if (overall >= 99) preco = 30000;
+    else if (overall >= 95) preco = 20000;
+    else if (overall >= 90) preco = 15000;
+    else if (overall >= 85) preco = 10000;
+    else if (overall >= 80) preco = 5000;
+    else if (overall >= 75) preco = 3500;
+    else if (overall >= 70) preco = 2500;
+    else if (overall >= 65) preco = 1500;
+
+    return res.status(200).json({
+      sucesso: true,
+      nome: chaveEncontrada,
+      overall: overall,
+      imagem: imagem,
+      preco: preco
+    });
+  } catch (error) {
+    // Garante que SEMPRE retorne um JSON se der erro genérico no servidor
+    console.error("Erro interno no /buscar-jogador:", error);
+    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
-
-  // Procura a chave no BANCO_DE_CARTAS que contém o termo pesquisado
-  const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => nome.includes(busca));
-
-  if (!chaveEncontrada) {
-    return res.json({ sucesso: false, erro: "nao_encontrado" });
-  }
-
-  // Extrai o overall dos últimos 2 dígitos do nome (Ex: "pelé 91" -> 91)
-  const partes = chaveEncontrada.split(' ');
-  const overall = parseInt(partes[partes.length - 1]) || 60;
-  const imagem = BANCO_DE_CARTAS[chaveEncontrada];
-
-  // Cálculo do Preço por Tabela
-  let preco = 1000;
-  if (overall >= 99) preco = 30000;
-  else if (overall >= 95) preco = 20000;
-  else if (overall >= 90) preco = 15000;
-  else if (overall >= 85) preco = 10000;
-  else if (overall >= 80) preco = 5000;
-  else if (overall >= 75) preco = 3500;
-  else if (overall >= 70) preco = 2500;
-  else if (overall >= 65) preco = 1500;
-
-  res.json({
-    sucesso: true,
-    nome: chaveEncontrada,
-    overall: overall,
-    imagem: imagem,
-    preco: preco
-  });
 });
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
