@@ -10,7 +10,7 @@ const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 // Dicionário de cartas (Mapeia o nome/termo para a imagem da carta)
 const BANCO_DE_CARTAS = {
   // 88-89 OVERALL
- "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
+  "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
   "buffon 90": "https://i.ibb.co/KxxLnfWd/buffon.png",
   "eusébio 90": "https://i.ibb.co/cSY6C7vP/eusebio.png",
   "lev yashin 90": "https://i.ibb.co/WWxHcr1m/yashin.png",
@@ -66,26 +66,25 @@ const BANCO_DE_CARTAS = {
   "dani olmo 85": "https://i.ibb.co/xqR2zjwq/daniolmo85.png",
   "lamine yamal 85": "https://i.ibb.co/DDn5tdCN/yamal85.png",
 
-    // 84 OVERALL
-"ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
-"lionel messi 84": "https://i.ibb.co/5XK1RhWz/messi84.png",
-"bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
-"haaland 84": "https://i.ibb.co/yBS6Z4s0/haaland84.png",
-"harry kane 84": "https://i.ibb.co/mF5fFLHR/harrykane.png",
-"mbappé 84": "https://i.ibb.co/m5PjypFT/mbappe84.png",
-"neymar jr 84": "https://i.ibb.co/ZpdBqzxF/neymar84.png",
-"nuno mendes 84": "https://i.ibb.co/67yHcGp3/nunomendes84.png",
-"vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
+  // 84 OVERALL
+  "ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
+  "lionel messi 84": "https://i.ibb.co/5XK1RhWz/messi84.png",
+  "bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
+  "haaland 84": "https://i.ibb.co/yBS6Z4s0/haaland84.png",
+  "harry kane 84": "https://i.ibb.co/mF5fFLHR/harrykane.png",
+  "mbappé 84": "https://i.ibb.co/m5PjypFT/mbappe84.png",
+  "neymar jr 84": "https://i.ibb.co/ZpdBqzxF/neymar84.png",
+  "nuno mendes 84": "https://i.ibb.co/67yHcGp3/nunomendes84.png",
+  "vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
   
   // 80 - 83 OVERALL
-  
   "vinicius júnior 83": "https://i.ibb.co/KMnsD2j/vini83.png",
   "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
   "michael lise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
   "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
   "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
   "diogo costa 83": "https://i.ibb.co/gLkfnyvc/diogocosta83.png",
-  "khvicha kvaratskhelia 82 82": "https://i.ibb.co/1GqXhm5N/kvara82.png",
+  "khvicha kvaratskhelia 82": "https://i.ibb.co/1GqXhm5N/kvara82.png",
   "vitinha 82": "https://i.ibb.co/Kj7B9f57/vitinha82.png",
   "joão neves 81": "https://i.ibb.co/mCvgB2hj/joaoneves81.png",
   "rafael leão 81": "https://i.ibb.co/CKjMSjtJ/rafaleao81.png",
@@ -174,6 +173,9 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
+// -------------------------------------------------------------
+// ROTA 1: GERAR IMAGEM DO CAMPO (Sua rota antiga)
+// -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -181,7 +183,6 @@ app.get('/gerar-campo', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // 1. CARREGAR IMAGEM DE FUNDO
     try {
       const bgImg = await loadImage(URL_FUNDO);
       ctx.drawImage(bgImg, 0, 0, width, height);
@@ -194,10 +195,6 @@ app.get('/gerar-campo', async (req, res) => {
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // Coordenadas das Posições:
-    // - GR recuado para y: 710
-    // - LE e LD recuados ligeiramente para y: 560
-    // - DCs mantidos em y: 535
     const POSICOES = {
       gr:  { x: 400, y: 710 },
       le:  { x: 105, y: 560 },
@@ -238,6 +235,48 @@ app.get('/gerar-campo', async (req, res) => {
     console.error(error);
     res.status(500).send('Erro ao gerar imagem.');
   }
+});
+
+// -------------------------------------------------------------
+// ROTA 2: NOVA ROTA PARA BUSCAR JOGADORES (Otimização do -contratar)
+// -------------------------------------------------------------
+app.get('/buscar-jogador', (req, res) => {
+  const busca = req.query.q ? req.query.q.toLowerCase().trim() : '';
+
+  if (!busca) {
+    return res.json({ sucesso: false, erro: "busca_vazia" });
+  }
+
+  // Procura a chave no BANCO_DE_CARTAS que contém o termo pesquisado
+  const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => nome.includes(busca));
+
+  if (!chaveEncontrada) {
+    return res.json({ sucesso: false, erro: "nao_encontrado" });
+  }
+
+  // Extrai o overall dos últimos 2 dígitos do nome (Ex: "pelé 91" -> 91)
+  const partes = chaveEncontrada.split(' ');
+  const overall = parseInt(partes[partes.length - 1]) || 60;
+  const imagem = BANCO_DE_CARTAS[chaveEncontrada];
+
+  // Cálculo do Preço por Tabela
+  let preco = 1000;
+  if (overall >= 99) preco = 30000;
+  else if (overall >= 95) preco = 20000;
+  else if (overall >= 90) preco = 15000;
+  else if (overall >= 85) preco = 10000;
+  else if (overall >= 80) preco = 5000;
+  else if (overall >= 75) preco = 3500;
+  else if (overall >= 70) preco = 2500;
+  else if (overall >= 65) preco = 1500;
+
+  res.json({
+    sucesso: true,
+    nome: chaveEncontrada,
+    overall: overall,
+    imagem: imagem,
+    preco: preco
+  });
 });
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
