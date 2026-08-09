@@ -420,13 +420,13 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (GERAÇÃO AUTOMÁTICA)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT HORIZONTAL COMPACTO)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
-    const faixa = req.query.faixa; // Ex: 9094, 8589, 8084...
+    const faixa = req.query.faixa;
     const chaves = Object.keys(BANCO_DE_CARTAS);
 
     let min = 0;
@@ -442,16 +442,21 @@ app.get('/listar-mercado', (req, res) => {
     else if (faixa === '6569') { min = 65; max = 69; }
     else if (faixa === '6064') { min = 60; max = 64; }
 
-    // Filtra e ordena do maior overall para o menor
+    // 1. Extrai, remove o overall do nome e limpa
     const filtrados = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
-      // Capitaliza cada palavra do nome
-      const nomeFormatado = chave.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      return { chave, nomeFormatado, overall };
+      
+      // Pega só o nome sem o número do final
+      const nomeSemOverall = partes.slice(0, -1).join(' ');
+      const nomeFormatado = nomeSemOverall
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+
+      return { nome: nomeFormatado, overall };
     })
-    .filter(j => j.overall >= min && j.overall <= max)
-    .sort((a, b) => b.overall - a.overall);
+    .filter(j => j.overall >= min && j.overall <= max);
 
     if (filtrados.length === 0) {
       return res.status(200).json({
@@ -459,9 +464,24 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
-    // Formata o texto final no estilo do seu Discord
-    const listaFormatada = filtrados
-      .map(j => `-# ${j.overall} | **${j.nomeFormatado}**`)
+    // 2. Agrupa os nomes por Overall
+    const agrupados = {};
+    filtrados.forEach(j => {
+      if (!agrupados[j.overall]) {
+        agrupados[j.overall] = [];
+      }
+      agrupados[j.overall].push(j.nome);
+    });
+
+    // 3. Monta o layout limpo e ultra compacto
+    // Ordena do maior over para o menor over
+    const oversOrdenados = Object.keys(agrupados).map(Number).sort((a, b) => b - a);
+
+    const listaFormatada = oversOrdenados
+      .map(over => {
+        const nomes = agrupados[over].join(', ');
+        return `\`${over}\` • ${nomes}`;
+      })
       .join('\n');
 
     return res.status(200).json({
