@@ -8,7 +8,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
-const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png"; // Fundo roxo temático
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
@@ -488,118 +487,6 @@ app.get('/listar-mercado', (req, res) => {
   } catch (error) {
     console.error("Erro no /listar-mercado:", error);
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
-  }
-});
-
-// -------------------------------------------------------------
-// ROTA 5: ABRIR PACK (CORRIGIDO)
-// -------------------------------------------------------------
-app.get('/abrir-pack', async (req, res) => {
-  try {
-    const chaves = Object.keys(BANCO_DE_CARTAS);
-    if (chaves.length === 0) {
-      return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
-    }
-
-    const jogadoresComPeso = chaves.map(chave => {
-      const partes = chave.split(' ');
-      const overall = parseInt(partes[partes.length - 1]) || 60;
-
-      let peso = 100;
-      if (overall >= 90) peso = 1;
-      else if (overall >= 88) peso = 3;
-      else if (overall >= 85) peso = 8;
-      else if (overall >= 80) peso = 25;
-      else if (overall >= 75) peso = 60;
-
-      return { chave, overall, peso };
-    });
-
-    const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
-
-    const sortearUm = () => {
-      let num = Math.random() * pesoTotal;
-      for (const j of jogadoresComPeso) {
-        if (num < j.peso) return j;
-        num -= j.peso;
-      }
-      return jogadoresComPeso[0];
-    };
-
-    const carta1 = sortearUm();
-    const carta2 = sortearUm();
-    const carta3 = sortearUm();
-
-    // Se o BDFD solicitar ?tipo=dados, devolve os dados em JSON leve
-    if (req.query.tipo === 'dados') {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      return res.status(200).json({
-        sucesso: true,
-        j1: carta1.chave,
-        over1: carta1.overall,
-        j2: carta2.chave,
-        over2: carta2.overall,
-        j3: carta3.chave,
-        over3: carta3.overall
-      });
-    }
-
-    // Caso contrário, gera a Imagem PNG com 3 cartas no canvas
-    const width = 1000;
-    const height = 500;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    try {
-      const bgImg = await loadImage(URL_FUNDO_PACK);
-      ctx.drawImage(bgImg, 0, 0, width, height);
-    } catch (e) {
-      const gradiente = ctx.createLinearGradient(0, 0, width, height);
-      gradiente.addColorStop(0, '#2e1462');
-      gradiente.addColorStop(1, '#110729');
-      ctx.fillStyle = gradiente;
-      ctx.fillRect(0, 0, width, height);
-    }
-
-    const cardW = 210;
-    const cardH = 300;
-    const posY = (height - cardH) / 2 + 20;
-    const posicoesX = [180, 395, 610];
-
-    // Pega as cartas recebidas pela query ou usa as sorteadas
-    const cartasParaDesenhar = [
-      req.query.c1 || carta1.chave,
-      req.query.c2 || carta2.chave,
-      req.query.c3 || carta3.chave
-    ];
-
-    for (let i = 0; i < 3; i++) {
-      const entradaRaw = cartasParaDesenhar[i];
-      const entradaLimpa = removerAcentos(entradaRaw); // Limpa acentos e converte para minúsculo
-
-      // Encontra a chave exata no BANCO_DE_CARTAS mesmo se vier com acentos/maiúsculas
-      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
-        k => removerAcentos(k) === entradaLimpa
-      ) || BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null;
-
-      const urlCarta = BANCO_DE_CARTAS[chaveEncontrada];
-
-      if (urlCarta) {
-        try {
-          const imgCarta = await loadImage(urlCarta);
-          ctx.drawImage(imgCarta, posicoesX[i], posY, cardW, cardH);
-        } catch (err) {
-          console.error(`Erro ao carregar carta ${entradaRaw}:`, err.message);
-        }
-      }
-    }
-
-    res.setHeader('Content-Type', 'image/png');
-    canvas.createPNGStream().pipe(res);
-
-  } catch (error) {
-    console.error("Erro no /abrir-pack:", error);
-    return res.status(500).send('Erro ao gerar pack.');
   }
 });
 
