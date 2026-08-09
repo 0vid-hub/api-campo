@@ -603,4 +603,86 @@ app.get('/abrir-pack', async (req, res) => {
   }
 });
 
+
+// -------------------------------------------------------------
+// ROTA 6: GERAR IMAGEM DO ELENCO (1 A 20 JOGADORES)
+// -------------------------------------------------------------
+app.get('/gerar-elenco', async (req, res) => {
+  try {
+    const rawJogadores = req.query.jogadores || "";
+    const lista = rawJogadores ? rawJogadores.split(',').filter(j => j.trim() !== '') : [];
+
+    // Canvas na proporção 16:9 (1280x720)
+    const width = 1280;
+    const height = 720;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Fundo elegante para o elenco
+    try {
+      const bgImg = await loadImage(URL_FUNDO_PACK);
+      ctx.drawImage(bgImg, 0, 0, width, height);
+    } catch (e) {
+      const gradiente = ctx.createLinearGradient(0, 0, width, height);
+      gradiente.addColorStop(0, '#0f172a');
+      gradiente.addColorStop(1, '#1e293b');
+      ctx.fillStyle = gradiente;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // Título no topo da imagem
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px Sans-Serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`MEU ELENCO (${lista.length}/20)`, width / 2, 50);
+
+    // Configuração da grade de cartas (até 20 cartas: 2 linhas de 10 ou 4 linhas de 5)
+    const maxCols = 5;
+    const cardW = 180;
+    const cardH = 250;
+    const gapX = 30;
+    const gapY = 20;
+    const startY = 80;
+
+    for (let i = 0; i < Math.min(lista.length, 20); i++) {
+      const itemRaw = lista[i];
+      const itemLimpo = removerAcentos(itemRaw);
+
+      // Busca no BANCO_DE_CARTAS
+      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
+        k => removerAcentos(k) === itemLimpo || removerAcentos(k).includes(itemLimpo)
+      );
+
+      const urlCarta = chaveEncontrada ? BANCO_DE_CARTAS[chaveEncontrada] : "https://i.ibb.co/sd3x55sR/desconhecido.png";
+
+      // Calcula posição na grade
+      const row = Math.floor(i / maxCols);
+      const col = i % maxCols;
+      
+      // Centralização dinâmica por linha
+      const itensNaLinha = Math.min(lista.length - row * maxCols, maxCols);
+      const totalWidthRow = (itensNaLinha * cardW) + ((itensNaLinha - 1) * gapX);
+      const startX = (width - totalWidthRow) / 2;
+
+      const posX = startX + col * (cardW + gapX);
+      const posY = startY + row * (cardH + gapY);
+
+      try {
+        const imgCarta = await loadImage(urlCarta);
+        ctx.drawImage(imgCarta, posX, posY, cardW, cardH);
+      } catch (err) {
+        console.error(`Erro ao carregar carta no elenco: ${itemRaw}`, err.message);
+      }
+    }
+
+    res.setHeader('Content-Type', 'image/png');
+    canvas.createPNGStream().pipe(res);
+
+  } catch (error) {
+    console.error("Erro ao gerar imagem do elenco:", error);
+    res.status(500).send('Erro ao gerar imagem do elenco.');
+  }
+});
+
+
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
