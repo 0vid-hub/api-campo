@@ -211,30 +211,30 @@ app.get('/gerar-campo', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
+    // Se falhar ao carregar imagem de fundo, mantém o fundo transparente
     try {
       const bgImg = await loadImage(URL_FUNDO);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (bgErr) {
-      console.error("Erro ao carregar fundo:", bgErr.message);
-      ctx.fillStyle = '#12141d';
-      ctx.fillRect(0, 0, width, height);
+      console.error("Fundo do campo não carregado, mantendo transparente:", bgErr.message);
     }
 
     const cardWidth = 145;
     const cardHeight = 195;
 
+    // Coordenadas Y reajustadas para subir todos os jogadores proporcionalmente
     const POSICOES = {
-      gr:  { x: 400, y: 710 },
-      le:  { x: 105, y: 560 },
-      dc1: { x: 300, y: 535 },
-      dc2: { x: 500, y: 535 },
-      ld:  { x: 695, y: 560 },
-      mc:  { x: 400, y: 375 },
-      mo1: { x: 235, y: 235 },
-      mo2: { x: 565, y: 235 },
-      ee:  { x: 105, y: 100 },
-      pl:  { x: 400, y: 90 },
-      ed:  { x: 695, y: 100 }
+      gr:  { x: 400, y: 680 },
+      le:  { x: 105, y: 510 },
+      dc1: { x: 300, y: 485 },
+      dc2: { x: 500, y: 485 },
+      ld:  { x: 695, y: 510 },
+      mc:  { x: 400, y: 325 },
+      mo1: { x: 235, y: 195 },
+      mo2: { x: 565, y: 195 },
+      ee:  { x: 105, y: 75 },
+      pl:  { x: 400, y: 65 },
+      ed:  { x: 695, y: 75 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -548,20 +548,17 @@ app.get('/abrir-pack', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
+    // Tenta aplicar fundo; se não tiver, permanece transparente
     try {
       const bgImg = await loadImage(URL_FUNDO_PACK);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (e) {
-      const gradiente = ctx.createLinearGradient(0, 0, width, height);
-      gradiente.addColorStop(0, '#2e1462');
-      gradiente.addColorStop(1, '#110729');
-      ctx.fillStyle = gradiente;
-      ctx.fillRect(0, 0, width, height);
+      // Deixado em branco de propósito para transparência caso a imagem falhe
     }
 
     const cardW = 210;
     const cardH = 300;
-    const posY = (height - cardH) / 2 + 20;
+    const posY = (height - cardH) / 2;
     const posicoesX = [180, 395, 610];
 
     const cartasParaDesenhar = [
@@ -600,7 +597,7 @@ app.get('/abrir-pack', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO ELENCO (TOTALMENTE CENTRALIZADO E ALINHADO)
+// ROTA 6: GERAR IMAGEM DO ELENCO (FUNDO TRANSPARENTE, ALINHADO E CENTRALIZADO)
 // -------------------------------------------------------------
 app.get('/gerar-elenco', async (req, res) => {
   try {
@@ -610,36 +607,24 @@ app.get('/gerar-elenco', async (req, res) => {
       rawJogadores = decodeURIComponent(rawJogadores);
     } catch (e) {}
 
-    // Limpa a lista eliminando espaços em branco e duplicados
     const listaBruta = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
-    const listaUnica = [...new Set(listaBruta)].slice(0, 20); // Limite de 20 cartas
+    const listaUnica = [...new Set(listaBruta)].slice(0, 20);
 
     const width = 1280;
     const height = 720;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Fundo Gradiente Escuro Moderno
-    const gradiente = ctx.createLinearGradient(0, 0, width, height);
-    gradiente.addColorStop(0, '#0a0f1d');
-    gradiente.addColorStop(1, '#1a233a');
-    ctx.fillStyle = gradiente;
-    ctx.fillRect(0, 0, width, height);
-
-    // Título Superior
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px Sans-Serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`ELENCO ATUAL (${listaUnica.length}/20)`, width / 2, 50);
+    // Nota: O fundo gradiente foi removido para deixar o fundo 100% TRANSPARENTE
 
     // Configurações do Grid
-    const maxCols = 5; // 5 cartas por linha
+    const maxCols = 5;
     const cardW = 150;
     const cardH = 210;
     const gapX = 30;
     const gapY = 20;
 
-    // Carrega todas as imagens primeiro
+    // Carrega todas as imagens
     const promessasCartas = listaUnica.map(async (itemRaw) => {
       const itemLimpo = removerAcentos(itemRaw);
       
@@ -659,24 +644,23 @@ app.get('/gerar-elenco', async (req, res) => {
 
     const imagensCarregadas = await Promise.all(promessasCartas);
 
-    // Separa as imagens em linhas de no máximo 5 cartas
+    // Separa as imagens em linhas
     const linhas = [];
     for (let i = 0; i < imagensCarregadas.length; i += maxCols) {
       linhas.push(imagensCarregadas.slice(i, i + maxCols));
     }
 
-    // Cálculo para centralizar o bloco inteiro VERTICALMENTE
+    // Centralização Vertical
     const totalLinhas = linhas.length || 1;
     const totalGridHeight = (totalLinhas * cardH) + ((totalLinhas - 1) * gapY);
-    const startYVertical = 80 + ((height - 80 - totalGridHeight) / 2);
+    const startYVertical = (height - totalGridHeight) / 2;
 
-    // Desenha cada linha CENTRALIZADA HORIZONTALMENTE
+    // Desenha cada linha centralizada Horizontalmente
     linhas.forEach((linhaImg, rowIndex) => {
       const cartasNaLinha = linhaImg.length;
       
-      // Largura exata desta linha específica
       const rowWidth = (cartasNaLinha * cardW) + ((cartasNaLinha - 1) * gapX);
-      const startXRow = (width - rowWidth) / 2; // Ponto X para centralizar a linha
+      const startXRow = (width - rowWidth) / 2;
       const posY = startYVertical + rowIndex * (cardH + gapY);
 
       linhaImg.forEach((imgCarta, colIndex) => {
