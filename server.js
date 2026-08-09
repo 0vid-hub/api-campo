@@ -1,8 +1,9 @@
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
+const axios = require('axios'); // Necessário para editar as mensagens no Discord via Webhook
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.process.env.PORT || 3000;
 
 // Garante o parse de JSON e habilita cabeçalhos para o BDFD
 app.use(express.json());
@@ -270,7 +271,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (Totalmente protegida contra erros JSON)
+// ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -306,7 +307,7 @@ app.get('/buscar-jogador', (req, res) => {
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const imagem = BANCO_DE_CARTAS[chaveEncontrada];
 
-let preco = 1000;
+    let preco = 1000;
     if (overall === 99) preco = 100000;
     else if (overall === 98) preco = 80000;
     else if (overall === 97) preco = 65000;
@@ -367,7 +368,7 @@ let preco = 1000;
 });
 
 // -------------------------------------------------------------
-// ROTA 3: OBTER JOGADOR ALEATÓRIO (COM PESOS DE RARIDADE)
+// ROTA 3: OBTER JOGADOR ALEATÓRIO
 // -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -378,26 +379,22 @@ app.get('/obter-aleatorio', (req, res) => {
       return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
     }
 
-    // 1. Calcula o peso/raridade de cada jogador baseado no Overall
     const jogadoresComPeso = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      let peso = 100; // Padrão para <75
-
-      if (overall >= 90) peso = 1;       // Impossível/Ultra Raro (~0.5% de chance)
-      else if (overall >= 88) peso = 3;  // Muito Raro
-      else if (overall >= 85) peso = 8;  // Raro
-      else if (overall >= 80) peso = 25; // Incomum
-      else if (overall >= 75) peso = 60; // Comum
+      let peso = 100;
+      if (overall >= 90) peso = 1;
+      else if (overall >= 88) peso = 3;
+      else if (overall >= 85) peso = 8;
+      else if (overall >= 80) peso = 25;
+      else if (overall >= 75) peso = 60;
 
       return { chave, overall, peso };
     });
 
-    // 2. Soma o peso total do banco
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
 
-    // 3. Sorteia um número entre 0 e o peso total
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -420,6 +417,99 @@ app.get('/obter-aleatorio', (req, res) => {
   } catch (error) {
     console.error("Erro interno no /obter-aleatorio:", error);
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+  }
+});
+
+// -------------------------------------------------------------
+// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (NOVA ROTA)
+// -------------------------------------------------------------
+app.get('/simular-partida', async (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  const { webhookUrl, timeCasa, timeFora, gerCasa, gerFora } = req.query;
+
+  if (!webhookUrl || !timeCasa || !timeFora) {
+    return res.status(400).json({ sucesso: false, erro: "parametros_ausentes" });
+  }
+
+  // Responde imediatamente ao BDFD para evitar timeout HTTP
+  res.status(200).json({ sucesso: true, mensagem: "Partida iniciada no servidor!" });
+
+  try {
+    // 1. Envia a mensagem inicial do jogo (0')
+    const embedInicial = {
+      title: "⚽ PARTIDA EM ANDAMENTO",
+      color: 0x1d74f5,
+      description: `🏟️ **${timeCasa}** (GER ${gerCasa || 60}) vs **${timeFora}** (GER ${gerFora || 60})\n\n⏱️ **0'** — O juiz apita o início do jogo!`,
+      fields: [{ name: "Placar", value: `**${timeCasa} 0 x 0 ${timeFora}**` }]
+    };
+
+    const resWebhook = await axios.post(`${webhookUrl}?wait=true`, { embeds: [embedInicial] });
+    const messageId = resWebhook.data.id;
+
+    let minuto = 0;
+    let golsCasa = 0;
+    let golsFora = 0;
+    let lances = [];
+
+    // 2. Loop a cada 8 segundos
+    const interval = setInterval(async () => {
+      minuto += 10;
+
+      const gC = Number(gerCasa) || 60;
+      const gF = Number(gerFora) || 60;
+
+      // Cálculo probabilístico baseado no Overall
+      if ((Math.random() * 100) < (15 + (gC - gF))) {
+        golsCasa++;
+        lances.push(`⚽ \`${minuto}'\` Gol do **${timeCasa}**!`);
+      }
+      if ((Math.random() * 100) < (15 + (gF - gC))) {
+        golsFora++;
+        lances.push(`⚽ \`${minuto}'\` Gol do **${timeFora}**!`);
+      }
+
+      const textoLances = lances.length > 0 ? lances.slice(-4).join('\n') : "Jogo disputado no meio de campo...";
+
+      if (minuto < 90) {
+        // Atualização dos minutos do jogo
+        const embedProgresso = {
+          title: "⚽ PARTIDA EM ANDAMENTO",
+          color: 0x1d74f5,
+          description: `🏟️ **${timeCasa}** vs **${timeFora}**\n\n⏱️ **${minuto}'** Minutos de jogo!`,
+          fields: [
+            { name: "Placar Atual", value: `**${timeCasa} ${golsCasa} x ${golsFora} ${timeFora}**` },
+            { name: "🎙️ Últimos Lances", value: textoLances }
+          ]
+        };
+
+        await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedProgresso] });
+
+      } else {
+        // Fim de jogo aos 90'
+        clearInterval(interval);
+
+        let resultadoTexto = "🤝 **Empate!**";
+        if (golsCasa > golsFora) resultadoTexto = `🏆 **Vitória do ${timeCasa}!**`;
+        if (golsFora > golsCasa) resultadoTexto = `🏆 **Vitória do ${timeFora}!**`;
+
+        const embedFinal = {
+          title: "🏁 FIM DE JOGO!",
+          color: 0x2ecc71,
+          description: `**${timeCasa} ${golsCasa} x ${golsFora} ${timeFora}**\n\n${resultadoTexto}`,
+          fields: [
+            { name: "🎙️ Lances do Jogo", value: lances.join('\n') || "Nenhum gol marcado durante a partida." }
+          ],
+          footer: { text: "ES League — Partida Finalizada" }
+        };
+
+        await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedFinal] });
+      }
+
+    }, 8000);
+
+  } catch (err) {
+    console.error("Erro na simulação do webhook:", err.message);
   }
 });
 
