@@ -203,6 +203,7 @@ function removerAcentos(texto) {
 function limparNomeJogador(nomeBruto) {
   if (!nomeBruto || nomeBruto === 'vazio') return null;
   let nomeSemOverall = nomeBruto.replace(/\s+\d+$/, '').trim();
+  if (!nomeSemOverall) return null;
   return nomeSemOverall.charAt(0).toUpperCase() + nomeSemOverall.slice(1);
 }
 
@@ -441,10 +442,10 @@ async function executarSimulacao(params) {
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const montarElencoGol = (prefixo) => {
-    const pl = limparNomeJogador(params[`${prefixo}_pl`] || params[`pl${prefixo.toUpperCase()}`]);
-    const ee = limparNomeJogador(params[`${prefixo}_ee`] || params[`ee${prefixo.toUpperCase()}`]);
-    const ed = limparNomeJogador(params[`${prefixo}_ed`] || params[`ed${prefixo.toUpperCase()}`]);
-    const mo = limparNomeJogador(params[`${prefixo}_mo1`] || params[`mo${prefixo.toUpperCase()}`]);
+    const pl = limparNomeJogador(params[`${prefixo}_pl`]);
+    const ee = limparNomeJogador(params[`${prefixo}_ee`]);
+    const ed = limparNomeJogador(params[`${prefixo}_ed`]);
+    const mo = limparNomeJogador(params[`${prefixo}_mo1`]);
 
     let lista = [];
     if (pl) lista.push(pl, pl, pl);
@@ -474,8 +475,10 @@ async function executarSimulacao(params) {
       fields: [{ name: "Placar", value: `**${timeCasa} 0 x 0 ${timeFora}**` }]
     };
 
+    console.log(`[SIMULAÇÃO] Enviando mensagem inicial para o webhook: ${webhookUrl}`);
     const resWebhook = await axios.post(`${webhookUrl}?wait=true`, { embeds: [embedInicial] });
     const messageId = resWebhook.data.id;
+    console.log(`[SIMULAÇÃO] Mensagem enviada com sucesso! ID: ${messageId}`);
 
     let golsCasa = 0;
     let golsFora = 0;
