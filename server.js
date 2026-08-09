@@ -492,7 +492,7 @@ app.get('/listar-mercado', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 5: ABRIR PACK (CORRIGIDO PARA ENVIO DIRETO EM PNG)
+// ROTA 5: ABRIR PACK (CORRIGIDO)
 // -------------------------------------------------------------
 app.get('/abrir-pack', async (req, res) => {
   try {
@@ -566,6 +566,7 @@ app.get('/abrir-pack', async (req, res) => {
     const posY = (height - cardH) / 2 + 20;
     const posicoesX = [180, 395, 610];
 
+    // Pega as cartas recebidas pela query ou usa as sorteadas
     const cartasParaDesenhar = [
       req.query.c1 || carta1.chave,
       req.query.c2 || carta2.chave,
@@ -573,15 +574,22 @@ app.get('/abrir-pack', async (req, res) => {
     ];
 
     for (let i = 0; i < 3; i++) {
-      const nomeCarta = cartasParaDesenhar[i];
-      const urlCarta = BANCO_DE_CARTAS[nomeCarta];
+      const entradaRaw = cartasParaDesenhar[i];
+      const entradaLimpa = removerAcentos(entradaRaw); // Limpa acentos e converte para minúsculo
+
+      // Encontra a chave exata no BANCO_DE_CARTAS mesmo se vier com acentos/maiúsculas
+      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
+        k => removerAcentos(k) === entradaLimpa
+      ) || BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null;
+
+      const urlCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
       if (urlCarta) {
         try {
           const imgCarta = await loadImage(urlCarta);
           ctx.drawImage(imgCarta, posicoesX[i], posY, cardW, cardH);
         } catch (err) {
-          console.error(`Erro ao carregar carta ${nomeCarta}:`, err.message);
+          console.error(`Erro ao carregar carta ${entradaRaw}:`, err.message);
         }
       }
     }
