@@ -12,9 +12,9 @@ const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
-  "modric 94": "https://i.ibb.co/5WvWtzPq/modric94.png",
+  "luka modric 94": "https://i.ibb.co/5WvWtzPq/modric94.png",
   "ronaldo 93": "https://i.ibb.co/wN7PFP96/c-ronaldo.png",
-  "mbappe 92": "https://i.ibb.co/K3sDyFd/mbappe92.png",
+  "mbappé 92": "https://i.ibb.co/K3sDyFd/mbappe92.png",
   "courtois 90": "https://i.ibb.co/7JkNk4nW/courtois.png",
   "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
   "buffon 90": "https://i.ibb.co/KxxLnfWd/buffon.png",
