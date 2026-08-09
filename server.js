@@ -603,4 +603,36 @@ app.get('/abrir-pack', async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// ROTA 6: AUTOCOMPLETE DINÂMICO DE JOGADORES
+// -------------------------------------------------------------
+app.get('/autocomplete-jogadores', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  try {
+    const buscaLimpa = removerAcentos(req.query.q || "");
+    const chaves = Object.keys(BANCO_DE_CARTAS);
+
+    // Se o usuário ainda não digitou nada, pega todas as cartas
+    let filtrados = chaves;
+
+    if (buscaLimpa) {
+      filtrados = chaves.filter(chave => removerAcentos(chave).includes(buscaLimpa));
+    }
+
+    // O Discord aceita no máximo 25 opções no autocomplete
+    const resultados = filtrados.slice(0, 25).map(chave => {
+      return {
+        name: formatarNomeExibicao(chave), // Ex: "Cristiano Ronaldo (93)"
+        value: chave                        // Ex: "ronaldo 93"
+      };
+    });
+
+    return res.status(200).json(resultados);
+  } catch (error) {
+    console.error("Erro na rota /autocomplete-jogadores:", error);
+    return res.status(500).json([]);
+  }
+});
+
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
