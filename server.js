@@ -183,6 +183,7 @@ const BANCO_DE_CARTAS = {
   "joaquin lavega 60": "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png",
   "caio césar 60": "https://i.ibb.co/67n1Lhkb/caiocesar60.png",
   "caça rato 60": "https://i.ibb.co/hRNn6wPv/ca-a-rato60.png",
+  "andré pimenta": "https://i.ibb.co/gZFf9C7G/andrepimenta60.png",
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
