@@ -420,7 +420,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT TABELA EM COLUNAS)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT PAINEL MINIMALISTA)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -463,24 +463,28 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
-    // Monta uma lista em 2 colunas usando separador elegante
+    // Monta a lista formatada e alinhada dentro de um bloco de código
     let linhas = [];
     for (let i = 0; i < filtrados.length; i += 2) {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      const item1 = `\`${j1.overall}\` **${j1.nome}**`;
+      // Formata com tamanho fixo (ex: "89 Marcelo        ")
+      const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
       
       if (j2) {
-        const item2 = `\`${j2.overall}\` **${j2.nome}**`;
-        linhas.push(`${item1}  •  ${item2}`);
+        const col2 = `[${j2.overall}] ${j2.nome}`;
+        linhas.push(`${col1}  ${col2}`);
       } else {
-        linhas.push(item1);
+        linhas.push(col1);
       }
     }
 
+    // Envolve toda a resposta num bloco codeblock clean
+    const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
+
     return res.status(200).json({
-      texto: linhas.join('\n')
+      texto: resultadoFinal
     });
 
   } catch (error) {
