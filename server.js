@@ -8,6 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
+const URL_FUNDO_PACK = "https://i.ibb.co/LhbvNn61/pack-bg.png"; // Fundo roxo temático
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
@@ -420,7 +421,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT PAINEL MINIMALISTA)
+// ROTA 4: LISTAR JOGADORES NO MERCADO
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -463,13 +464,11 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
-    // Monta a lista formatada e alinhada dentro de um bloco de código
     let linhas = [];
     for (let i = 0; i < filtrados.length; i += 2) {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Formata com tamanho fixo (ex: "89 Marcelo        ")
       const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
       
       if (j2) {
@@ -480,7 +479,6 @@ app.get('/listar-mercado', (req, res) => {
       }
     }
 
-    // Envolve toda a resposta num bloco codeblock clean
     const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
 
     return res.status(200).json({
@@ -493,11 +491,8 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// URL de Fundo do Pack (Pode trocar por outro fundo no formato 16:9 se quiser)
-const URL_FUNDO_PACK = "https://i.ibb.co/LhbvNn61/pack-bg.png"; // Fundo roxo temático
-
 // -------------------------------------------------------------
-// ROTA 5: ABRIR PACK (3 JOGADORES NA MESMA IMAGEM)
+// ROTA 5: ABRIR PACK (CORRIGIDO PARA ENVIO DIRETO EM PNG)
 // -------------------------------------------------------------
 app.get('/abrir-pack', async (req, res) => {
   try {
@@ -506,7 +501,6 @@ app.get('/abrir-pack', async (req, res) => {
       return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
     }
 
-    // Mapeia os pesos por Overall para o sorteio
     const jogadoresComPeso = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
@@ -523,7 +517,6 @@ app.get('/abrir-pack', async (req, res) => {
 
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
 
-    // Função interna para sortear 1 jogador baseado em peso
     const sortearUm = () => {
       let num = Math.random() * pesoTotal;
       for (const j of jogadoresComPeso) {
@@ -533,25 +526,34 @@ app.get('/abrir-pack', async (req, res) => {
       return jogadoresComPeso[0];
     };
 
-    // Sortear 3 cartas aleatórias
     const carta1 = sortearUm();
     const carta2 = sortearUm();
     const carta3 = sortearUm();
 
-    const cartasSorteadas = [carta1, carta2, carta3];
+    // Se o BDFD solicitar ?tipo=dados, devolve os dados em JSON leve
+    if (req.query.tipo === 'dados') {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      return res.status(200).json({
+        sucesso: true,
+        j1: carta1.chave,
+        over1: carta1.overall,
+        j2: carta2.chave,
+        over2: carta2.overall,
+        j3: carta3.chave,
+        over3: carta3.overall
+      });
+    }
 
-    // Criar Canvas 1000x500 (Proporção bonita estilo EA FC / FutVerse)
+    // Caso contrário, gera a Imagem PNG com 3 cartas no canvas
     const width = 1000;
     const height = 500;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Desenhar Fundo
     try {
       const bgImg = await loadImage(URL_FUNDO_PACK);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (e) {
-      // Fundo fallback degradê caso a imagem falhe
       const gradiente = ctx.createLinearGradient(0, 0, width, height);
       gradiente.addColorStop(0, '#2e1462');
       gradiente.addColorStop(1, '#110729');
@@ -559,46 +561,38 @@ app.get('/abrir-pack', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Configuração do tamanho das 3 cartas
     const cardW = 210;
     const cardH = 300;
-    const posY = (height - cardH) / 2 + 20; // Centralizado na altura
-
-    // Posições X para centralizar as 3 cartas lado a lado
+    const posY = (height - cardH) / 2 + 20;
     const posicoesX = [180, 395, 610];
 
-    // Renderiza as 3 cartas no canvas
-    for (let i = 0; i < 3; i++) {
-      const carta = cartasSorteadas[i];
-      const urlCarta = BANCO_DE_CARTAS[carta.chave];
+    const cartasParaDesenhar = [
+      req.query.c1 || carta1.chave,
+      req.query.c2 || carta2.chave,
+      req.query.c3 || carta3.chave
+    ];
 
-      try {
-        const imgCarta = await loadImage(urlCarta);
-        ctx.drawImage(imgCarta, posicoesX[i], posY, cardW, cardH);
-      } catch (err) {
-        console.error(`Erro ao carregar carta ${carta.chave}:`, err.message);
+    for (let i = 0; i < 3; i++) {
+      const nomeCarta = cartasParaDesenhar[i];
+      const urlCarta = BANCO_DE_CARTAS[nomeCarta];
+
+      if (urlCarta) {
+        try {
+          const imgCarta = await loadImage(urlCarta);
+          ctx.drawImage(imgCarta, posicoesX[i], posY, cardW, cardH);
+        } catch (err) {
+          console.error(`Erro ao carregar carta ${nomeCarta}:`, err.message);
+        }
       }
     }
 
-    // Converter imagem para Base64/Buffer para enviar na resposta JSON
-    const bufferImagem = canvas.toBuffer('image/png');
-    const imagemBase64 = `data:image/png;base64,${bufferImagem.toString('base64')}`;
-
-    return res.status(200).json({
-      sucesso: true,
-      jogadores: [
-        { nome: carta1.chave, overall: carta1.overall },
-        { nome: carta2.chave, overall: carta2.overall },
-        { nome: carta3.chave, overall: carta3.overall }
-      ],
-      imagem: imagemBase64
-    });
+    res.setHeader('Content-Type', 'image/png');
+    canvas.createPNGStream().pipe(res);
 
   } catch (error) {
     console.error("Erro no /abrir-pack:", error);
-    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+    return res.status(500).send('Erro ao gerar pack.');
   }
 });
-
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
