@@ -420,7 +420,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT HORIZONTAL COMPACTO)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT TABELA EM COLUNAS)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -442,12 +442,10 @@ app.get('/listar-mercado', (req, res) => {
     else if (faixa === '6569') { min = 65; max = 69; }
     else if (faixa === '6064') { min = 60; max = 64; }
 
-    // 1. Extrai, remove o overall do nome e limpa
     const filtrados = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
       
-      // Pega só o nome sem o número do final
       const nomeSemOverall = partes.slice(0, -1).join(' ');
       const nomeFormatado = nomeSemOverall
         .split(' ')
@@ -456,7 +454,8 @@ app.get('/listar-mercado', (req, res) => {
 
       return { nome: nomeFormatado, overall };
     })
-    .filter(j => j.overall >= min && j.overall <= max);
+    .filter(j => j.overall >= min && j.overall <= max)
+    .sort((a, b) => b.overall - a.overall);
 
     if (filtrados.length === 0) {
       return res.status(200).json({
@@ -464,28 +463,24 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
-    // 2. Agrupa os nomes por Overall
-    const agrupados = {};
-    filtrados.forEach(j => {
-      if (!agrupados[j.overall]) {
-        agrupados[j.overall] = [];
+    // Monta uma lista em 2 colunas usando separador elegante
+    let linhas = [];
+    for (let i = 0; i < filtrados.length; i += 2) {
+      const j1 = filtrados[i];
+      const j2 = filtrados[i + 1];
+
+      const item1 = `\`${j1.overall}\` **${j1.nome}**`;
+      
+      if (j2) {
+        const item2 = `\`${j2.overall}\` **${j2.nome}**`;
+        linhas.push(`${item1}  •  ${item2}`);
+      } else {
+        linhas.push(item1);
       }
-      agrupados[j.overall].push(j.nome);
-    });
-
-    // 3. Monta o layout limpo e ultra compacto
-    // Ordena do maior over para o menor over
-    const oversOrdenados = Object.keys(agrupados).map(Number).sort((a, b) => b - a);
-
-    const listaFormatada = oversOrdenados
-      .map(over => {
-        const nomes = agrupados[over].join(', ');
-        return `\`${over}\` • ${nomes}`;
-      })
-      .join('\n');
+    }
 
     return res.status(200).json({
-      texto: listaFormatada
+      texto: linhas.join('\n')
     });
 
   } catch (error) {
