@@ -420,7 +420,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT PAINEL MINIMALISTA)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (OPÇÃO A - FONTE LEVE 2 COLUNAS)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -463,28 +463,23 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
-    // Monta a lista formatada e alinhada dentro de um bloco de código
     let linhas = [];
     for (let i = 0; i < filtrados.length; i += 2) {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Formata com tamanho fixo (ex: "89 Marcelo        ")
-      const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
+      const item1 = `**${j1.overall}** ${j1.nome}`;
       
       if (j2) {
-        const col2 = `[${j2.overall}] ${j2.nome}`;
-        linhas.push(`${col1}  ${col2}`);
+        const item2 = `**${j2.overall}** ${j2.nome}`;
+        linhas.push(`-# ▫ ${item1}  •  ${item2}`);
       } else {
-        linhas.push(col1);
+        linhas.push(`-# ▫ ${item1}`);
       }
     }
 
-    // Envolve toda a resposta num bloco codeblock clean
-    const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
-
     return res.status(200).json({
-      texto: resultadoFinal
+      texto: linhas.join('\n')
     });
 
   } catch (error) {
