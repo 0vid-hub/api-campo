@@ -3,7 +3,8 @@ const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios'); // Necessário para editar as mensagens no Discord via Webhook
 
 const app = express();
-const PORT = process.process.env.PORT || 3000;
+// Corrigido: process.env.PORT (estava process.process.env.PORT)
+const PORT = process.env.PORT || 3000;
 
 // Garante o parse de JSON e habilita cabeçalhos para o BDFD
 app.use(express.json());
