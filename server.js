@@ -604,7 +604,7 @@ app.get('/abrir-pack', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 6: AUTOCOMPLETE DINÂMICO DE JOGADORES
+// ROTA 6: AUTOCOMPLETE DINÂMICO DE JOGADORES (CORRIGIDA PARA BDFD)
 // -------------------------------------------------------------
 app.get('/autocomplete-jogadores', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -613,26 +613,35 @@ app.get('/autocomplete-jogadores', (req, res) => {
     const buscaLimpa = removerAcentos(req.query.q || "");
     const chaves = Object.keys(BANCO_DE_CARTAS);
 
-    // Se o usuário ainda não digitou nada, pega todas as cartas
     let filtrados = chaves;
 
     if (buscaLimpa) {
       filtrados = chaves.filter(chave => removerAcentos(chave).includes(buscaLimpa));
     }
 
-    // O Discord aceita no máximo 25 opções no autocomplete
-    const resultados = filtrados.slice(0, 25).map(chave => {
-      return {
-        name: formatarNomeExibicao(chave), // Ex: "Cristiano Ronaldo (93)"
-        value: chave                        // Ex: "ronaldo 93"
-      };
-    });
+    // Mapeia até 25 jogadores válidos
+    const resultadosValidos = filtrados.slice(0, 25).map(chave => ({
+      name: formatarNomeExibicao(chave),
+      value: chave
+    }));
 
-    return res.status(200).json(resultados);
+    // Preenche o resto até dar 25 itens para não quebrar a chamada do BDFD
+    const resultadosFinais = [];
+    for (let i = 0; i < 25; i++) {
+      if (resultadosValidos[i]) {
+        resultadosFinais.push(resultadosValidos[i]);
+      } else {
+        resultadosFinais.push({ name: "ignore", value: "ignore" });
+      }
+    }
+
+    return res.status(200).json(resultadosFinais);
   } catch (error) {
     console.error("Erro na rota /autocomplete-jogadores:", error);
-    return res.status(500).json([]);
+    
+    // Retorna lista com 25 "ignore" em caso de erro
+    const erroArray = Array(25).fill({ name: "ignore", value: "ignore" });
+    return res.status(500).json(erroArray);
   }
 });
-
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
