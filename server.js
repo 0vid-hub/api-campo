@@ -7,8 +7,13 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// -------------------------------------------------------------
+// CONFIGURAÇÃO DE IMAGENS DE FUNDO
+// -------------------------------------------------------------
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png"; // Fundo roxo temático
+// ALTERE O LINK ABAIXO para a imagem que deseja no multisell/vendas:
+const URL_FUNDO_MULTISELL = "https://i.ibb.co/1J4MZTKw/time.png"; 
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
@@ -201,7 +206,9 @@ function removerAcentos(texto) {
     .trim();
 }
 
+// -------------------------------------------------------------
 // ROTA 1: GERAR IMAGEM DO CAMPO
+// -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -267,7 +274,9 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
 // ROTA 2: BUSCAR JOGADORES
+// -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -362,7 +371,9 @@ app.get('/buscar-jogador', (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
 // ROTA 3: OBTER JOGADOR ALEATÓRIO
+// -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -414,7 +425,9 @@ app.get('/obter-aleatorio', (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
 // ROTA 4: LISTAR JOGADORES NO MERCADO
+// -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -483,7 +496,9 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
 // ROTA 5: ABRIR PACK
+// -------------------------------------------------------------
 app.get('/abrir-pack', async (req, res) => {
   try {
     const chaves = Object.keys(BANCO_DE_CARTAS);
@@ -590,7 +605,7 @@ app.get('/abrir-pack', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO MULTISELL (CORRIGIDA)
+// ROTA 6: GERAR IMAGEM DO MULTISELL (COM BUSCA CORRIGIDA E NOVO FUNDO)
 // -------------------------------------------------------------
 app.get('/gerar-multisell', async (req, res) => {
   try {
@@ -599,6 +614,7 @@ app.get('/gerar-multisell', async (req, res) => {
       return res.status(400).send('Nenhuma carta especificada.');
     }
 
+    // Aceita separação por vírgula (ex: "fabio vieira 66,goncalo sa 69,joao ferreira 69")
     const listaCartas = cartasRaw.split(',').map(c => c.trim()).filter(Boolean);
     const total = listaCartas.length;
 
@@ -606,7 +622,7 @@ app.get('/gerar-multisell', async (req, res) => {
       return res.status(400).send('Lista de cartas vazia.');
     }
 
-    // Grid: Máximo de 5 cartas por linha
+    // Grade com no máximo 5 cartas por linha
     const cols = total <= 5 ? total : Math.min(5, total);
     const rows = Math.ceil(total / cols);
 
@@ -621,19 +637,20 @@ app.get('/gerar-multisell', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Desenha Fundo
+    // Tenta carregar o fundo específico do MULTISELL
     try {
-      const bgImg = await loadImage(URL_FUNDO_PACK);
+      const bgImg = await loadImage(URL_FUNDO_MULTISELL);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (e) {
+      // Se a imagem falhar, cria um fundo azul escuro limpo
       const gradiente = ctx.createLinearGradient(0, 0, width, height);
-      gradiente.addColorStop(0, '#1a0b2e');
-      gradiente.addColorStop(1, '#090314');
+      gradiente.addColorStop(0, '#0a1128');
+      gradiente.addColorStop(1, '#000411');
       ctx.fillStyle = gradiente;
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Renderiza cada carta usando busca por aproximação (.includes)
+    // Desenha todas as cartas recebidas
     for (let i = 0; i < total; i++) {
       const r = Math.floor(i / cols);
       const c = i % cols;
@@ -642,10 +659,10 @@ app.get('/gerar-multisell', async (req, res) => {
       const posY = paddingY + r * (cardH + paddingY);
 
       const entradaLimpa = removerAcentos(listaCartas[i]);
-      
-      // Procura a chave mais próxima (caso a string venha como "fabio vieira 66")
+
+      // Procura a carta aproximando pelo nome (impede de só pegar 1 carta)
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
-        k => removerAcentos(k) === entradaLimpa || removerAcentos(k).includes(entradaLimpa)
+        k => removerAcentos(k) === entradaLimpa || removerAcentos(k).includes(entradaLimpa) || entradaLimpa.includes(removerAcentos(k))
       );
 
       if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
