@@ -49,7 +49,7 @@ const BANCO_DE_CARTAS = {
   "gvardiol 86": "https://i.ibb.co/3mt22NRP/gvardiol86.png",
   "livakovic 86": "https://i.ibb.co/WvyKDQpK/livakovic86.png",
   "pepe 86": "https://i.ibb.co/Rp9xf308/pepe86.png",
-  
+
   // 85 OVERALL
   "unai simón 85": "https://i.ibb.co/1tP6SR0K/unaisimon85.png",
   "rodri 85": "https://i.ibb.co/XrH16CKR/rodri85.png",
@@ -78,7 +78,7 @@ const BANCO_DE_CARTAS = {
   "neymar jr 84": "https://i.ibb.co/ZpdBqzxF/neymar84.png",
   "nuno mendes 84": "https://i.ibb.co/67yHcGp3/nunomendes84.png",
   "vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
-  
+
   // 80 - 83 OVERALL
   "vinicius júnior 83": "https://i.ibb.co/KMnsD2j/vini83.png",
   "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
@@ -175,14 +175,16 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
+// Função de higienização de strings para URLs e Buscas
 function removerAcentos(texto) {
   if (!texto) return "";
   try {
     texto = decodeURIComponent(texto);
   } catch (e) {}
+
   return texto
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "") // Remove sinais diacríticos (acentos)
     .toLowerCase()
     .trim();
 }
@@ -250,16 +252,16 @@ app.get('/gerar-campo', async (req, res) => {
     canvas.createPNGStream().pipe(res);
 
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao gerar campo:", error);
     res.status(500).send('Erro ao gerar imagem.');
   }
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (Garantia de JSON Válido)
+// ROTA 2: BUSCAR JOGADORES (Totalmente protegida contra erros JSON)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
-  // Configura os cabeçalhos explicitamente para JSON
+  // Define forçadamente o header JSON
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
@@ -270,18 +272,22 @@ app.get('/buscar-jogador', (req, res) => {
       return res.status(200).json({ 
         sucesso: false, 
         erro: "busca_vazia",
-        imagem: "https://i.ibb.co/8ndDRbQt/negociar.png",
+        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
         overall: 60 
       });
     }
 
-    const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(buscaLimpa));
+    // Busca insensível a acentos tanto no termo enviado quanto nas chaves do banco
+    const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
+      const nomeLimpo = removerAcentos(nomeNoBanco);
+      return nomeLimpo.includes(buscaLimpa);
+    });
 
     if (!chaveEncontrada) {
       return res.status(200).json({ 
         sucesso: false, 
         erro: "nao_encontrado",
-        imagem: "https://i.ibb.co/8ndDRbQt/negociar.png",
+        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
         overall: 60 
       });
     }
@@ -312,7 +318,7 @@ app.get('/buscar-jogador', (req, res) => {
     return res.status(200).json({ 
       sucesso: false, 
       erro: "erro_interno",
-      imagem: "https://i.ibb.co/8ndDRbQt/negociar.png",
+      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
       overall: 60 
     });
   }
