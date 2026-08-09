@@ -167,6 +167,7 @@ const BANCO_DE_CARTAS = {
   "henrique araújo 68": "https://i.ibb.co/fYQNHLkw/henriquearaujo69r.png",
   "rodrigo pinho 67": "https://i.ibb.co/hR1Cvs0f/rodrigopinho67r.png",
   "tomas araújo 67": "https://i.ibb.co/LXTybjKP/tomasaraujo67r.png",
+  "martim martins": "https://i.ibb.co/Hp3yrG8N/martimmartins.png",
   "fábio vieira 66": "https://i.ibb.co/JFWGB85y/fabiovieira66r.png",
   "nuno tavares 65": "https://i.ibb.co/84Lqjh54/nunotacares65r.png",
   "joão mário 65": "https://i.ibb.co/6jwS6H8/joaomario65r.png",
