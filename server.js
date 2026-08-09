@@ -26,7 +26,7 @@ const BANCO_DE_CARTAS = {
   "pavard 89": "https://i.ibb.co/CpVYWS51/pavard.png",
   "varane 89": "https://i.ibb.co/gZxkBWMp/rapvarane.png",
   "thiago silva 89": "https://i.ibb.co/Wpv27xRF/thiagosilva.png",
-  "luis figo 89": "https://i.ibb.co/Vc7HpNjF/luisfigo.png",
+  "luis figo 89": "https://i.ibb.co/Vc7HpDxF/luisfigo.png",
   "ronaldo nazário 89": "https://i.ibb.co/gLqzcW1C/r9.png",
   "cafu 88": "https://i.ibb.co/wZhHw1Wq/cafu.png",
   "griezmann 88": "https://i.ibb.co/nsM51rXC/griesmann.png",
@@ -201,9 +201,7 @@ function removerAcentos(texto) {
     .trim();
 }
 
-// -------------------------------------------------------------
 // ROTA 1: GERAR IMAGEM DO CAMPO
-// -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -269,9 +267,7 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
 // ROTA 2: BUSCAR JOGADORES
-// -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -366,9 +362,7 @@ app.get('/buscar-jogador', (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
 // ROTA 3: OBTER JOGADOR ALEATÓRIO
-// -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -420,9 +414,7 @@ app.get('/obter-aleatorio', (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
 // ROTA 4: LISTAR JOGADORES NO MERCADO
-// -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -491,9 +483,7 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 5: ABRIR PACK (CORRIGIDO)
-// -------------------------------------------------------------
+// ROTA 5: ABRIR PACK
 app.get('/abrir-pack', async (req, res) => {
   try {
     const chaves = Object.keys(BANCO_DE_CARTAS);
@@ -530,7 +520,6 @@ app.get('/abrir-pack', async (req, res) => {
     const carta2 = sortearUm();
     const carta3 = sortearUm();
 
-    // Se o BDFD solicitar ?tipo=dados, devolve os dados em JSON leve
     if (req.query.tipo === 'dados') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.status(200).json({
@@ -544,7 +533,6 @@ app.get('/abrir-pack', async (req, res) => {
       });
     }
 
-    // Caso contrário, gera a Imagem PNG com 3 cartas no canvas
     const width = 1000;
     const height = 500;
     const canvas = createCanvas(width, height);
@@ -566,7 +554,6 @@ app.get('/abrir-pack', async (req, res) => {
     const posY = (height - cardH) / 2 + 20;
     const posicoesX = [180, 395, 610];
 
-    // Pega as cartas recebidas pela query ou usa as sorteadas
     const cartasParaDesenhar = [
       req.query.c1 || carta1.chave,
       req.query.c2 || carta2.chave,
@@ -575,12 +562,11 @@ app.get('/abrir-pack', async (req, res) => {
 
     for (let i = 0; i < 3; i++) {
       const entradaRaw = cartasParaDesenhar[i];
-      const entradaLimpa = removerAcentos(entradaRaw); // Limpa acentos e converte para minúsculo
+      const entradaLimpa = removerAcentos(entradaRaw);
 
-      // Encontra a chave exata no BANCO_DE_CARTAS mesmo se vier com acentos/maiúsculas
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
-        k => removerAcentos(k) === entradaLimpa
-      ) || BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null;
+        k => removerAcentos(k) === entradaLimpa || removerAcentos(k).includes(entradaLimpa)
+      );
 
       const urlCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
@@ -600,6 +586,84 @@ app.get('/abrir-pack', async (req, res) => {
   } catch (error) {
     console.error("Erro no /abrir-pack:", error);
     return res.status(500).send('Erro ao gerar pack.');
+  }
+});
+
+// -------------------------------------------------------------
+// ROTA 6: GERAR IMAGEM DO MULTISELL (CORRIGIDA)
+// -------------------------------------------------------------
+app.get('/gerar-multisell', async (req, res) => {
+  try {
+    const cartasRaw = req.query.cartas || "";
+    if (!cartasRaw) {
+      return res.status(400).send('Nenhuma carta especificada.');
+    }
+
+    const listaCartas = cartasRaw.split(',').map(c => c.trim()).filter(Boolean);
+    const total = listaCartas.length;
+
+    if (total === 0) {
+      return res.status(400).send('Lista de cartas vazia.');
+    }
+
+    // Grid: Máximo de 5 cartas por linha
+    const cols = total <= 5 ? total : Math.min(5, total);
+    const rows = Math.ceil(total / cols);
+
+    const cardW = 150;
+    const cardH = 210;
+    const paddingX = 20;
+    const paddingY = 20;
+
+    const width = cols * cardW + (cols + 1) * paddingX;
+    const height = rows * cardH + (rows + 1) * paddingY;
+
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Desenha Fundo
+    try {
+      const bgImg = await loadImage(URL_FUNDO_PACK);
+      ctx.drawImage(bgImg, 0, 0, width, height);
+    } catch (e) {
+      const gradiente = ctx.createLinearGradient(0, 0, width, height);
+      gradiente.addColorStop(0, '#1a0b2e');
+      gradiente.addColorStop(1, '#090314');
+      ctx.fillStyle = gradiente;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // Renderiza cada carta usando busca por aproximação (.includes)
+    for (let i = 0; i < total; i++) {
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+
+      const posX = paddingX + c * (cardW + paddingX);
+      const posY = paddingY + r * (cardH + paddingY);
+
+      const entradaLimpa = removerAcentos(listaCartas[i]);
+      
+      // Procura a chave mais próxima (caso a string venha como "fabio vieira 66")
+      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
+        k => removerAcentos(k) === entradaLimpa || removerAcentos(k).includes(entradaLimpa)
+      );
+
+      if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
+        try {
+          const imgCarta = await loadImage(BANCO_DE_CARTAS[chaveEncontrada]);
+          ctx.drawImage(imgCarta, posX, posY, cardW, cardH);
+        } catch (err) {
+          console.error(`Erro ao carregar imagem para ${listaCartas[i]}:`, err.message);
+        }
+      }
+    }
+
+    res.setHeader('Content-Type', 'image/png');
+    canvas.createPNGStream().pipe(res);
+
+  } catch (error) {
+    console.error("Erro no /gerar-multisell:", error);
+    res.status(500).send('Erro ao gerar imagem do multisell.');
   }
 });
 
