@@ -605,41 +605,42 @@ app.get('/abrir-pack', async (req, res) => {
 
 
 // -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO ELENCO (OTIMIZADA E RÁPIDA)
+// ROTA: GERAR IMAGEM DO ELENCO (1 A 20 JOGADORES - 16:9 HD)
 // -------------------------------------------------------------
 app.get('/gerar-elenco', async (req, res) => {
   try {
-    // Decodifica a URL e aceita vírgulas corretamente
+    // Decodifica a URL para ler espaços e vírgulas sem quebrar
     const rawJogadores = decodeURIComponent(req.query.jogadores || "");
     const lista = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
 
+    // Canvas na proporção 16:9 HD
     const width = 1280;
     const height = 720;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Fundo Gradiente Escuro (Garante carregamento instantâneo sem depender de imagem externa)
+    // Fundo Escuro Moderno (Evita falhas ao carregar background externo)
     const gradiente = ctx.createLinearGradient(0, 0, width, height);
     gradiente.addColorStop(0, '#0a0f1d');
     gradiente.addColorStop(1, '#1a233a');
     ctx.fillStyle = gradiente;
     ctx.fillRect(0, 0, width, height);
 
-    // Título
+    // Título Superior
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 32px Sans-Serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`MEU ELENCO (${lista.length}/20)`, width / 2, 45);
+    ctx.fillText(`ELENCO ATUAL (${lista.length}/20)`, width / 2, 50);
 
-    // Configuração do Grid (20 cartas = 4 linhas x 5 colunas ou 2 x 10)
+    // Configuração da Grade de Cartas (Até 20 cartas: 4 linhas x 5 colunas)
     const maxCols = 5;
     const cardW = 160;
     const cardH = 220;
     const gapX = 25;
     const gapY = 15;
-    const startY = 65;
+    const startY = 70;
 
-    // Pré-carrega todas as imagens juntas para não dar Timeout
+    // Carregamento paralelo ultra-rápido de todas as cartas
     const promessasCartas = lista.slice(0, 20).map(async (itemRaw) => {
       const itemLimpo = removerAcentos(itemRaw);
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
@@ -648,17 +649,15 @@ app.get('/gerar-elenco', async (req, res) => {
       const urlCarta = chaveEncontrada ? BANCO_DE_CARTAS[chaveEncontrada] : "https://i.ibb.co/sd3x55sR/desconhecido.png";
 
       try {
-        const img = await loadImage(urlCarta);
-        return img;
+        return await loadImage(urlCarta);
       } catch (e) {
-        // Se a imagem falhar, carrega uma transparente/padrão sem quebrar o código
         return null;
       }
     });
 
     const imagensCarregadas = await Promise.all(promessasCartas);
 
-    // Desenha na tela
+    // Renderiza cada carta na sua posição correspondente
     imagensCarregadas.forEach((imgCarta, i) => {
       const row = Math.floor(i / maxCols);
       const col = i % maxCols;
