@@ -1,12 +1,10 @@
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
-const axios = require('axios'); // Necessário para editar as mensagens no Discord via Webhook
+const axios = require('axios');
 
 const app = express();
-// Corrigido: process.env.PORT (estava process.process.env.PORT)
 const PORT = process.env.PORT || 3000;
 
-// Garante o parse de JSON e habilita cabeçalhos para o BDFD
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -189,7 +187,6 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// Função de higienização de strings para URLs e Buscas
 function removerAcentos(texto) {
   if (!texto) return "";
   try {
@@ -198,14 +195,12 @@ function removerAcentos(texto) {
 
   return texto
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove sinais diacríticos (acentos)
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
 
-// -------------------------------------------------------------
 // ROTA 1: GERAR IMAGEM DO CAMPO
-// -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -271,9 +266,7 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
 // ROTA 2: BUSCAR JOGADORES
-// -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -368,9 +361,7 @@ app.get('/buscar-jogador', (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
 // ROTA 3: OBTER JOGADOR ALEATÓRIO
-// -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -421,23 +412,24 @@ app.get('/obter-aleatorio', (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (NOVA ROTA)
-// -------------------------------------------------------------
+// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (AJUSTADA E INTEGRADA COM O BDFD)
 app.get('/simular-partida', async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  const { webhookUrl, timeCasa, timeFora, gerCasa, gerFora } = req.query;
+  const { webhookIdToken, timeCasa, timeFora, gerCasa, gerFora } = req.query;
 
-  if (!webhookUrl || !timeCasa || !timeFora) {
+  if (!webhookIdToken || !timeCasa || !timeFora) {
     return res.status(400).json({ sucesso: false, erro: "parametros_ausentes" });
   }
 
-  // Responde imediatamente ao BDFD para evitar timeout HTTP
+  // Reconstrói a URL do Webhook dinamicamente
+  const webhookUrl = `https://discord.com/api/webhooks/${webhookIdToken}`;
+
+  // Responde imediatamente ao BDFD
   res.status(200).json({ sucesso: true, mensagem: "Partida iniciada no servidor!" });
 
   try {
-    // 1. Envia a mensagem inicial do jogo (0')
+    // 1. Envia a mensagem inicial
     const embedInicial = {
       title: "⚽ PARTIDA EM ANDAMENTO",
       color: 0x1d74f5,
@@ -460,7 +452,6 @@ app.get('/simular-partida', async (req, res) => {
       const gC = Number(gerCasa) || 60;
       const gF = Number(gerFora) || 60;
 
-      // Cálculo probabilístico baseado no Overall
       if ((Math.random() * 100) < (15 + (gC - gF))) {
         golsCasa++;
         lances.push(`⚽ \`${minuto}'\` Gol do **${timeCasa}**!`);
@@ -473,7 +464,6 @@ app.get('/simular-partida', async (req, res) => {
       const textoLances = lances.length > 0 ? lances.slice(-4).join('\n') : "Jogo disputado no meio de campo...";
 
       if (minuto < 90) {
-        // Atualização dos minutos do jogo
         const embedProgresso = {
           title: "⚽ PARTIDA EM ANDAMENTO",
           color: 0x1d74f5,
@@ -487,7 +477,6 @@ app.get('/simular-partida', async (req, res) => {
         await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedProgresso] });
 
       } else {
-        // Fim de jogo aos 90'
         clearInterval(interval);
 
         let resultadoTexto = "🤝 **Empate!**";
@@ -510,7 +499,7 @@ app.get('/simular-partida', async (req, res) => {
     }, 8000);
 
   } catch (err) {
-    console.error("Erro na simulação do webhook:", err.message);
+    console.error("Erro na simulação do webhook:", err.response ? err.response.data : err.message);
   }
 });
 
