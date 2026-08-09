@@ -420,7 +420,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT PAINEL EM COLUNAS)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT PAINEL MINIMALISTA)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -463,27 +463,25 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
-    // Monta a lista formatada em 2 colunas com espaçamento seguro
+    // Monta a lista formatada e alinhada dentro de um bloco de código
     let linhas = [];
     for (let i = 0; i < filtrados.length; i += 2) {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Limita o tamanho do nome na coluna 1 para não estourar o ecrã do telemóvel
-      const nome1 = j1.nome.length > 13 ? j1.nome.substring(0, 11) + '..' : j1.nome;
-      const col1 = `[${j1.overall}] ${nome1.padEnd(13, ' ')}`;
+      // Formata com tamanho fixo (ex: "89 Marcelo        ")
+      const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
       
       if (j2) {
-        const nome2 = j2.nome.length > 13 ? j2.nome.substring(0, 11) + '..' : j2.nome;
-        const col2 = `[${j2.overall}] ${nome2}`;
-        linhas.push(`${col1} | ${col2}`);
+        const col2 = `[${j2.overall}] ${j2.nome}`;
+        linhas.push(`${col1}  ${col2}`);
       } else {
         linhas.push(col1);
       }
     }
 
-    // Bloco escuro limpo
-    const resultadoFinal = "```\n" + linhas.join('\n') + "\n```";
+    // Envolve toda a resposta num bloco codeblock clean
+    const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
 
     return res.status(200).json({
       texto: resultadoFinal
@@ -494,5 +492,4 @@ app.get('/listar-mercado', (req, res) => {
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
-
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
