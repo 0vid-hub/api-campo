@@ -1,10 +1,10 @@
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
-const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Garante o parse de JSON e habilita cabeçalhos para o BDFD
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -187,6 +187,7 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
+// Função de higienização de strings para URLs e Buscas
 function removerAcentos(texto) {
   if (!texto) return "";
   try {
@@ -195,19 +196,14 @@ function removerAcentos(texto) {
 
   return texto
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "") // Remove sinais diacríticos (acentos)
     .toLowerCase()
     .trim();
 }
 
-function limparNomeJogador(nomeBruto) {
-  if (!nomeBruto || nomeBruto === 'vazio') return null;
-  let nomeSemOverall = nomeBruto.replace(/\s+\d+$/, '').trim();
-  if (!nomeSemOverall) return null;
-  return nomeSemOverall.charAt(0).toUpperCase() + nomeSemOverall.slice(1);
-}
-
+// -------------------------------------------------------------
 // ROTA 1: GERAR IMAGEM DO CAMPO
+// -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -273,7 +269,9 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// ROTA 2: BUSCAR JOGADORES
+// -------------------------------------------------------------
+// ROTA 2: BUSCAR JOGADORES (Totalmente protegida contra erros JSON)
+// -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -308,7 +306,7 @@ app.get('/buscar-jogador', (req, res) => {
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const imagem = BANCO_DE_CARTAS[chaveEncontrada];
 
-    let preco = 1000;
+let preco = 1000;
     if (overall === 99) preco = 100000;
     else if (overall === 98) preco = 80000;
     else if (overall === 97) preco = 65000;
@@ -349,7 +347,7 @@ app.get('/buscar-jogador', (req, res) => {
     else if (overall === 62) preco = 210;
     else if (overall === 61) preco = 180;
     else if (overall <= 60) preco = 150;
-
+    
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
@@ -368,7 +366,9 @@ app.get('/buscar-jogador', (req, res) => {
   }
 });
 
-// ROTA 3: OBTER JOGADOR ALEATÓRIO
+// -------------------------------------------------------------
+// ROTA 3: OBTER JOGADOR ALEATÓRIO (COM PESOS DE RARIDADE)
+// -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -378,22 +378,26 @@ app.get('/obter-aleatorio', (req, res) => {
       return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
     }
 
+    // 1. Calcula o peso/raridade de cada jogador baseado no Overall
     const jogadoresComPeso = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      let peso = 100;
-      if (overall >= 90) peso = 1;
-      else if (overall >= 88) peso = 3;
-      else if (overall >= 85) peso = 8;
-      else if (overall >= 80) peso = 25;
-      else if (overall >= 75) peso = 60;
+      let peso = 100; // Padrão para <75
+
+      if (overall >= 90) peso = 1;       // Impossível/Ultra Raro (~0.5% de chance)
+      else if (overall >= 88) peso = 3;  // Muito Raro
+      else if (overall >= 85) peso = 8;  // Raro
+      else if (overall >= 80) peso = 25; // Incomum
+      else if (overall >= 75) peso = 60; // Comum
 
       return { chave, overall, peso };
     });
 
+    // 2. Soma o peso total do banco
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
 
+    // 3. Sorteia um número entre 0 e o peso total
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -418,133 +422,5 @@ app.get('/obter-aleatorio', (req, res) => {
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
 });
-
-// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (ASSÍNCRONA / ANTI-TIMEOUT)
-app.get('/simular-partida', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
-  const { webhookIdToken, timeCasa, timeFora } = req.query;
-
-  if (!webhookIdToken || !timeCasa || !timeFora) {
-    return res.status(400).json({ sucesso: false, erro: "parametros_ausentes" });
-  }
-
-  // 1. RESPOSTA IMEDIATA PARA O BDFD NÃO DAR TIMEOUT
-  res.status(200).json({ sucesso: true, mensagem: "Simulação iniciada em segundo plano!" });
-
-  // 2. EXECUÇÃO DA SIMULAÇÃO EM SEGUNDO PLANO
-  executarSimulacao(req.query);
-});
-
-async function executarSimulacao(params) {
-  const { webhookIdToken, timeCasa, timeFora, gerCasa, gerFora } = params;
-  const webhookUrl = `https://discord.com/api/webhooks/${webhookIdToken}`;
-  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const montarElencoGol = (prefixo) => {
-    const pl = limparNomeJogador(params[`${prefixo}_pl`]);
-    const ee = limparNomeJogador(params[`${prefixo}_ee`]);
-    const ed = limparNomeJogador(params[`${prefixo}_ed`]);
-    const mo = limparNomeJogador(params[`${prefixo}_mo1`]);
-
-    let lista = [];
-    if (pl) lista.push(pl, pl, pl);
-    if (ee) lista.push(ee, ee);
-    if (ed) lista.push(ed, ed);
-    if (mo) lista.push(mo);
-
-    return lista.length > 0 ? lista : ["Atacante"];
-  };
-
-  const marcadoresCasa = montarElencoGol('eC');
-  const marcadoresFora = montarElencoGol('eF');
-
-  const sortearAutorGol = (time, marcadores) => {
-    const nome = marcadores[Math.floor(Math.random() * marcadores.length)];
-    return nome === "Atacante" ? `Atacante do **${time}**` : `**${nome}**`;
-  };
-
-  try {
-    const gC = Number(gerCasa) || 60;
-    const gF = Number(gerFora) || 60;
-
-    const embedInicial = {
-      title: "⚽ PARTIDA EM ANDAMENTO",
-      color: 0x1d74f5,
-      description: `🏟️ **${timeCasa}** (GER ${gC}) vs **${timeFora}** (GER ${gF})\n\n⏱️ **0'** — O juiz apita o início do jogo!`,
-      fields: [{ name: "Placar", value: `**${timeCasa} 0 x 0 ${timeFora}**` }]
-    };
-
-    console.log(`[SIMULAÇÃO] Enviando mensagem inicial para o webhook: ${webhookUrl}`);
-    const resWebhook = await axios.post(`${webhookUrl}?wait=true`, { embeds: [embedInicial] });
-    const messageId = resWebhook.data.id;
-    console.log(`[SIMULAÇÃO] Mensagem enviada com sucesso! ID: ${messageId}`);
-
-    let golsCasa = 0;
-    let golsFora = 0;
-    let lances = [];
-
-    // Loop de 10' a 90'
-    for (let minuto = 10; minuto <= 90; minuto += 10) {
-      await sleep(4000); 
-
-      if ((Math.random() * 100) < (15 + (gC - gF))) {
-        golsCasa++;
-        const autor = sortearAutorGol(timeCasa, marcadoresCasa);
-        lances.push(`⚽ \`${minuto}'\` Gol do **${timeCasa}**! (${autor})`);
-      }
-      if ((Math.random() * 100) < (15 + (gF - gC))) {
-        golsFora++;
-        const autor = sortearAutorGol(timeFora, marcadoresFora);
-        lances.push(`⚽ \`${minuto}'\` Gol do **${timeFora}**! (${autor})`);
-      }
-
-      const textoLances = lances.length > 0 ? lances.slice(-4).join('\n') : "Jogo disputado no meio de campo...";
-
-      if (minuto < 90) {
-        const embedProgresso = {
-          title: "⚽ PARTIDA EM ANDAMENTO",
-          color: 0x1d74f5,
-          description: `🏟️ **${timeCasa}** (GER ${gC}) vs **${timeFora}** (GER ${gF})\n\n⏱️ **${minuto}'** Minutos de jogo!`,
-          fields: [
-            { name: "Placar Atual", value: `**${timeCasa} ${golsCasa} x ${golsFora} ${timeFora}**` },
-            { name: "🎙️ Últimos Lances", value: textoLances }
-          ]
-        };
-
-        await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedProgresso] });
-      } else {
-        // Fim de jogo
-        let resultadoTexto = "🤝 **Empate!**";
-        if (golsCasa > golsFora) resultadoTexto = `🏆 **Vitória do ${timeCasa}!**`;
-        if (golsFora > golsCasa) resultadoTexto = `🏆 **Vitória do ${timeFora}!**`;
-
-        const embedFinal = {
-          title: "🏁 FIM DE JOGO!",
-          color: 0x2ecc71,
-          description: `**${timeCasa} ${golsCasa} x ${golsFora} ${timeFora}**\n\n${resultadoTexto}`,
-          fields: [
-            { name: "🎙️ Lances do Jogo", value: lances.join('\n') || "Nenhum gol marcado durante a partida." }
-          ],
-          footer: { text: "ES League — Partida Finalizada" }
-        };
-
-        await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedFinal] });
-      }
-    }
-  } catch (err) {
-    console.error("Erro na simulação em segundo plano:", err.response ? err.response.data : err.message);
-  } finally {
-    // ----------------------------------------------------
-    // DELETAR A WEBHOOK AO FINAL DA PARTIDA
-    // ----------------------------------------------------
-    try {
-      await axios.delete(webhookUrl);
-      console.log(`[LIMPEZA] Webhook ${webhookIdToken} foi deletada com sucesso!`);
-    } catch (errDelete) {
-      console.error(`Erro ao tentar deletar webhook ${webhookIdToken}:`, errDelete.response ? errDelete.response.data : errDelete.message);
-    }
-  }
-}
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
