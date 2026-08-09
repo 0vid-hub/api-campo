@@ -603,44 +603,4 @@ app.get('/abrir-pack', async (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 6: AUTOCOMPLETE DINÂMICO DE JOGADORES (CORRIGIDA)
-// -------------------------------------------------------------
-app.get('/autocomplete-jogadores', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
-  try {
-    const query = req.query.q !== undefined ? String(req.query.q) : "";
-    const buscaLimpa = removerAcentos(query);
-    const chaves = Object.keys(BANCO_DE_CARTAS);
-
-    let filtrados = chaves;
-
-    if (buscaLimpa) {
-      filtrados = chaves.filter(chave => removerAcentos(chave).includes(buscaLimpa));
-    }
-
-    const resultadosValidos = filtrados.slice(0, 25).map(chave => ({
-      name: formatarNomeExibicao(chave),
-      value: chave
-    }));
-
-    // Preenche até 25 posições fixas para evitar erros de índice no BDFD
-    const resultadosFinais = [];
-    for (let i = 0; i < 25; i++) {
-      if (resultadosValidos[i]) {
-        resultadosFinais.push(resultadosValidos[i]);
-      } else {
-        resultadosFinais.push({ name: "ignore", value: "ignore" });
-      }
-    }
-
-    return res.status(200).json(resultadosFinais);
-  } catch (error) {
-    console.error("Erro no /autocomplete-jogadores:", error);
-    const erroArray = Array(25).fill({ name: "ignore", value: "ignore" });
-    return res.status(200).json(erroArray);
-  }
-});
-
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
