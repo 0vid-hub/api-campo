@@ -342,7 +342,7 @@ app.get('/buscar-jogador', (req, res) => {
     else if (overall === 62) preco = 210;
     else if (overall === 61) preco = 180;
     else if (overall <= 60) preco = 150;
-    
+
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
@@ -412,7 +412,7 @@ app.get('/obter-aleatorio', (req, res) => {
   }
 });
 
-// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (AJUSTADA E INTEGRADA COM O BDFD)
+// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (COM LOOP ASYNC E SLEEP)
 app.get('/simular-partida', async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -422,14 +422,16 @@ app.get('/simular-partida', async (req, res) => {
     return res.status(400).json({ sucesso: false, erro: "parametros_ausentes" });
   }
 
-  // Reconstrói a URL do Webhook dinamicamente
   const webhookUrl = `https://discord.com/api/webhooks/${webhookIdToken}`;
+
+  // Helper para criar uma pausa assíncrona
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   // Responde imediatamente ao BDFD
   res.status(200).json({ sucesso: true, mensagem: "Partida iniciada no servidor!" });
 
   try {
-    // 1. Envia a mensagem inicial
+    // 1. Envia a mensagem inicial (0')
     const embedInicial = {
       title: "⚽ PARTIDA EM ANDAMENTO",
       color: 0x1d74f5,
@@ -440,18 +442,18 @@ app.get('/simular-partida', async (req, res) => {
     const resWebhook = await axios.post(`${webhookUrl}?wait=true`, { embeds: [embedInicial] });
     const messageId = resWebhook.data.id;
 
-    let minuto = 0;
     let golsCasa = 0;
     let golsFora = 0;
     let lances = [];
 
-    // 2. Loop a cada 8 segundos
-    const interval = setInterval(async () => {
-      minuto += 10;
+    const gC = Number(gerCasa) || 60;
+    const gF = Number(gerFora) || 60;
 
-      const gC = Number(gerCasa) || 60;
-      const gF = Number(gerFora) || 60;
+    // 2. Loop de 10' até 90' a cada 8 segundos (8000ms)
+    for (let minuto = 10; minuto <= 90; minuto += 10) {
+      await sleep(8000);
 
+      // Sorteio de gols baseado na diferença de GER
       if ((Math.random() * 100) < (15 + (gC - gF))) {
         golsCasa++;
         lances.push(`⚽ \`${minuto}'\` Gol do **${timeCasa}**!`);
@@ -467,7 +469,7 @@ app.get('/simular-partida', async (req, res) => {
         const embedProgresso = {
           title: "⚽ PARTIDA EM ANDAMENTO",
           color: 0x1d74f5,
-          description: `🏟️ **${timeCasa}** vs **${timeFora}**\n\n⏱️ **${minuto}'** Minutos de jogo!`,
+          description: `🏟️ **${timeCasa}** (GER ${gC}) vs **${timeFora}** (GER ${gF})\n\n⏱️ **${minuto}'** Minutos de jogo!`,
           fields: [
             { name: "Placar Atual", value: `**${timeCasa} ${golsCasa} x ${golsFora} ${timeFora}**` },
             { name: "🎙️ Últimos Lances", value: textoLances }
@@ -475,10 +477,8 @@ app.get('/simular-partida', async (req, res) => {
         };
 
         await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedProgresso] });
-
       } else {
-        clearInterval(interval);
-
+        // Fim de jogo
         let resultadoTexto = "🤝 **Empate!**";
         if (golsCasa > golsFora) resultadoTexto = `🏆 **Vitória do ${timeCasa}!**`;
         if (golsFora > golsCasa) resultadoTexto = `🏆 **Vitória do ${timeFora}!**`;
@@ -495,8 +495,7 @@ app.get('/simular-partida', async (req, res) => {
 
         await axios.patch(`${webhookUrl}/messages/${messageId}`, { embeds: [embedFinal] });
       }
-
-    }, 8000);
+    }
 
   } catch (err) {
     console.error("Erro na simulação do webhook:", err.response ? err.response.data : err.message);
