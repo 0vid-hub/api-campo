@@ -7,8 +7,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
-const URL_FUNDO_PACK = "https://i.ibb.co/zY2vfzG/es.png"; // Fundo roxo temático
+const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
+const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png"; // Fundo roxo temático
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
