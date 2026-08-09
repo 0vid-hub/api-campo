@@ -600,7 +600,7 @@ app.get('/abrir-pack', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO ELENCO (CORRIGIDA E TOTALMENTE ESTÁVEL)
+// ROTA 6: GERAR IMAGEM DO ELENCO (TOTALMENTE CENTRALIZADO E ALINHADO)
 // -------------------------------------------------------------
 app.get('/gerar-elenco', async (req, res) => {
   try {
@@ -612,7 +612,7 @@ app.get('/gerar-elenco', async (req, res) => {
 
     // Limpa a lista eliminando espaços em branco e duplicados
     const listaBruta = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
-    const listaUnica = [...new Set(listaBruta)];
+    const listaUnica = [...new Set(listaBruta)].slice(0, 20); // Limite de 20 cartas
 
     const width = 1280;
     const height = 720;
@@ -632,15 +632,15 @@ app.get('/gerar-elenco', async (req, res) => {
     ctx.textAlign = 'center';
     ctx.fillText(`ELENCO ATUAL (${listaUnica.length}/20)`, width / 2, 50);
 
-    // Configurações Fixas da Grade (5 Colunas x 4 Linhas)
-    const maxCols = 5;
+    // Configurações do Grid
+    const maxCols = 5; // 5 cartas por linha
     const cardW = 150;
     const cardH = 210;
-    const gapX = 25;
-    const gapY = 15;
+    const gapX = 30;
+    const gapY = 20;
 
-    // Desenha cada carta
-    const promessasCartas = listaUnica.slice(0, 20).map(async (itemRaw) => {
+    // Carrega todas as imagens primeiro
+    const promessasCartas = listaUnica.map(async (itemRaw) => {
       const itemLimpo = removerAcentos(itemRaw);
       
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(k => {
@@ -659,22 +659,33 @@ app.get('/gerar-elenco', async (req, res) => {
 
     const imagensCarregadas = await Promise.all(promessasCartas);
 
-    // Cálculo exato das posições
-    const totalCols = Math.min(listaUnica.length, maxCols) || 1;
-    const gridWidth = (totalCols * cardW) + ((totalCols - 1) * gapX);
-    const startXGlobal = (width - gridWidth) / 2;
-    const startY = 80;
+    // Separa as imagens em linhas de no máximo 5 cartas
+    const linhas = [];
+    for (let i = 0; i < imagensCarregadas.length; i += maxCols) {
+      linhas.push(imagensCarregadas.slice(i, i + maxCols));
+    }
 
-    imagensCarregadas.forEach((imgCarta, i) => {
-      const row = Math.floor(i / maxCols);
-      const col = i % maxCols;
+    // Cálculo para centralizar o bloco inteiro VERTICALMENTE
+    const totalLinhas = linhas.length || 1;
+    const totalGridHeight = (totalLinhas * cardH) + ((totalLinhas - 1) * gapY);
+    const startYVertical = 80 + ((height - 80 - totalGridHeight) / 2);
 
-      const posX = startXGlobal + col * (cardW + gapX);
-      const posY = startY + row * (cardH + gapY);
+    // Desenha cada linha CENTRALIZADA HORIZONTALMENTE
+    linhas.forEach((linhaImg, rowIndex) => {
+      const cartasNaLinha = linhaImg.length;
+      
+      // Largura exata desta linha específica
+      const rowWidth = (cartasNaLinha * cardW) + ((cartasNaLinha - 1) * gapX);
+      const startXRow = (width - rowWidth) / 2; // Ponto X para centralizar a linha
+      const posY = startYVertical + rowIndex * (cardH + gapY);
 
-      if (imgCarta) {
-        ctx.drawImage(imgCarta, posX, posY, cardW, cardH);
-      }
+      linhaImg.forEach((imgCarta, colIndex) => {
+        const posX = startXRow + colIndex * (cardW + gapX);
+
+        if (imgCarta) {
+          ctx.drawImage(imgCarta, posX, posY, cardW, cardH);
+        }
+      });
     });
 
     res.setHeader('Content-Type', 'image/png');
