@@ -261,7 +261,6 @@ app.get('/gerar-campo', async (req, res) => {
 // ROTA 2: BUSCAR JOGADORES (Totalmente protegida contra erros JSON)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
-  // Define forçadamente o header JSON
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
@@ -277,7 +276,6 @@ app.get('/buscar-jogador', (req, res) => {
       });
     }
 
-    // Busca insensível a acentos tanto no termo enviado quanto nas chaves do banco
     const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
       const nomeLimpo = removerAcentos(nomeNoBanco);
       return nomeLimpo.includes(buscaLimpa);
@@ -321,6 +319,37 @@ app.get('/buscar-jogador', (req, res) => {
       imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
       overall: 60 
     });
+  }
+});
+
+// -------------------------------------------------------------
+// ROTA 3: OBTER JOGADOR ALEATÓRIO (PACUTE/PACK)
+// -------------------------------------------------------------
+app.get('/obter-aleatorio', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  try {
+    const chaves = Object.keys(BANCO_DE_CARTAS);
+    if (chaves.length === 0) {
+      return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
+    }
+
+    // Sorteia uma chave aleatória do banco de cartas
+    const chaveSorteada = chaves[Math.floor(Math.random() * chaves.length)];
+    
+    const partes = chaveSorteada.split(' ');
+    const overall = parseInt(partes[partes.length - 1]) || 60;
+    const imagem = BANCO_DE_CARTAS[chaveSorteada];
+
+    return res.status(200).json({
+      sucesso: true,
+      nome: chaveSorteada,
+      overall: overall,
+      imagem: imagem
+    });
+  } catch (error) {
+    console.error("Erro interno no /obter-aleatorio:", error);
+    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
 });
 
