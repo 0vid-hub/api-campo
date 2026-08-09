@@ -30,7 +30,7 @@ const BANCO_DE_CARTAS = {
   "ronaldo nazário 89": "https://i.ibb.co/gLqzcW1C/r9.png",
   "cafu 88": "https://i.ibb.co/wZhHw1Wq/cafu.png",
   "griezmann 88": "https://i.ibb.co/nsM51rXC/griesmann.png",
-  "hazard 88": "https://i.ibb.co/Gf8pLcHz/hazard.png"
+  "hazard 88": "https://i.ibb.co/Gf8pLcHz/hazard.png",
   "carlos alberto 88": "https://i.ibb.co/WjN7z9r/carlosalberto.png",
   "diogo jota 88": "https://i.ibb.co/HDwr4hNV/diogojota.png",
   "garrincha 88": "https://i.ibb.co/HT8Mxhww/garrincha.png",
