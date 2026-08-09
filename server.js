@@ -11,14 +11,26 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
 
 const BANCO_DE_CARTAS = {
-  // 88-89 OVERALL
+  // 90-94 OVERALL
+  "modric 94": "https://i.ibb.co/5WvWtzPq/modric94.png",
+  "ronaldo 93": "https://i.ibb.co/wN7PFP96/c-ronaldo.png",
+  "mbappe 92": "https://i.ibb.co/K3sDyFd/mbappe92.png",
+  "courtois 90": "https://i.ibb.co/7JkNk4nW/courtois.png",
   "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
   "buffon 90": "https://i.ibb.co/KxxLnfWd/buffon.png",
   "eusébio 90": "https://i.ibb.co/cSY6C7vP/eusebio.png",
   "lev yashin 90": "https://i.ibb.co/WWxHcr1m/yashin.png",
+  
+  // 88-89 OVERALL
+  "marcelo 89": "https://i.ibb.co/WW2Ddt99/marcelo.png",
+  "pavard 89": "https://i.ibb.co/CpVYWS51/pavard.png",
+  "varane 89": "https://i.ibb.co/gZxkBWMp/rapvarane.png",
+  "thiago silva 89": "https://i.ibb.co/Wpv27xRF/thiagosilva.png",
   "luis figo 89": "https://i.ibb.co/Vc7HpNjF/luisfigo.png",
   "ronaldo nazário 89": "https://i.ibb.co/gLqzcW1C/r9.png",
   "cafu 88": "https://i.ibb.co/wZhHw1Wq/cafu.png",
+  "griezmann 88": "https://i.ibb.co/nsM51rXC/griesmann.png",
+  "hazard 88": "https://i.ibb.co/Gf8pLcHz/hazard.png"
   "carlos alberto 88": "https://i.ibb.co/WjN7z9r/carlosalberto.png",
   "diogo jota 88": "https://i.ibb.co/HDwr4hNV/diogojota.png",
   "garrincha 88": "https://i.ibb.co/HT8Mxhww/garrincha.png",
