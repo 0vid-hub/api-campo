@@ -323,7 +323,7 @@ app.get('/buscar-jogador', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 3: OBTER JOGADOR ALEATÓRIO (PACUTE/PACK)
+// ROTA 3: OBTER JOGADOR ALEATÓRIO (COM PESOS DE RARIDADE)
 // -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -334,17 +334,43 @@ app.get('/obter-aleatorio', (req, res) => {
       return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
     }
 
-    // Sorteia uma chave aleatória do banco de cartas
-    const chaveSorteada = chaves[Math.floor(Math.random() * chaves.length)];
-    
-    const partes = chaveSorteada.split(' ');
-    const overall = parseInt(partes[partes.length - 1]) || 60;
-    const imagem = BANCO_DE_CARTAS[chaveSorteada];
+    // 1. Calcula o peso/raridade de cada jogador baseado no Overall
+    const jogadoresComPeso = chaves.map(chave => {
+      const partes = chave.split(' ');
+      const overall = parseInt(partes[partes.length - 1]) || 60;
+
+      let peso = 100; // Padrão para <75
+
+      if (overall >= 90) peso = 1;       // Impossível/Ultra Raro (~0.5% de chance)
+      else if (overall >= 88) peso = 3;  // Muito Raro
+      else if (overall >= 85) peso = 8;  // Raro
+      else if (overall >= 80) peso = 25; // Incomum
+      else if (overall >= 75) peso = 60; // Comum
+
+      return { chave, overall, peso };
+    });
+
+    // 2. Soma o peso total do banco
+    const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
+
+    // 3. Sorteia um número entre 0 e o peso total
+    let numeroSorteado = Math.random() * pesoTotal;
+    let cartaSorteada = jogadoresComPeso[0];
+
+    for (const jogador of jogadoresComPeso) {
+      if (numeroSorteado < jogador.peso) {
+        cartaSorteada = jogador;
+        break;
+      }
+      numeroSorteado -= jogador.peso;
+    }
+
+    const imagem = BANCO_DE_CARTAS[cartaSorteada.chave];
 
     return res.status(200).json({
       sucesso: true,
-      nome: chaveSorteada,
-      overall: overall,
+      nome: cartaSorteada.chave,
+      overall: cartaSorteada.overall,
       imagem: imagem
     });
   } catch (error) {
