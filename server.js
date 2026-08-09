@@ -420,7 +420,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (OPÇÃO A - FONTE LEVE 2 COLUNAS)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (LAYOUT PAINEL EM COLUNAS)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -463,23 +463,30 @@ app.get('/listar-mercado', (req, res) => {
       });
     }
 
+    // Monta a lista formatada em 2 colunas com espaçamento seguro
     let linhas = [];
     for (let i = 0; i < filtrados.length; i += 2) {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      const item1 = `**${j1.overall}** ${j1.nome}`;
+      // Limita o tamanho do nome na coluna 1 para não estourar o ecrã do telemóvel
+      const nome1 = j1.nome.length > 13 ? j1.nome.substring(0, 11) + '..' : j1.nome;
+      const col1 = `[${j1.overall}] ${nome1.padEnd(13, ' ')}`;
       
       if (j2) {
-        const item2 = `**${j2.overall}** ${j2.nome}`;
-        linhas.push(`-# ▫ ${item1}  •  ${item2}`);
+        const nome2 = j2.nome.length > 13 ? j2.nome.substring(0, 11) + '..' : j2.nome;
+        const col2 = `[${j2.overall}] ${nome2}`;
+        linhas.push(`${col1} | ${col2}`);
       } else {
-        linhas.push(`-# ▫ ${item1}`);
+        linhas.push(col1);
       }
     }
 
+    // Bloco escuro limpo
+    const resultadoFinal = "```\n" + linhas.join('\n') + "\n```";
+
     return res.status(200).json({
-      texto: linhas.join('\n')
+      texto: resultadoFinal
     });
 
   } catch (error) {
