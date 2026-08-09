@@ -306,16 +306,48 @@ app.get('/buscar-jogador', (req, res) => {
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const imagem = BANCO_DE_CARTAS[chaveEncontrada];
 
-    let preco = 1000;
-    if (overall >= 99) preco = 30000;
-    else if (overall >= 95) preco = 20000;
-    else if (overall >= 90) preco = 15000;
-    else if (overall >= 85) preco = 10000;
-    else if (overall >= 80) preco = 5000;
-    else if (overall >= 75) preco = 3500;
-    else if (overall >= 70) preco = 2500;
-    else if (overall >= 65) preco = 1500;
-
+let preco = 1000;
+    if (overall === 99) preco = 100000;
+    else if (overall === 98) preco = 80000;
+    else if (overall === 97) preco = 65000;
+    else if (overall === 96) preco = 52000;
+    else if (overall === 95) preco = 42000;
+    else if (overall === 94) preco = 34000;
+    else if (overall === 93) preco = 28000;
+    else if (overall === 92) preco = 23000;
+    else if (overall === 91) preco = 19000;
+    else if (overall === 90) preco = 16000;
+    else if (overall === 89) preco = 13500;
+    else if (overall === 88) preco = 11500;
+    else if (overall === 87) preco = 9800;
+    else if (overall === 86) preco = 8300;
+    else if (overall === 85) preco = 7000;
+    else if (overall === 84) preco = 5800;
+    else if (overall === 83) preco = 4800;
+    else if (overall === 82) preco = 3900;
+    else if (overall === 81) preco = 3100;
+    else if (overall === 80) preco = 2500;
+    else if (overall === 79) preco = 2100;
+    else if (overall === 78) preco = 1800;
+    else if (overall === 77) preco = 1550;
+    else if (overall === 76) preco = 1350;
+    else if (overall === 75) preco = 1200;
+    else if (overall === 74) preco = 1050;
+    else if (overall === 73) preco = 920;
+    else if (overall === 72) preco = 810;
+    else if (overall === 71) preco = 710;
+    else if (overall === 70) preco = 620;
+    else if (overall === 69) preco = 540;
+    else if (overall === 68) preco = 470;
+    else if (overall === 67) preco = 410;
+    else if (overall === 66) preco = 360;
+    else if (overall === 65) preco = 310;
+    else if (overall === 64) preco = 270;
+    else if (overall === 63) preco = 240;
+    else if (overall === 62) preco = 210;
+    else if (overall === 61) preco = 180;
+    else if (overall <= 60) preco = 150;
+    
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
