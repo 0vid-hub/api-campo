@@ -4,7 +4,6 @@ const { createCanvas, loadImage } = require('canvas');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Garante o parse de JSON e habilita cabeçalhos para o BDFD
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -187,7 +186,6 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// Função de higienização de strings para URLs e Buscas
 function removerAcentos(texto) {
   if (!texto) return "";
   try {
@@ -196,7 +194,7 @@ function removerAcentos(texto) {
 
   return texto
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove sinais diacríticos (acentos)
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
@@ -270,7 +268,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (Totalmente protegida contra erros JSON)
+// ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -306,7 +304,7 @@ app.get('/buscar-jogador', (req, res) => {
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const imagem = BANCO_DE_CARTAS[chaveEncontrada];
 
-let preco = 1000;
+    let preco = 1000;
     if (overall === 99) preco = 100000;
     else if (overall === 98) preco = 80000;
     else if (overall === 97) preco = 65000;
@@ -367,7 +365,7 @@ let preco = 1000;
 });
 
 // -------------------------------------------------------------
-// ROTA 3: OBTER JOGADOR ALEATÓRIO (COM PESOS DE RARIDADE)
+// ROTA 3: OBTER JOGADOR ALEATÓRIO
 // -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -378,26 +376,23 @@ app.get('/obter-aleatorio', (req, res) => {
       return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
     }
 
-    // 1. Calcula o peso/raridade de cada jogador baseado no Overall
     const jogadoresComPeso = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      let peso = 100; // Padrão para <75
+      let peso = 100;
 
-      if (overall >= 90) peso = 1;       // Impossível/Ultra Raro (~0.5% de chance)
-      else if (overall >= 88) peso = 3;  // Muito Raro
-      else if (overall >= 85) peso = 8;  // Raro
-      else if (overall >= 80) peso = 25; // Incomum
-      else if (overall >= 75) peso = 60; // Comum
+      if (overall >= 90) peso = 1;
+      else if (overall >= 88) peso = 3;
+      else if (overall >= 85) peso = 8;
+      else if (overall >= 80) peso = 25;
+      else if (overall >= 75) peso = 60;
 
       return { chave, overall, peso };
     });
 
-    // 2. Soma o peso total do banco
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
 
-    // 3. Sorteia um número entre 0 e o peso total
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -420,6 +415,61 @@ app.get('/obter-aleatorio', (req, res) => {
   } catch (error) {
     console.error("Erro interno no /obter-aleatorio:", error);
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+  }
+});
+
+// -------------------------------------------------------------
+// ROTA 4: LISTAR JOGADORES NO MERCADO (GERAÇÃO AUTOMÁTICA)
+// -------------------------------------------------------------
+app.get('/listar-mercado', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  try {
+    const faixa = req.query.faixa; // Ex: 9094, 8589, 8084...
+    const chaves = Object.keys(BANCO_DE_CARTAS);
+
+    let min = 0;
+    let max = 99;
+
+    if (faixa === '9999') { min = 99; max = 99; }
+    else if (faixa === '9598') { min = 95; max = 98; }
+    else if (faixa === '9094') { min = 90; max = 94; }
+    else if (faixa === '8589') { min = 85; max = 89; }
+    else if (faixa === '8084') { min = 80; max = 84; }
+    else if (faixa === '7579') { min = 75; max = 79; }
+    else if (faixa === '7074') { min = 70; max = 74; }
+    else if (faixa === '6569') { min = 65; max = 69; }
+    else if (faixa === '6064') { min = 60; max = 64; }
+
+    // Filtra e ordena do maior overall para o menor
+    const filtrados = chaves.map(chave => {
+      const partes = chave.split(' ');
+      const overall = parseInt(partes[partes.length - 1]) || 60;
+      // Capitaliza cada palavra do nome
+      const nomeFormatado = chave.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      return { chave, nomeFormatado, overall };
+    })
+    .filter(j => j.overall >= min && j.overall <= max)
+    .sort((a, b) => b.overall - a.overall);
+
+    if (filtrados.length === 0) {
+      return res.status(200).json({
+        texto: "*(Ainda não há jogadores disponíveis nesta faixa.)*"
+      });
+    }
+
+    // Formata o texto final no estilo do seu Discord
+    const listaFormatada = filtrados
+      .map(j => `-# ${j.overall} | **${j.nomeFormatado}**`)
+      .join('\n');
+
+    return res.status(200).json({
+      texto: listaFormatada
+    });
+
+  } catch (error) {
+    console.error("Erro no /listar-mercado:", error);
+    return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
 
