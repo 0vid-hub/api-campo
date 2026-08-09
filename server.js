@@ -604,13 +604,14 @@ app.get('/abrir-pack', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 6: AUTOCOMPLETE DINÂMICO DE JOGADORES (CORRIGIDA PARA BDFD)
+// ROTA 6: AUTOCOMPLETE DINÂMICO DE JOGADORES (CORRIGIDA)
 // -------------------------------------------------------------
 app.get('/autocomplete-jogadores', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
-    const buscaLimpa = removerAcentos(req.query.q || "");
+    const query = req.query.q !== undefined ? String(req.query.q) : "";
+    const buscaLimpa = removerAcentos(query);
     const chaves = Object.keys(BANCO_DE_CARTAS);
 
     let filtrados = chaves;
@@ -619,13 +620,12 @@ app.get('/autocomplete-jogadores', (req, res) => {
       filtrados = chaves.filter(chave => removerAcentos(chave).includes(buscaLimpa));
     }
 
-    // Mapeia até 25 jogadores válidos
     const resultadosValidos = filtrados.slice(0, 25).map(chave => ({
       name: formatarNomeExibicao(chave),
       value: chave
     }));
 
-    // Preenche o resto até dar 25 itens para não quebrar a chamada do BDFD
+    // Preenche até 25 posições fixas para evitar erros de índice no BDFD
     const resultadosFinais = [];
     for (let i = 0; i < 25; i++) {
       if (resultadosValidos[i]) {
@@ -637,11 +637,10 @@ app.get('/autocomplete-jogadores', (req, res) => {
 
     return res.status(200).json(resultadosFinais);
   } catch (error) {
-    console.error("Erro na rota /autocomplete-jogadores:", error);
-    
-    // Retorna lista com 25 "ignore" em caso de erro
+    console.error("Erro no /autocomplete-jogadores:", error);
     const erroArray = Array(25).fill({ name: "ignore", value: "ignore" });
-    return res.status(500).json(erroArray);
+    return res.status(200).json(erroArray);
   }
 });
+
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
