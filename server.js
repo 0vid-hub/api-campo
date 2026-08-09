@@ -202,7 +202,6 @@ function removerAcentos(texto) {
 
 function limparNomeJogador(nomeBruto) {
   if (!nomeBruto || nomeBruto === 'vazio') return null;
-  // Remove o numero de overall do final do nome se existir (ex: "ronaldo 84" -> "Ronaldo")
   let nomeSemOverall = nomeBruto.replace(/\s+\d+$/, '').trim();
   return nomeSemOverall.charAt(0).toUpperCase() + nomeSemOverall.slice(1);
 }
@@ -429,7 +428,7 @@ app.get('/simular-partida', (req, res) => {
     return res.status(400).json({ sucesso: false, erro: "parametros_ausentes" });
   }
 
-  // 1. RESPOSTA IMEDIATA PARA O BDFD NÃO DAR TIMEOUT (net/http: timeout awaiting response headers)
+  // 1. RESPOSTA IMEDIATA PARA O BDFD NÃO DAR TIMEOUT
   res.status(200).json({ sucesso: true, mensagem: "Simulação iniciada em segundo plano!" });
 
   // 2. EXECUÇÃO DA SIMULAÇÃO EM SEGUNDO PLANO
@@ -441,7 +440,6 @@ async function executarSimulacao(params) {
   const webhookUrl = `https://discord.com/api/webhooks/${webhookIdToken}`;
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Monta lista de marcadores possíveis para cada time
   const montarElencoGol = (prefixo) => {
     const pl = limparNomeJogador(params[`${prefixo}_pl`] || params[`pl${prefixo.toUpperCase()}`]);
     const ee = limparNomeJogador(params[`${prefixo}_ee`] || params[`ee${prefixo.toUpperCase()}`]);
@@ -449,7 +447,7 @@ async function executarSimulacao(params) {
     const mo = limparNomeJogador(params[`${prefixo}_mo1`] || params[`mo${prefixo.toUpperCase()}`]);
 
     let lista = [];
-    if (pl) lista.push(pl, pl, pl); // Atacante tem 3x mais chance de fazer gol
+    if (pl) lista.push(pl, pl, pl);
     if (ee) lista.push(ee, ee);
     if (ed) lista.push(ed, ed);
     if (mo) lista.push(mo);
@@ -469,7 +467,6 @@ async function executarSimulacao(params) {
     const gC = Number(gerCasa) || 60;
     const gF = Number(gerFora) || 60;
 
-    // Mensagem Inicial (0')
     const embedInicial = {
       title: "⚽ PARTIDA EM ANDAMENTO",
       color: 0x1d74f5,
@@ -488,7 +485,6 @@ async function executarSimulacao(params) {
     for (let minuto = 10; minuto <= 90; minuto += 10) {
       await sleep(4000); 
 
-      // Probabilidade de gol
       if ((Math.random() * 100) < (15 + (gC - gF))) {
         golsCasa++;
         const autor = sortearAutorGol(timeCasa, marcadoresCasa);
@@ -535,6 +531,16 @@ async function executarSimulacao(params) {
     }
   } catch (err) {
     console.error("Erro na simulação em segundo plano:", err.response ? err.response.data : err.message);
+  } finally {
+    // ----------------------------------------------------
+    // DELETAR A WEBHOOK AO FINAL DA PARTIDA
+    // ----------------------------------------------------
+    try {
+      await axios.delete(webhookUrl);
+      console.log(`[LIMPEZA] Webhook ${webhookIdToken} foi deletada com sucesso!`);
+    } catch (errDelete) {
+      console.error(`Erro ao tentar deletar webhook ${webhookIdToken}:`, errDelete.response ? errDelete.response.data : errDelete.message);
+    }
   }
 }
 
