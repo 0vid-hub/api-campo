@@ -412,7 +412,7 @@ app.get('/obter-aleatorio', (req, res) => {
   }
 });
 
-// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (COM LOOP ASYNC E SLEEP)
+// ROTA 4: SIMULAÇÃO DINÂMICA DE PARTIDA (SINCRO REAL-TIME)
 app.get('/simular-partida', async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -423,19 +423,17 @@ app.get('/simular-partida', async (req, res) => {
   }
 
   const webhookUrl = `https://discord.com/api/webhooks/${webhookIdToken}`;
-
-  // Helper para criar uma pausa assíncrona
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Responde imediatamente ao BDFD
-  res.status(200).json({ sucesso: true, mensagem: "Partida iniciada no servidor!" });
-
   try {
-    // 1. Envia a mensagem inicial (0')
+    const gC = Number(gerCasa) || 60;
+    const gF = Number(gerFora) || 60;
+
+    // 1. Mensagem Inicial (0')
     const embedInicial = {
       title: "⚽ PARTIDA EM ANDAMENTO",
       color: 0x1d74f5,
-      description: `🏟️ **${timeCasa}** (GER ${gerCasa || 60}) vs **${timeFora}** (GER ${gerFora || 60})\n\n⏱️ **0'** — O juiz apita o início do jogo!`,
+      description: `🏟️ **${timeCasa}** (GER ${gC}) vs **${timeFora}** (GER ${gF})\n\n⏱️ **0'** — O juiz apita o início do jogo!`,
       fields: [{ name: "Placar", value: `**${timeCasa} 0 x 0 ${timeFora}**` }]
     };
 
@@ -446,14 +444,11 @@ app.get('/simular-partida', async (req, res) => {
     let golsFora = 0;
     let lances = [];
 
-    const gC = Number(gerCasa) || 60;
-    const gF = Number(gerFora) || 60;
-
-    // 2. Loop de 10' até 90' a cada 8 segundos (8000ms)
+    // 2. Loop de 10' a 90' (5 segundos entre atualizações)
     for (let minuto = 10; minuto <= 90; minuto += 10) {
-      await sleep(8000);
+      await sleep(5000); 
 
-      // Sorteio de gols baseado na diferença de GER
+      // Chances de gol dinâmicas baseadas na diferença de GER
       if ((Math.random() * 100) < (15 + (gC - gF))) {
         golsCasa++;
         lances.push(`⚽ \`${minuto}'\` Gol do **${timeCasa}**!`);
@@ -497,8 +492,14 @@ app.get('/simular-partida', async (req, res) => {
       }
     }
 
+    // Responde ao BDFD no final da partida
+    return res.status(200).json({ sucesso: true, mensagem: "Partida finalizada com sucesso!" });
+
   } catch (err) {
-    console.error("Erro na simulação do webhook:", err.response ? err.response.data : err.message);
+    console.error("Erro na simulação:", err.response ? err.response.data : err.message);
+    if (!res.headersSent) {
+      return res.status(500).json({ sucesso: false, erro: "erro_simulacao" });
+    }
   }
 });
 
