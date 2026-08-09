@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
-const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png"; // Fundo roxo temático
+const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png";
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
@@ -492,7 +492,7 @@ app.get('/listar-mercado', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 5: ABRIR PACK (CORRIGIDO)
+// ROTA 5: ABRIR PACK
 // -------------------------------------------------------------
 app.get('/abrir-pack', async (req, res) => {
   try {
@@ -530,7 +530,6 @@ app.get('/abrir-pack', async (req, res) => {
     const carta2 = sortearUm();
     const carta3 = sortearUm();
 
-    // Se o BDFD solicitar ?tipo=dados, devolve os dados em JSON leve
     if (req.query.tipo === 'dados') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.status(200).json({
@@ -544,7 +543,6 @@ app.get('/abrir-pack', async (req, res) => {
       });
     }
 
-    // Caso contrário, gera a Imagem PNG com 3 cartas no canvas
     const width = 1000;
     const height = 500;
     const canvas = createCanvas(width, height);
@@ -566,7 +564,6 @@ app.get('/abrir-pack', async (req, res) => {
     const posY = (height - cardH) / 2 + 20;
     const posicoesX = [180, 395, 610];
 
-    // Pega as cartas recebidas pela query ou usa as sorteadas
     const cartasParaDesenhar = [
       req.query.c1 || carta1.chave,
       req.query.c2 || carta2.chave,
@@ -575,12 +572,11 @@ app.get('/abrir-pack', async (req, res) => {
 
     for (let i = 0; i < 3; i++) {
       const entradaRaw = cartasParaDesenhar[i];
-      const entradaLimpa = removerAcentos(entradaRaw); // Limpa acentos e converte para minúsculo
+      const entradaLimpa = removerAcentos(entradaRaw);
 
-      // Encontra a chave exata no BANCO_DE_CARTAS mesmo se vier com acentos/maiúsculas
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
         k => removerAcentos(k) === entradaLimpa
-      ) || BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null;
+      ) || (BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null);
 
       const urlCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
@@ -603,23 +599,27 @@ app.get('/abrir-pack', async (req, res) => {
   }
 });
 
-
 // -------------------------------------------------------------
-// ROTA: GERAR IMAGEM DO ELENCO (1 A 20 JOGADORES - 16:9 HD)
+// ROTA 6: GERAR IMAGEM DO ELENCO (CORRIGIDA E TOTALMENTE ESTÁVEL)
 // -------------------------------------------------------------
 app.get('/gerar-elenco', async (req, res) => {
   try {
-    // Decodifica a URL para ler espaços e vírgulas sem quebrar
-    const rawJogadores = decodeURIComponent(req.query.jogadores || "");
-    const lista = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
+    let rawJogadores = req.query.jogadores || "";
+    
+    try {
+      rawJogadores = decodeURIComponent(rawJogadores);
+    } catch (e) {}
 
-    // Canvas na proporção 16:9 HD
+    // Limpa a lista eliminando espaços em branco e duplicados
+    const listaBruta = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
+    const listaUnica = [...new Set(listaBruta)];
+
     const width = 1280;
     const height = 720;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Fundo Escuro Moderno (Evita falhas ao carregar background externo)
+    // Fundo Gradiente Escuro Moderno
     const gradiente = ctx.createLinearGradient(0, 0, width, height);
     gradiente.addColorStop(0, '#0a0f1d');
     gradiente.addColorStop(1, '#1a233a');
@@ -630,22 +630,24 @@ app.get('/gerar-elenco', async (req, res) => {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 32px Sans-Serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`ELENCO ATUAL (${lista.length}/20)`, width / 2, 50);
+    ctx.fillText(`ELENCO ATUAL (${listaUnica.length}/20)`, width / 2, 50);
 
-    // Configuração da Grade de Cartas (Até 20 cartas: 4 linhas x 5 colunas)
+    // Configurações Fixas da Grade (5 Colunas x 4 Linhas)
     const maxCols = 5;
-    const cardW = 160;
-    const cardH = 220;
+    const cardW = 150;
+    const cardH = 210;
     const gapX = 25;
     const gapY = 15;
-    const startY = 70;
 
-    // Carregamento paralelo ultra-rápido de todas as cartas
-    const promessasCartas = lista.slice(0, 20).map(async (itemRaw) => {
+    // Desenha cada carta
+    const promessasCartas = listaUnica.slice(0, 20).map(async (itemRaw) => {
       const itemLimpo = removerAcentos(itemRaw);
-      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
-        k => removerAcentos(k) === itemLimpo || removerAcentos(k).includes(itemLimpo)
-      );
+      
+      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(k => {
+        const kLimpa = removerAcentos(k);
+        return kLimpa === itemLimpo || itemLimpo.includes(kLimpa) || kLimpa.includes(itemLimpo);
+      });
+
       const urlCarta = chaveEncontrada ? BANCO_DE_CARTAS[chaveEncontrada] : "https://i.ibb.co/sd3x55sR/desconhecido.png";
 
       try {
@@ -657,16 +659,17 @@ app.get('/gerar-elenco', async (req, res) => {
 
     const imagensCarregadas = await Promise.all(promessasCartas);
 
-    // Renderiza cada carta na sua posição correspondente
+    // Cálculo exato das posições
+    const totalCols = Math.min(listaUnica.length, maxCols) || 1;
+    const gridWidth = (totalCols * cardW) + ((totalCols - 1) * gapX);
+    const startXGlobal = (width - gridWidth) / 2;
+    const startY = 80;
+
     imagensCarregadas.forEach((imgCarta, i) => {
       const row = Math.floor(i / maxCols);
       const col = i % maxCols;
 
-      const itensNaLinha = Math.min(lista.length - row * maxCols, maxCols);
-      const totalWidthRow = (itensNaLinha * cardW) + ((itensNaLinha - 1) * gapX);
-      const startX = (width - totalWidthRow) / 2;
-
-      const posX = startX + col * (cardW + gapX);
+      const posX = startXGlobal + col * (cardW + gapX);
       const posY = startY + row * (cardH + gapY);
 
       if (imgCarta) {
@@ -675,11 +678,11 @@ app.get('/gerar-elenco', async (req, res) => {
     });
 
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     return canvas.createPNGStream().pipe(res);
 
   } catch (error) {
-    console.error("Erro ao gerar imagem do elenco:", error);
+    console.error("Erro fatal ao gerar imagem do elenco:", error);
     return res.status(500).send('Erro ao gerar imagem.');
   }
 });
