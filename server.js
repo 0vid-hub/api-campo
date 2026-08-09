@@ -4,14 +4,13 @@ const { createCanvas, loadImage } = require('canvas');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Garante o parse de JSON e habilita cabeçalhos para o BDFD
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/rRCdDwc2/time.png";
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
 const BANCO_DE_CARTAS = {
-  // 88-89 OVERALL
   "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
   "buffon 90": "https://i.ibb.co/KxxLnfWd/buffon.png",
   "eusébio 90": "https://i.ibb.co/cSY6C7vP/eusebio.png",
@@ -26,7 +25,6 @@ const BANCO_DE_CARTAS = {
   "pepe 88": "https://i.ibb.co/bMYppmWJ/pepe.png",
   "roberto carlos 88": "https://i.ibb.co/Ps3KFZ5h/robertocarlos.png",
   "zidane 88": "https://i.ibb.co/wr45wSpS/zidane.png",
-
   "lionel messi 88": "https://i.ibb.co/SD9XC7KK/messi86.png",
   "martinez 87": "https://i.ibb.co/PsTNhDxT/martinez86.png",
   "mbappé 87": "https://i.ibb.co/wTzfxNN/mbappe86.png",
@@ -42,15 +40,12 @@ const BANCO_DE_CARTAS = {
   "maradona 86": "https://i.ibb.co/YFPPdqSb/maradona.png",
   "ricardo quaresma 86": "https://i.ibb.co/k2HvS9V7/quaresma.png",
   "zlatan ibrahimovic 86": "https://i.ibb.co/Mks18Nm9/zlatan.png",
-
   "amrabat 86": "https://i.ibb.co/VP0s2cc/amrabat86.png",
   "bruno fernandes 86": "https://i.ibb.co/QjHQkGFn/brunofernandes86.png",
   "griezmann 86": "https://i.ibb.co/V0KY5RzN/griezmann86.png",
   "gvardiol 86": "https://i.ibb.co/3mt22NRP/gvardiol86.png",
   "livakovic 86": "https://i.ibb.co/WvyKDQpK/livakovic86.png",
   "pepe 86": "https://i.ibb.co/Rp9xf308/pepe86.png",
-
-  // 85 OVERALL
   "unai simón 85": "https://i.ibb.co/1tP6SR0K/unaisimon85.png",
   "rodri 85": "https://i.ibb.co/XrH16CKR/rodri85.png",
   "pedro porro 85": "https://i.ibb.co/sJCBTG0L/pedroporro85.png",
@@ -67,8 +62,6 @@ const BANCO_DE_CARTAS = {
   "cucurella 85": "https://i.ibb.co/xtC2sYfv/cucurella85.png",
   "dani olmo 85": "https://i.ibb.co/xqR2zjwq/daniolmo85.png",
   "lamine yamal 85": "https://i.ibb.co/DDn5tdCN/yamal85.png",
-
-  // 84 OVERALL
   "ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
   "lionel messi 84": "https://i.ibb.co/5XK1RhWz/messi84.png",
   "bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
@@ -78,8 +71,6 @@ const BANCO_DE_CARTAS = {
   "neymar jr 84": "https://i.ibb.co/ZpdBqzxF/neymar84.png",
   "nuno mendes 84": "https://i.ibb.co/67yHcGp3/nunomendes84.png",
   "vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
-
-  // 80 - 83 OVERALL
   "vinicius júnior 83": "https://i.ibb.co/KMnsD2j/vini83.png",
   "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
   "michael olise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
@@ -94,8 +85,6 @@ const BANCO_DE_CARTAS = {
   "ruben dias 80": "https://i.ibb.co/SLNg0bV/rubendias80.png",
   "gonçalo ramos 80": "https://i.ibb.co/sJXr8Yd1/gon-aloramos80.png",
   "neymar jr 80": "https://i.ibb.co/WNX88Xj1/neymar80.png",
-
-  // 75 - 79 OVERALL
   "rodri 79": "https://i.ibb.co/NntbtcYh/rodri79r.png",
   "vinicius júnior 78": "https://i.ibb.co/k6r70yqc/vini78r.png",
   "kevin de bruyne 78": "https://i.ibb.co/PsFCVnHg/DEBRUYNE78r.png",
@@ -111,8 +100,6 @@ const BANCO_DE_CARTAS = {
   "mohamed salah 75": "https://i.ibb.co/QF0RV1qn/salah75r.png",
   "ronaldo 75": "https://i.ibb.co/CpsxPhQc/ronaldo75r.png",
   "ederson 75": "https://i.ibb.co/dRMZpsv/ederson75.png",
-
-  // 70 - 74 OVERALL
   "cucurella 74": "https://i.ibb.co/M52XXn3H/cucurella74.png",
   "endrick 74": "https://i.ibb.co/jvzs7j4q/endrick74.png",
   "estevão 74": "https://i.ibb.co/LdyFYYnK/estevao74.png",
@@ -138,8 +125,6 @@ const BANCO_DE_CARTAS = {
   "ribamar 70": "https://i.ibb.co/XZ2FjFLp/ribamar70.png",
   "igor jesus 70": "https://i.ibb.co/C3ByxRBk/igorjesus70.png",
   "yuri alberto 70": "https://i.ibb.co/DPLcTQKY/yurialberto70.png",
-
-  // 65 - 69 OVERALL
   "carlinhos 69": "https://i.ibb.co/6cXqTrRP/carlinhos69r.png",
   "francisco moura 69": "https://i.ibb.co/1YtgK2QV/franciscomoura69r.png",
   "gonçalo sá 69": "https://i.ibb.co/2Yd1XYnz/gon-alosa69r.png",
@@ -160,8 +145,6 @@ const BANCO_DE_CARTAS = {
   "nuno tavares 65": "https://i.ibb.co/84Lqjh54/nunotacares65r.png",
   "joão mário 65": "https://i.ibb.co/6jwS6H8/joaomario65r.png",
   "toti gomes 65": "https://i.ibb.co/WWZ1hRSR/totigomes65r.png",
-
-  // 60 - 64 OVERALL
   "marcano 64": "https://i.ibb.co/ymTyPkY1/marcano64.png",
   "lukas ullrich 64": "https://i.ibb.co/Kj7B9f57/lukasullrish64.png",
   "andré almeida 63": "https://i.ibb.co/Y7PGCHR3/andrealmeida63.png",
@@ -175,27 +158,15 @@ const BANCO_DE_CARTAS = {
   "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
-// Função de higienização de strings para URLs e Buscas
 function removerAcentos(texto) {
   if (!texto) return "";
-  try {
-    texto = decodeURIComponent(texto);
-  } catch (e) {}
-
-  return texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove sinais diacríticos (acentos)
-    .toLowerCase()
-    .trim();
+  try { texto = decodeURIComponent(texto); } catch (e) {}
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
-// -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO
-// -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
-    const width = 800;
-    const height = 800;
+    const width = 800; const height = 800;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
@@ -203,92 +174,45 @@ app.get('/gerar-campo', async (req, res) => {
       const bgImg = await loadImage(URL_FUNDO);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (bgErr) {
-      console.error("Erro ao carregar fundo:", bgErr.message);
-      ctx.fillStyle = '#12141d';
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#12141d'; ctx.fillRect(0, 0, width, height);
     }
 
-    const cardWidth = 145;
-    const cardHeight = 195;
-
+    const cardWidth = 145; const cardHeight = 195;
     const POSICOES = {
-      gr:  { x: 400, y: 710 },
-      le:  { x: 105, y: 560 },
-      dc1: { x: 300, y: 535 },
-      dc2: { x: 500, y: 535 },
-      ld:  { x: 695, y: 560 },
-      mc:  { x: 400, y: 375 },
-      mo1: { x: 235, y: 235 },
-      mo2: { x: 565, y: 235 },
-      ee:  { x: 105, y: 100 },
-      pl:  { x: 400, y: 90 },
-      ed:  { x: 695, y: 100 }
+      gr: { x: 400, y: 710 }, le: { x: 105, y: 560 }, dc1: { x: 300, y: 535 },
+      dc2: { x: 500, y: 535 }, ld: { x: 695, y: 560 }, mc: { x: 400, y: 375 },
+      mo1: { x: 235, y: 235 }, mo2: { x: 565, y: 235 }, ee: { x: 105, y: 100 },
+      pl: { x: 400, y: 90 }, ed: { x: 695, y: 100 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const busca = removerAcentos(req.query[pos]);
-
       if (busca && busca !== 'vazio') {
         const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(busca));
-
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
             const cardImg = await loadImage(BANCO_DE_CARTAS[chaveEncontrada]);
-            ctx.drawImage(
-              cardImg, 
-              coord.x - cardWidth / 2, 
-              coord.y - cardHeight / 2, 
-              cardWidth, 
-              cardHeight
-            );
-          } catch (err) {
-            console.error(`Erro ao carregar imagem para ${busca}:`, err.message);
-          }
+            ctx.drawImage(cardImg, coord.x - cardWidth / 2, coord.y - cardHeight / 2, cardWidth, cardHeight);
+          } catch (err) {}
         }
       }
     }
-
     res.setHeader('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
-
   } catch (error) {
-    console.error("Erro ao gerar campo:", error);
     res.status(500).send('Erro ao gerar imagem.');
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (Totalmente protegida contra erros JSON)
-// -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
   try {
     const queryBruta = req.query.q || "";
     const buscaLimpa = removerAcentos(queryBruta);
+    if (!buscaLimpa) return res.status(200).json({ sucesso: false, erro: "busca_vazia", imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", overall: 60 });
 
-    if (!buscaLimpa) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "busca_vazia",
-        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-        overall: 60 
-      });
-    }
-
-    const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
-      const nomeLimpo = removerAcentos(nomeNoBanco);
-      return nomeLimpo.includes(buscaLimpa);
-    });
-
-    if (!chaveEncontrada) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "nao_encontrado",
-        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-        overall: 60 
-      });
-    }
+    const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => removerAcentos(nomeNoBanco).includes(buscaLimpa));
+    if (!chaveEncontrada) return res.status(200).json({ sucesso: false, erro: "nao_encontrado", imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", overall: 60 });
 
     const partes = chaveEncontrada.split(' ');
     const overall = parseInt(partes[partes.length - 1]) || 60;
@@ -304,56 +228,31 @@ app.get('/buscar-jogador', (req, res) => {
     else if (overall >= 70) preco = 2500;
     else if (overall >= 65) preco = 1500;
 
-    return res.status(200).json({
-      sucesso: true,
-      nome: chaveEncontrada,
-      overall: overall,
-      imagem: imagem,
-      preco: preco
-    });
+    return res.status(200).json({ sucesso: true, nome: chaveEncontrada, overall, imagem, preco });
   } catch (error) {
-    console.error("Erro interno no /buscar-jogador:", error);
-    return res.status(200).json({ 
-      sucesso: false, 
-      erro: "erro_interno",
-      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-      overall: 60 
-    });
+    return res.status(200).json({ sucesso: false, erro: "erro_interno", imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", overall: 60 });
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 3: OBTER JOGADOR ALEATÓRIO (COM PESOS DE RARIDADE)
-// -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
   try {
     const chaves = Object.keys(BANCO_DE_CARTAS);
-    if (chaves.length === 0) {
-      return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
-    }
+    if (chaves.length === 0) return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
 
-    // 1. Calcula o peso/raridade de cada jogador baseado no Overall
     const jogadoresComPeso = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
-
-      let peso = 100; // Padrão para <75
-
-      if (overall >= 90) peso = 1;       // Impossível/Ultra Raro (~0.5% de chance)
-      else if (overall >= 88) peso = 3;  // Muito Raro
-      else if (overall >= 85) peso = 8;  // Raro
-      else if (overall >= 80) peso = 25; // Incomum
-      else if (overall >= 75) peso = 60; // Comum
-
+      let peso = 100;
+      if (overall >= 90) peso = 1;
+      else if (overall >= 88) peso = 3;
+      else if (overall >= 85) peso = 8;
+      else if (overall >= 80) peso = 25;
+      else if (overall >= 75) peso = 60;
       return { chave, overall, peso };
     });
 
-    // 2. Soma o peso total do banco
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
-
-    // 3. Sorteia um número entre 0 e o peso total
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -365,18 +264,76 @@ app.get('/obter-aleatorio', (req, res) => {
       numeroSorteado -= jogador.peso;
     }
 
-    const imagem = BANCO_DE_CARTAS[cartaSorteada.chave];
-
-    return res.status(200).json({
-      sucesso: true,
-      nome: cartaSorteada.chave,
-      overall: cartaSorteada.overall,
-      imagem: imagem
-    });
+    return res.status(200).json({ sucesso: true, nome: cartaSorteada.chave, overall: cartaSorteada.overall, imagem: BANCO_DE_CARTAS[cartaSorteada.chave] });
   } catch (error) {
-    console.error("Erro interno no /obter-aleatorio:", error);
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
+});
+
+// ROTA 4: SIMULAÇÃO AO VIVO
+app.get('/simular-partida-live', async (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const channelId = req.query.channelId;
+  const gerCasa = parseInt(req.query.gerCasa) || 70;
+  const gerFora = parseInt(req.query.gerFora) || 70;
+  const nomeCasa = req.query.nomeCasa || "Time Casa";
+  const nomeFora = req.query.nomeFora || "Time Fora";
+
+  if (!channelId) return res.status(400).json({ sucesso: false, erro: "channelId_obrigatorio" });
+
+  res.status(200).json({ sucesso: true, mensagem: "Partida iniciada!" });
+
+  try {
+    const headers = { "Authorization": `Bot ${BOT_TOKEN}`, "Content-Type": "application/json" };
+    const webhookReq = await fetch(`https://discord.com/api/v10/channels/${channelId}/webhooks`, {
+      method: 'POST', headers, body: JSON.stringify({ name: "Placar Ao Vivo" })
+    });
+    const webhookData = await webhookReq.json();
+    if (!webhookData.id || !webhookData.token) return;
+
+    const webhookUrl = `https://discord.com/api/webhooks/${webhookData.id}/${webhookData.token}`;
+    const diff = gerCasa - gerFora;
+    let probCasa = 0.35 + (diff * 0.02);
+    let probFora = 0.25 - (diff * 0.02);
+
+    const golsPartida = [];
+    for (let m = 10; m <= 90; m += 10) {
+      const rand = Math.random();
+      if (rand < probCasa / 3) golsPartida.push({ minuto: m, time: nomeCasa });
+      else if (rand < (probCasa / 3) + (probFora / 3)) golsPartida.push({ minuto: m, time: nomeFora });
+    }
+
+    const primeiraMsgReq = await fetch(`${webhookUrl}?wait=true`, {
+      method: 'POST', headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ embeds: [{ title: "🏟️ PARTIDA EM ANDAMENTO", description: `⏱️ **Tempo:** \`10'\` Minutos\n📊 **Placar:** ${nomeCasa} 0 x 0 ${nomeFora}\n\n**Lances:**\nApito inicial! A bola está rolando...`, color: 16776960 }] })
+    });
+    const primeiraMsgData = await primeiraMsgReq.json();
+    const messageId = primeiraMsgData.id;
+    let minutoAtual = 20;
+
+    const interval = setInterval(async () => {
+      const golsAteAgora = golsPartida.filter(g => g.minuto <= minutoAtual);
+      const cGols = golsAteAgora.filter(g => g.time === nomeCasa).length;
+      const fGols = golsAteAgora.filter(g => g.time === nomeFora).length;
+
+      let lancesTexto = golsAteAgora.map(g => `⚽ \`${g.minuto}'\` Gol do **${g.time}**!`).join("\n");
+      if (!lancesTexto) lancesTexto = "Jogo disputado intensamente no meio de campo...";
+
+      const eFinal = minutoAtual >= 90;
+
+      await fetch(`${webhookUrl}/messages/${messageId}`, {
+        method: 'PATCH', headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [{ title: eFinal ? "🏆 FIM DE JOGO!" : "🏟️ PARTIDA EM ANDAMENTO", description: `⏱️ **Tempo:** \`${minutoAtual}'\` Minutos\n📊 **Placar:** ${nomeCasa} ${cGols} x ${fGols} ${nomeFora}\n\n**Lances:**\n${lancesTexto}`, color: eFinal ? 65280 : 16776960 }] })
+      }).catch(() => {});
+
+      if (eFinal) {
+        clearInterval(interval);
+        await fetch(`https://discord.com/api/v10/webhooks/${webhookData.id}`, { method: 'DELETE', headers }).catch(() => {});
+      } else {
+        minutoAtual += 10;
+      }
+    }, 8000);
+  } catch (error) {}
 });
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
