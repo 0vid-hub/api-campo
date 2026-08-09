@@ -52,7 +52,7 @@ const BANCO_DE_CARTAS = {
   "thierry henry 86": "https://i.ibb.co/kgQV7K0F/henry.png",
   "maradona 86": "https://i.ibb.co/YFPPdqSb/maradona.png",
   "ricardo quaresma 86": "https://i.ibb.co/k2HvS9V7/quaresma.png",
-  "zlatan ibrahimovic 86": "https://i.ibb.co/Mks18Nm9/zlatan.png",
+  "ibrahimovic 86": "https://i.ibb.co/Mks18Nm9/zlatan.png",
 
   "amrabat 86": "https://i.ibb.co/VP0s2cc/amrabat86.png",
   "bruno fernandes 86": "https://i.ibb.co/QjHQkGFn/brunofernandes86.png",
