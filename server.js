@@ -605,61 +605,64 @@ app.get('/abrir-pack', async (req, res) => {
 
 
 // -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO ELENCO (1 A 20 JOGADORES)
+// ROTA 6: GERAR IMAGEM DO ELENCO (OTIMIZADA E RÁPIDA)
 // -------------------------------------------------------------
 app.get('/gerar-elenco', async (req, res) => {
   try {
-    const rawJogadores = req.query.jogadores || "";
-    const lista = rawJogadores ? rawJogadores.split(',').filter(j => j.trim() !== '') : [];
+    // Decodifica a URL e aceita vírgulas corretamente
+    const rawJogadores = decodeURIComponent(req.query.jogadores || "");
+    const lista = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
 
-    // Canvas na proporção 16:9 (1280x720)
     const width = 1280;
     const height = 720;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Fundo elegante para o elenco
-    try {
-      const bgImg = await loadImage(URL_FUNDO_PACK);
-      ctx.drawImage(bgImg, 0, 0, width, height);
-    } catch (e) {
-      const gradiente = ctx.createLinearGradient(0, 0, width, height);
-      gradiente.addColorStop(0, '#0f172a');
-      gradiente.addColorStop(1, '#1e293b');
-      ctx.fillStyle = gradiente;
-      ctx.fillRect(0, 0, width, height);
-    }
+    // Fundo Gradiente Escuro (Garante carregamento instantâneo sem depender de imagem externa)
+    const gradiente = ctx.createLinearGradient(0, 0, width, height);
+    gradiente.addColorStop(0, '#0a0f1d');
+    gradiente.addColorStop(1, '#1a233a');
+    ctx.fillStyle = gradiente;
+    ctx.fillRect(0, 0, width, height);
 
-    // Título no topo da imagem
+    // Título
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 32px Sans-Serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`MEU ELENCO (${lista.length}/20)`, width / 2, 50);
+    ctx.fillText(`MEU ELENCO (${lista.length}/20)`, width / 2, 45);
 
-    // Configuração da grade de cartas (até 20 cartas: 2 linhas de 10 ou 4 linhas de 5)
+    // Configuração do Grid (20 cartas = 4 linhas x 5 colunas ou 2 x 10)
     const maxCols = 5;
-    const cardW = 180;
-    const cardH = 250;
-    const gapX = 30;
-    const gapY = 20;
-    const startY = 80;
+    const cardW = 160;
+    const cardH = 220;
+    const gapX = 25;
+    const gapY = 15;
+    const startY = 65;
 
-    for (let i = 0; i < Math.min(lista.length, 20); i++) {
-      const itemRaw = lista[i];
+    // Pré-carrega todas as imagens juntas para não dar Timeout
+    const promessasCartas = lista.slice(0, 20).map(async (itemRaw) => {
       const itemLimpo = removerAcentos(itemRaw);
-
-      // Busca no BANCO_DE_CARTAS
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
         k => removerAcentos(k) === itemLimpo || removerAcentos(k).includes(itemLimpo)
       );
-
       const urlCarta = chaveEncontrada ? BANCO_DE_CARTAS[chaveEncontrada] : "https://i.ibb.co/sd3x55sR/desconhecido.png";
 
-      // Calcula posição na grade
+      try {
+        const img = await loadImage(urlCarta);
+        return img;
+      } catch (e) {
+        // Se a imagem falhar, carrega uma transparente/padrão sem quebrar o código
+        return null;
+      }
+    });
+
+    const imagensCarregadas = await Promise.all(promessasCartas);
+
+    // Desenha na tela
+    imagensCarregadas.forEach((imgCarta, i) => {
       const row = Math.floor(i / maxCols);
       const col = i % maxCols;
-      
-      // Centralização dinâmica por linha
+
       const itensNaLinha = Math.min(lista.length - row * maxCols, maxCols);
       const totalWidthRow = (itensNaLinha * cardW) + ((itensNaLinha - 1) * gapX);
       const startX = (width - totalWidthRow) / 2;
@@ -667,22 +670,19 @@ app.get('/gerar-elenco', async (req, res) => {
       const posX = startX + col * (cardW + gapX);
       const posY = startY + row * (cardH + gapY);
 
-      try {
-        const imgCarta = await loadImage(urlCarta);
+      if (imgCarta) {
         ctx.drawImage(imgCarta, posX, posY, cardW, cardH);
-      } catch (err) {
-        console.error(`Erro ao carregar carta no elenco: ${itemRaw}`, err.message);
       }
-    }
+    });
 
     res.setHeader('Content-Type', 'image/png');
-    canvas.createPNGStream().pipe(res);
+    res.setHeader('Cache-Control', 'no-cache');
+    return canvas.createPNGStream().pipe(res);
 
   } catch (error) {
     console.error("Erro ao gerar imagem do elenco:", error);
-    res.status(500).send('Erro ao gerar imagem do elenco.');
+    return res.status(500).send('Erro ao gerar imagem.');
   }
 });
-
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
