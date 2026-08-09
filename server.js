@@ -12,7 +12,6 @@ app.use(express.urlencoded({ extended: true }));
 // -------------------------------------------------------------
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png"; // Fundo roxo temático
-// ALTERE O LINK ABAIXO para a imagem que deseja no multisell/vendas:
 const URL_FUNDO_MULTISELL = "https://i.ibb.co/1J4MZTKw/time.png"; 
 
 const BANCO_DE_CARTAS = {
@@ -605,7 +604,7 @@ app.get('/abrir-pack', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO MULTISELL (COM BUSCA CORRIGIDA E NOVO FUNDO)
+// ROTA 6: GERAR IMAGEM DO MULTISELL
 // -------------------------------------------------------------
 app.get('/gerar-multisell', async (req, res) => {
   try {
@@ -614,7 +613,6 @@ app.get('/gerar-multisell', async (req, res) => {
       return res.status(400).send('Nenhuma carta especificada.');
     }
 
-    // Aceita separação por vírgula (ex: "fabio vieira 66,goncalo sa 69,joao ferreira 69")
     const listaCartas = cartasRaw.split(',').map(c => c.trim()).filter(Boolean);
     const total = listaCartas.length;
 
@@ -622,7 +620,6 @@ app.get('/gerar-multisell', async (req, res) => {
       return res.status(400).send('Lista de cartas vazia.');
     }
 
-    // Grade com no máximo 5 cartas por linha
     const cols = total <= 5 ? total : Math.min(5, total);
     const rows = Math.ceil(total / cols);
 
@@ -637,12 +634,10 @@ app.get('/gerar-multisell', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Tenta carregar o fundo específico do MULTISELL
     try {
       const bgImg = await loadImage(URL_FUNDO_MULTISELL);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (e) {
-      // Se a imagem falhar, cria um fundo azul escuro limpo
       const gradiente = ctx.createLinearGradient(0, 0, width, height);
       gradiente.addColorStop(0, '#0a1128');
       gradiente.addColorStop(1, '#000411');
@@ -650,7 +645,6 @@ app.get('/gerar-multisell', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Desenha todas as cartas recebidas
     for (let i = 0; i < total; i++) {
       const r = Math.floor(i / cols);
       const c = i % cols;
@@ -660,7 +654,6 @@ app.get('/gerar-multisell', async (req, res) => {
 
       const entradaLimpa = removerAcentos(listaCartas[i]);
 
-      // Procura a carta aproximando pelo nome (impede de só pegar 1 carta)
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
         k => removerAcentos(k) === entradaLimpa || removerAcentos(k).includes(entradaLimpa) || entradaLimpa.includes(removerAcentos(k))
       );
@@ -681,6 +674,65 @@ app.get('/gerar-multisell', async (req, res) => {
   } catch (error) {
     console.error("Erro no /gerar-multisell:", error);
     res.status(500).send('Erro ao gerar imagem do multisell.');
+  }
+});
+
+// -------------------------------------------------------------
+// ROTA 7: PROCESSAR MULTISELL (LÓGICA DOS RESERVAS)
+// -------------------------------------------------------------
+app.get('/multisell', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  try {
+    const invRaw = req.query.inv || "";
+    const titularesRaw = req.query.titulares || "";
+
+    if (!invRaw) {
+      return res.status(200).json({ sucesso: false, erro: "inv_vazio" });
+    }
+
+    const inventario = invRaw.split(',').map(item => item.trim()).filter(Boolean);
+    const titulares = titularesRaw.split(',').map(item => removerAcentos(item)).filter(Boolean);
+
+    const mantidos = [];
+    const vendidos = [];
+
+    inventario.forEach(item => {
+      const itemLimpo = removerAcentos(item);
+
+      // Checa se o item bate ou está contido em alguma vaga dos titulares
+      const ehTitular = titulares.some(t => t && (t === itemLimpo || itemLimpo.includes(t) || t.includes(itemLimpo)));
+
+      if (ehTitular) {
+        mantidos.push(item);
+      } else {
+        vendidos.push(item);
+      }
+    });
+
+    if (vendidos.length === 0) {
+      return res.status(200).json({
+        sucesso: false,
+        erro: "sem_reservas",
+        mensagem: "Todos os jogadores estão escalados como titulares ou não há cartas para vender."
+      });
+    }
+
+    const totalMoedas = vendidos.length * 800;
+    const listaVendaFormatada = vendidos.map(v => `▫ **${v}**`).join('\n');
+
+    return res.status(200).json({
+      sucesso: true,
+      qtdVendidos: vendidos.length,
+      totalMoedas: totalMoedas,
+      novoInv: mantidos.join(','),
+      listaVenda: listaVendaFormatada,
+      cartasQuery: vendidos.join(',')
+    });
+
+  } catch (error) {
+    console.error("Erro no /multisell:", error);
+    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
 });
 
