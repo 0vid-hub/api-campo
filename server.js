@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
-const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png";
+const URL_FUNDO_PACK = "https://i.ibb.co/Sw40Dr1q/fundopackfree.png"; // Fundo roxo temático
 
 const BANCO_DE_CARTAS = {
   // 90-94 OVERALL
@@ -211,30 +211,30 @@ app.get('/gerar-campo', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Se falhar ao carregar imagem de fundo, mantém o fundo transparente
     try {
       const bgImg = await loadImage(URL_FUNDO);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (bgErr) {
-      console.error("Fundo do campo não carregado, mantendo transparente:", bgErr.message);
+      console.error("Erro ao carregar fundo:", bgErr.message);
+      ctx.fillStyle = '#12141d';
+      ctx.fillRect(0, 0, width, height);
     }
 
     const cardWidth = 145;
     const cardHeight = 195;
 
-    // Coordenadas Y reajustadas para subir todos os jogadores proporcionalmente
     const POSICOES = {
-      gr:  { x: 400, y: 680 },
-      le:  { x: 105, y: 510 },
-      dc1: { x: 300, y: 485 },
-      dc2: { x: 500, y: 485 },
-      ld:  { x: 695, y: 510 },
-      mc:  { x: 400, y: 325 },
-      mo1: { x: 235, y: 195 },
-      mo2: { x: 565, y: 195 },
-      ee:  { x: 105, y: 75 },
-      pl:  { x: 400, y: 65 },
-      ed:  { x: 695, y: 75 }
+      gr:  { x: 400, y: 710 },
+      le:  { x: 105, y: 560 },
+      dc1: { x: 300, y: 535 },
+      dc2: { x: 500, y: 535 },
+      ld:  { x: 695, y: 560 },
+      mc:  { x: 400, y: 375 },
+      mo1: { x: 235, y: 235 },
+      mo2: { x: 565, y: 235 },
+      ee:  { x: 105, y: 100 },
+      pl:  { x: 400, y: 90 },
+      ed:  { x: 695, y: 100 }
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
@@ -492,7 +492,7 @@ app.get('/listar-mercado', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 5: ABRIR PACK
+// ROTA 5: ABRIR PACK (CORRIGIDO)
 // -------------------------------------------------------------
 app.get('/abrir-pack', async (req, res) => {
   try {
@@ -530,6 +530,7 @@ app.get('/abrir-pack', async (req, res) => {
     const carta2 = sortearUm();
     const carta3 = sortearUm();
 
+    // Se o BDFD solicitar ?tipo=dados, devolve os dados em JSON leve
     if (req.query.tipo === 'dados') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.status(200).json({
@@ -543,24 +544,29 @@ app.get('/abrir-pack', async (req, res) => {
       });
     }
 
+    // Caso contrário, gera a Imagem PNG com 3 cartas no canvas
     const width = 1000;
     const height = 500;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Tenta aplicar fundo; se não tiver, permanece transparente
     try {
       const bgImg = await loadImage(URL_FUNDO_PACK);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (e) {
-      // Deixado em branco de propósito para transparência caso a imagem falhe
+      const gradiente = ctx.createLinearGradient(0, 0, width, height);
+      gradiente.addColorStop(0, '#2e1462');
+      gradiente.addColorStop(1, '#110729');
+      ctx.fillStyle = gradiente;
+      ctx.fillRect(0, 0, width, height);
     }
 
     const cardW = 210;
     const cardH = 300;
-    const posY = (height - cardH) / 2;
+    const posY = (height - cardH) / 2 + 20;
     const posicoesX = [180, 395, 610];
 
+    // Pega as cartas recebidas pela query ou usa as sorteadas
     const cartasParaDesenhar = [
       req.query.c1 || carta1.chave,
       req.query.c2 || carta2.chave,
@@ -569,11 +575,12 @@ app.get('/abrir-pack', async (req, res) => {
 
     for (let i = 0; i < 3; i++) {
       const entradaRaw = cartasParaDesenhar[i];
-      const entradaLimpa = removerAcentos(entradaRaw);
+      const entradaLimpa = removerAcentos(entradaRaw); // Limpa acentos e converte para minúsculo
 
+      // Encontra a chave exata no BANCO_DE_CARTAS mesmo se vier com acentos/maiúsculas
       const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(
         k => removerAcentos(k) === entradaLimpa
-      ) || (BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null);
+      ) || BANCO_DE_CARTAS[entradaRaw] ? entradaRaw : null;
 
       const urlCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
@@ -593,92 +600,6 @@ app.get('/abrir-pack', async (req, res) => {
   } catch (error) {
     console.error("Erro no /abrir-pack:", error);
     return res.status(500).send('Erro ao gerar pack.');
-  }
-});
-
-// -------------------------------------------------------------
-// ROTA 6: GERAR IMAGEM DO ELENCO (FUNDO TRANSPARENTE, ALINHADO E CENTRALIZADO)
-// -------------------------------------------------------------
-app.get('/gerar-elenco', async (req, res) => {
-  try {
-    let rawJogadores = req.query.jogadores || "";
-    
-    try {
-      rawJogadores = decodeURIComponent(rawJogadores);
-    } catch (e) {}
-
-    const listaBruta = rawJogadores ? rawJogadores.split(',').map(j => j.trim()).filter(j => j !== '') : [];
-    const listaUnica = [...new Set(listaBruta)].slice(0, 20);
-
-    const width = 1280;
-    const height = 720;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    // Nota: O fundo gradiente foi removido para deixar o fundo 100% TRANSPARENTE
-
-    // Configurações do Grid
-    const maxCols = 5;
-    const cardW = 150;
-    const cardH = 210;
-    const gapX = 30;
-    const gapY = 20;
-
-    // Carrega todas as imagens
-    const promessasCartas = listaUnica.map(async (itemRaw) => {
-      const itemLimpo = removerAcentos(itemRaw);
-      
-      const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(k => {
-        const kLimpa = removerAcentos(k);
-        return kLimpa === itemLimpo || itemLimpo.includes(kLimpa) || kLimpa.includes(itemLimpo);
-      });
-
-      const urlCarta = chaveEncontrada ? BANCO_DE_CARTAS[chaveEncontrada] : "https://i.ibb.co/sd3x55sR/desconhecido.png";
-
-      try {
-        return await loadImage(urlCarta);
-      } catch (e) {
-        return null;
-      }
-    });
-
-    const imagensCarregadas = await Promise.all(promessasCartas);
-
-    // Separa as imagens em linhas
-    const linhas = [];
-    for (let i = 0; i < imagensCarregadas.length; i += maxCols) {
-      linhas.push(imagensCarregadas.slice(i, i + maxCols));
-    }
-
-    // Centralização Vertical
-    const totalLinhas = linhas.length || 1;
-    const totalGridHeight = (totalLinhas * cardH) + ((totalLinhas - 1) * gapY);
-    const startYVertical = (height - totalGridHeight) / 2;
-
-    // Desenha cada linha centralizada Horizontalmente
-    linhas.forEach((linhaImg, rowIndex) => {
-      const cartasNaLinha = linhaImg.length;
-      
-      const rowWidth = (cartasNaLinha * cardW) + ((cartasNaLinha - 1) * gapX);
-      const startXRow = (width - rowWidth) / 2;
-      const posY = startYVertical + rowIndex * (cardH + gapY);
-
-      linhaImg.forEach((imgCarta, colIndex) => {
-        const posX = startXRow + colIndex * (cardW + gapX);
-
-        if (imgCarta) {
-          ctx.drawImage(imgCarta, posX, posY, cardW, cardH);
-        }
-      });
-    });
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    return canvas.createPNGStream().pipe(res);
-
-  } catch (error) {
-    console.error("Erro fatal ao gerar imagem do elenco:", error);
-    return res.status(500).send('Erro ao gerar imagem.');
   }
 });
 
