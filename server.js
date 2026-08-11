@@ -273,7 +273,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO
+// ROTA 4: LISTAR JOGADORES NO MERCADO (COM POSIÇÃO INCLUÍDA)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -305,7 +305,10 @@ app.get('/listar-mercado', (req, res) => {
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
 
-      return { nome: nomeFormatado, overall };
+      const dadosCarta = BANCO_DE_CARTAS[chave];
+      const posicao = (dadosCarta.posicao || "PL").toUpperCase().trim();
+
+      return { nome: nomeFormatado, overall, posicao };
     })
     .filter(j => j.overall >= min && j.overall <= max)
     .sort((a, b) => b.overall - a.overall);
@@ -321,10 +324,11 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
+      // Exemplo de saída: [94] Luka Modric (MC)
+      const col1 = `[${j1.overall}] ${j1.nome} (${j1.posicao})`.padEnd(23, ' ');
       
       if (j2) {
-        const col2 = `[${j2.overall}] ${j2.nome}`;
+        const col2 = `[${j2.overall}] ${j2.nome} (${j2.posicao})`;
         linhas.push(`${col1}  ${col2}`);
       } else {
         linhas.push(col1);
