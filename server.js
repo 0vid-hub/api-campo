@@ -19,7 +19,7 @@ const BANCO_DE_CARTAS = {
   "joão costa 60": { imagem: "https://image.png/", posicao: "PL", atributos: [65, 58, 62, 61, 48, 64] },
   "charles 60": { imagem: "https://i.ibb.co/QFSyBFRv/charles60.png", posicao: "GR", atributos: [62, 63, 55, 60, 35, 60] },
   "joaquin lavega 60": { imagem: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", posicao: "EE", atributos: [68, 57, 58, 62, 30, 55] },
-  "zé ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: [55, 50, 60, 56, 62, 65] },
+  "Zé Ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: [55, 50, 60, 56, 62, 65] },
   "thibaut courtois 90": { imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", posicao: "GR", atributos: [85, 89, 76, 93, 90, 88] }
 };
 
