@@ -15,12 +15,63 @@ const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 // Ordem para GR:    [ALC, CON, REP, REF, POS, FIS]
 // -------------------------------------------------------------
 const BANCO_DE_CARTAS = {
-  "luka modric 94": { imagem: "https://i.ibb.co/5WvWtzPq/modric94.png", posicao: "MC", atributos: [78, 84, 95, 92, 75, 72] },
-  "joão costa 60": { imagem: "https://image.png/", posicao: "PL", atributos: [65, 58, 62, 61, 48, 64] },
-  "charles 60": { imagem: "https://i.ibb.co/QFSyBFRv/charles60.png", posicao: "GR", atributos: [62, 63, 55, 60, 35, 60] },
-  "joaquin lavega 60": { imagem: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", posicao: "EE", atributos: [68, 57, 58, 62, 30, 55] },
-  "Zé Ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: [55, 50, 60, 56, 62, 65] },
-  "thibaut courtois 90": { imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", posicao: "GR", atributos: [85, 89, 76, 93, 90, 88] }
+"André Clóvis 69": { imagem: "https://image.png/", posicao: "PL", atributos: [58, 69, 58, 64, 32, 76] },
+"Zé Lucas 69": { imagem: "https://image.png/", posicao: "MC", atributos: [70, 51, 78, 70, 72, 75] },
+
+"Rafael Luís 68": { imagem: "https://image.png/", posicao: "MC", atributos: [65, 55, 72, 67, 68, 70] },
+"Tony Strata 68": { imagem: "https://image.png/", posicao: "LD", atributos: [82, 39, 62, 72, 67, 65] },
+"Tomás Pochettino 68": { imagem: "https://image.png/", posicao: "MO", atributos: [63, 70, 82, 79, 39, 58] },
+"João Pedro 68": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 66, 58, 79, 30, 57] },
+
+"Daniel Banjaqui 67": { imagem: "https://image.png/", posicao: "LD", atributos: [78, 42, 62, 70, 65, 67] },
+"Ejike Opara 67": { imagem: "https://image.png/", posicao: "PL", atributos: [76, 78, 43, 66, 30, 70] },
+"Miguel Nogueira 67": { imagem: "https://image.png/", posicao: "ED", atributos: [85, 62, 65, 80, 34, 57] },
+"Ryan 67": { imagem: "https://image.png/", posicao: "MC", atributos: [73, 44, 75, 68, 70, 73] },
+"Gustavo Santos 67": { imagem: "https://image.png/", posicao: "PL", atributos: [70, 76, 46, 61, 29, 71] },
+
+"Gonçalo Oliveira 66": { imagem: "https://image.png/", posicao: "DC", atributos: [54, 38, 55, 48, 76, 74] },
+"Nuno Félix 66": { imagem: "https://image.png/", posicao: "MC", atributos: [62, 48, 70, 61, 69, 68] },
+"Thiago Balieiro 66": { imagem: "https://image.png/", posicao: "DC", atributos: [59, 34, 54, 45, 78, 75] },
+"Rômulo 66": { imagem: "https://image.png/", posicao: "MO", atributos: [67, 65, 77, 75, 42, 61] },
+"Lourenço 66": { imagem: "https://image.png/", posicao: "MC", atributos: [62, 58, 81, 68, 55, 67] },
+"Gustavo Prado 66": { imagem: "https://image.png/", posicao: "ED", atributos: [86, 64, 65, 80, 34, 55] },
+"Lucas Kallyel 66": { imagem: "https://image.png/", posicao: "MC", atributos: [69, 46, 73, 65, 67, 71] },
+
+"Gonçalo Moreira 65": { imagem: "https://image.png/", posicao: "MO", atributos: [74, 61, 69, 78, 38, 56] },
+"Pozo 65": { imagem: "https://image.png/", posicao: "MO", atributos: [63, 67, 73, 77, 32, 58] },
+"Juan Muñoz 65": { imagem: "https://image.png/", posicao: "PL", atributos: [61, 76, 57, 62, 31, 68] },
+"Vasco Santos 65": { imagem: "https://image.png/", posicao: "DC", atributos: [62, 36, 57, 48, 79, 72] },
+"Chrystian Barletta 65": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 73, 56, 81, 30, 59] },
+"Ronald 65": { imagem: "https://image.png/", posicao: "MC", atributos: [76, 48, 73, 67, 68, 72] },
+"Darlisson 65": { imagem: "https://image.png/", posicao: "DC", atributos: [58, 35, 52, 44, 77, 76] },
+
+"Carter 64": { imagem: "https://image.png/", posicao: "PL", atributos: [79, 72, 48, 68, 29, 61] },
+"Messeguem 64": { imagem: "https://image.png/", posicao: "MO", atributos: [67, 54, 75, 72, 42, 58] },
+"Bernardo 64": { imagem: "https://image.png/", posicao: "GR", atributos: [70, 68, 72, 69, 74, 72] },
+"Vlad 64": { imagem: "https://image.png/", posicao: "EE", atributos: [88, 58, 61, 82, 29, 52] },
+"Ronaldo Lumungo 64": { imagem: "https://image.png/", posicao: "ED", atributos: [86, 61, 53, 79, 32, 59] },
+"Luiz Fernando 64": { imagem: "https://image.png/", posicao: "EE", atributos: [82, 67, 61, 76, 35, 60] },
+"Gabriel Boschilia 64": { imagem: "https://image.png/", posicao: "MO", atributos: [61, 69, 79, 76, 31, 54] },
+"Cipriano 64": { imagem: "https://image.png/", posicao: "DC", atributos: [61, 34, 55, 46, 75, 74] },
+"Fabrício Daniel 64": { imagem: "https://image.png/", posicao: "ED", atributos: [78, 69, 56, 73, 33, 63] },
+
+"Rafael Nel 63": { imagem: "https://image.png/", posicao: "PL", atributos: [76, 70, 49, 63, 28, 62] },
+"Frederico Namora 63": { imagem: "https://image.png/", posicao: "DC", atributos: [55, 31, 52, 43, 80, 77] },
+"Armando Lopes 63": { imagem: "https://image.png/", posicao: "LE", atributos: [76, 38, 60, 68, 70, 65] },
+"João Silva 63": { imagem: "https://image.png/", posicao: "ED", atributos: [80, 59, 58, 76, 35, 57] },
+"Gustavo Coutinho 63": { imagem: "https://image.png/", posicao: "PL", atributos: [64, 77, 47, 58, 28, 69] },
+"Matheus Araújo 63": { imagem: "https://image.png/", posicao: "MO", atributos: [68, 57, 75, 72, 35, 55] },
+"Matheus Sales 63": { imagem: "https://image.png/", posicao: "MC", atributos: [61, 43, 69, 59, 73, 74] },
+"Clayson 63": { imagem: "https://image.png/", posicao: "EE", atributos: [80, 67, 63, 75, 36, 58] },
+
+"Pedro Martelo 62": { imagem: "https://image.png/", posicao: "PL", atributos: [68, 72, 45, 60, 27, 63] },
+"Rafa 62": { imagem: "https://image.png/", posicao: "GR", atributos: [68, 65, 70, 72, 76, 69] },
+"Daniel Penha 62": { imagem: "https://image.png/", posicao: "MO", atributos: [65, 62, 76, 73, 33, 55] },
+"Kevyson 62": { imagem: "https://image.png/", posicao: "LE", atributos: [79, 36, 62, 67, 61, 63] },
+
+"Andre Sousa 61": { imagem: "https://image.png/", posicao: "LE", atributos: [71, 36, 59, 64, 68, 62] },
+"Hereda 61": { imagem: "https://image.png/", posicao: "LD", atributos: [76, 34, 60, 64, 65, 66] },
+"Thiaguinho 61": { imagem: "https://image.png/", posicao: "ED", atributos: [84, 60, 52, 74, 29, 55] }
 };
 
 function removerAcentos(texto) {
