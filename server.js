@@ -160,6 +160,9 @@ app.get('/buscar-jogador', (req, res) => {
     const att5 = listaAtributos[4] !== undefined ? listaAtributos[4] : overall;
     const att6 = listaAtributos[5] !== undefined ? listaAtributos[5] : overall;
 
+    // CÁLCULO DA FORÇA TOTAL (SOMA DOS 6 STATS)
+    const forcaTotal = att1 + att2 + att3 + att4 + att5 + att6;
+
     let preco = 1000;
     if (overall === 99) preco = 100000;
     else if (overall === 98) preco = 80000;
@@ -215,7 +218,8 @@ app.get('/buscar-jogador', (req, res) => {
       att3: att3,
       att4: att4,
       att5: att5,
-      att6: att6
+      att6: att6,
+      forcaTotal: forcaTotal
     });
   } catch (error) {
     console.error("Erro interno no /buscar-jogador:", error);
