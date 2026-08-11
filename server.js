@@ -29,7 +29,7 @@ function removerAcentos(texto) {
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO
+// ROTA 1: GERAR IMAGEM DO CAMPO (CORRIGIDA)
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -65,16 +65,25 @@ app.get('/gerar-campo', async (req, res) => {
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
-      const busca = removerAcentos(req.query[pos]);
+      let busca = removerAcentos(req.query[pos]);
 
       if (busca && busca !== 'vazio') {
-        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(busca));
+        // REMOVE NÚMEROS DO FINAL DA BUSCA (Ex: "lavega 30" vira "lavega")
+        busca = busca.replace(/\s+\d+$/, '').trim();
+
+        // Encontra a carta mesmo que o nome no banco tenha o overall original
+        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
+          const nomeLimpo = removerAcentos(nomeNoBanco).replace(/\s+\d+$/, '').trim();
+          return nomeLimpo.includes(busca) || busca.includes(nomeLimpo);
+        });
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
             const cardData = BANCO_DE_CARTAS[chaveEncontrada];
             const imgUrl = typeof cardData === 'string' ? cardData : cardData.imagem;
             const cardImg = await loadImage(imgUrl);
+
+            // Desenha a carta na posição que foi requisitada no parâmetro do campo
             ctx.drawImage(
               cardImg, 
               coord.x - cardWidth / 2, 
