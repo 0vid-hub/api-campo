@@ -407,7 +407,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (ALINHAMENTO PERFEITO)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (FORMATAÇÃO INTELIGENTE)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -434,11 +434,11 @@ app.get('/listar-mercado', (req, res) => {
       const partes = chave.trim().split(/\s+/);
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      // 2. Isolamento estrito do nome (remove o overall do final)
+      // 2. Isola as palavras do nome
       let palavrasNome = partes.slice(0, -1);
       if (palavrasNome.length === 0) palavrasNome = [chave];
 
-      // 3. Abreviação da PRIMEIRA palavra (ex: Gabriel Boschilia -> G. Boschilia)
+      // 3. Abrevia apenas o primeiro nome se houver mais de uma palavra
       let nomeFormatado = "";
       if (palavrasNome.length > 1) {
         const primeiraInicial = palavrasNome[0].charAt(0).toUpperCase() + ".";
@@ -448,9 +448,9 @@ app.get('/listar-mercado', (req, res) => {
         nomeFormatado = palavrasNome[0].charAt(0).toUpperCase() + palavrasNome[0].slice(1).toLowerCase();
       }
 
-      // 4. Limita o tamanho do nome em até 13 caracteres para NUNCA estourar a coluna
-      if (nomeFormatado.length > 13) {
-        nomeFormatado = nomeFormatado.substring(0, 12) + ".";
+      // 4. Limite de segurança: só corta se o nome isolado passar de 20 caracteres!
+      if (nomeFormatado.length > 20) {
+        nomeFormatado = nomeFormatado.substring(0, 19) + ".";
       }
 
       const dadosCarta = BANCO_DE_CARTAS[chave];
@@ -472,11 +472,11 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Monta o texto base do jogador: ex "[64] G. Boschilia (MO)"
+      // Monta a string completa do jogador 1
       const item1 = `[${j1.overall}] ${j1.nome} (${j1.posicao})`;
       
-      // Trava a primeira coluna em exatos 25 caracteres de largura
-      const col1 = item1.padEnd(25, ' '); 
+      // Expande a coluna 1 para 32 caracteres (dá espaço de sobra para nomes longos como "G. Boschilia")
+      const col1 = item1.padEnd(32, ' '); 
 
       if (j2) {
         const item2 = `[${j2.overall}] ${j2.nome} (${j2.posicao})`;
@@ -497,5 +497,4 @@ app.get('/listar-mercado', (req, res) => {
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
-
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
