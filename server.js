@@ -9,199 +9,200 @@ app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
-// -------------------------------------------------------------
-// BANCO DE CARTAS (AGORA COM APENAS OS 6 NÚMEROS DE ATRIBUTOS EM ORDEM)
-// Ordem para LINHA: [VEL, REM, PAS, DRI, DEF, FIS]
-// Ordem para GR:    [ALC, CON, REP, REF, POS, FIS]
-// -------------------------------------------------------------
 const BANCO_DE_CARTAS = {
-"Kylian Mbappé 89": { imagem: "https://image.png/", posicao: "PL", atributos: [91, 92, 83, 90, 38, 84] },
-"Lamine Yamal 89": { imagem: "https://image.png/", posicao: "ED", atributos: [89, 86, 91, 92, 32, 68] },
-"Harry Kane 89": { imagem: "https://image.png/", posicao: "PL", atributos: [78, 93, 91, 79, 42, 87] },
-"Cristiano Ronaldo 89": { imagem: "https://image.png/", posicao: "PL", atributos: [78, 93, 82, 79, 35, 88] },
-"Lionel Messi 89": { imagem: "https://image.png/", posicao: "ED", atributos: [75, 89, 92, 93, 28, 58] },
-"Neymar Jr. 89": { imagem: "https://image.png/", posicao: "EE", atributos: [77, 86, 91, 92, 30, 63] },
-
-"Ousmane Dembélé 88": { imagem: "https://image.png/", posicao: "ED", atributos: [91, 87, 82, 92, 32, 70] },
-"Erling Haaland 88": { imagem: "https://image.png/", posicao: "PL", atributos: [90, 94, 70, 78, 38, 94] },
-"Jude Bellingham 88": { imagem: "https://image.png/", posicao: "MC", atributos: [84, 80, 88, 84, 79, 87] },
-"Vinícius Júnior 88": { imagem: "https://image.png/", posicao: "EE", atributos: [93, 87, 80, 92, 31, 72] },
-
-"Michael Olise 87": { imagem: "https://image.png/", posicao: "ED", atributos: [84, 83, 89, 89, 31, 68] },
-"Rodri 87": { imagem: "https://image.png/", posicao: "MC", atributos: [68, 70, 91, 76, 90, 87] },
-"Jamal Musiala 87": { imagem: "https://image.png/", posicao: "MO", atributos: [86, 82, 89, 91, 29, 66] },
-"Pedri 87": { imagem: "https://image.png/", posicao: "MC", atributos: [72, 66, 92, 87, 67, 70] },
-"Federico Valverde 87": { imagem: "https://image.png/", posicao: "MC", atributos: [88, 78, 86, 81, 82, 90] },
-
-"Raphinha 86": { imagem: "https://image.png/", posicao: "EE", atributos: [88, 88, 82, 89, 32, 72] },
-"Florian Wirtz 86": { imagem: "https://image.png/", posicao: "MO", atributos: [79, 81, 90, 88, 31, 65] },
-"Vitinha 86": { imagem: "https://image.png/", posicao: "MC", atributos: [77, 67, 91, 86, 65, 70] },
-"Declan Rice 86": { imagem: "https://image.png/", posicao: "MC", atributos: [79, 68, 87, 76, 88, 89] },
-"Achraf Hakimi 86": { imagem: "https://image.png/", posicao: "LD", atributos: [91, 68, 81, 87, 78, 86] },
-
-"Bernardo Silva 85": { imagem: "https://image.png/", posicao: "MC", atributos: [78, 72, 89, 90, 47, 64] },
-"Bruno Fernandes 85": { imagem: "https://image.png/", posicao: "MO", atributos: [72, 86, 89, 83, 42, 72] },
-"Martin Ødegaard 85": { imagem: "https://image.png/", posicao: "MO", atributos: [74, 71, 90, 87, 48, 65] },
-"Khvicha Kvaratskhelia 85": { imagem: "https://image.png/", posicao: "EE", atributos: [87, 83, 84, 90, 31, 70] },
-"William Saliba 85": { imagem: "https://image.png/", posicao: "DC", atributos: [78, 35, 70, 57, 89, 88] },
-
-"Virgil van Dijk 84": { imagem: "https://image.png/", posicao: "DC", atributos: [72, 35, 71, 51, 91, 88] },
-"Antonio Rüdiger 84": { imagem: "https://image.png/", posicao: "DC", atributos: [81, 33, 62, 48, 88, 91] },
-"Alphonso Davies 84": { imagem: "https://image.png/", posicao: "LE", atributos: [92, 34, 72, 82, 76, 83] },
-"Marquinhos 84": { imagem: "https://image.png/", posicao: "DC", atributos: [77, 32, 75, 56, 87, 82] },
-
-"Julián Álvarez 83": { imagem: "https://image.png/", posicao: "PL", atributos: [85, 88, 76, 82, 36, 79] },
-"Lautaro Martínez 83": { imagem: "https://image.png/", posicao: "PL", atributos: [82, 90, 73, 77, 39, 84] },
-"Victor Osimhen 83": { imagem: "https://image.png/", posicao: "PL", atributos: [92, 91, 61, 72, 30, 91] },
-"Rodrygo 83": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 81, 77, 87, 29, 67] },
-"Phil Foden 83": { imagem: "https://image.png/", posicao: "ED", atributos: [84, 82, 86, 88, 29, 64] },
-"Bukayo Saka 83": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 84, 81, 87, 36, 72] },
-
-"Rúben Dias 82": { imagem: "https://image.png/", posicao: "DC", atributos: [68, 31, 68, 47, 88, 85] },
-"Gabriel Magalhães 82": { imagem: "https://image.png/", posicao: "DC", atributos: [70, 37, 64, 45, 88, 89] },
-"William Pacho 82": { imagem: "https://image.png/", posicao: "DC", atributos: [78, 30, 61, 44, 86, 84] },
-
-"Alisson 81": { imagem: "https://image.png/", posicao: "GR", atributos: [88, 87, 90, 84, 91, 87] },
-"Thibaut Courtois 81": { imagem: "https://image.png/", posicao: "GR", atributos: [92, 86, 89, 87, 93, 91] },
-"Emiliano Martínez 81": { imagem: "https://image.png/", posicao: "GR", atributos: [89, 88, 91, 85, 92, 89] },
-"Diogo Costa 81": { imagem: "https://image.png/", posicao: "GR", atributos: [87, 90, 88, 84, 90, 86] },
+  // 90-94 OVERALL
+  "luka modric 94": "https://i.ibb.co/5WvWtzPq/modric94.png",
+  "ronaldo 93": "https://i.ibb.co/wN7PFP96/c-ronaldo.png",
+  "mbappé 92": "https://i.ibb.co/K3sDyFd/mbappe92.png",
+  "courtois 90": "https://i.ibb.co/7JkNk4nW/courtois.png",
+  "pelé 91": "https://i.ibb.co/HDd67r7w/pele.png",
+  "buffon 90": "https://i.ibb.co/KxxLnfWd/buffon.png",
+  "eusébio 90": "https://i.ibb.co/cSY6C7vP/eusebio.png",
+  "lev yashin 90": "https://i.ibb.co/WWxHcr1m/yashin.png",
   
-"Ricardo Horta 79": { imagem: "https://image.png/", posicao: "EE", atributos: [78, 79, 76, 82, 38, 65] },
-"Riccardo Orsolini 79": { imagem: "https://image.png/", posicao: "ED", atributos: [82, 81, 73, 84, 35, 61] },
-"Vincenzo Grifo 79": { imagem: "https://image.png/", posicao: "EE", atributos: [76, 82, 79, 81, 32, 57] },
+  // 88-89 OVERALL
+  "marcelo 89": "https://i.ibb.co/WW2Ddt99/marcelo.png",
+  "pavard 89": "https://i.ibb.co/CpVYWS51/pavard.png",
+  "varane 89": "https://i.ibb.co/gZxkBWMp/rapvarane.png",
+  "thiago silva 89": "https://i.ibb.co/Wpv27xRF/thiagosilva.png",
+  "luis figo 89": "https://i.ibb.co/Vc7HpNjF/luisfigo.png",
+  "ronaldo nazário 89": "https://i.ibb.co/gLqzcW1C/r9.png",
+  "cafu 88": "https://i.ibb.co/wZhHw1Wq/cafu.png",
+  "griezmann 88": "https://i.ibb.co/nsM51rXC/griesmann.png",
+  "hazard 88": "https://i.ibb.co/Gf8pLcHz/hazard.png",
+  "carlos alberto 88": "https://i.ibb.co/WjN7z9r/carlosalberto.png",
+  "diogo jota 88": "https://i.ibb.co/HDwr4hNV/diogojota.png",
+  "garrincha 88": "https://i.ibb.co/HT8Mxhww/garrincha.png",
+  "gullit 88": "https://i.ibb.co/7NLWk27K/gullit.png",
+  "pepe 88": "https://i.ibb.co/bMYppmWJ/pepe.png",
+  "roberto carlos 88": "https://i.ibb.co/Ps3KFZ5h/robertocarlos.png",
+  "zidane 88": "https://i.ibb.co/wr45wSpS/zidane.png",
 
-"Rodrigo Zalazar 78": { imagem: "https://image.png/", posicao: "MC", atributos: [72, 76, 82, 77, 48, 72] },
-"Samuele Ricci 78": { imagem: "https://image.png/", posicao: "MC", atributos: [70, 48, 84, 69, 76, 74] },
-"Arambarri 78": { imagem: "https://image.png/", posicao: "MC", atributos: [68, 51, 78, 63, 82, 78] },
-"Antonee Robinson 78": { imagem: "https://image.png/", posicao: "LE", atributos: [91, 42, 71, 77, 70, 73] },
-"Folarin Balogun 78": { imagem: "https://image.png/", posicao: "PL", atributos: [88, 81, 52, 72, 29, 77] },
+  "lionel messi 88": "https://i.ibb.co/SD9XC7KK/messi86.png",
+  "martinez 87": "https://i.ibb.co/PsTNhDxT/martinez86.png",
+  "mbappé 87": "https://i.ibb.co/wTzfxNN/mbappe86.png",
+  "luka modric 87": "https://i.ibb.co/cXh7dVZ1/modric87.png",
+  "beckenbauer 87": "https://i.ibb.co/ZzzWHWk8/beckenbauer.png",
+  "george best 87": "https://i.ibb.co/Gf5nDHyc/best.png",
+  "iniesta 87": "https://i.ibb.co/JFBg47m5/iniest.png",
+  "kaká 87": "https://i.ibb.co/Y7BZskxC/kaka.png",
+  "paolo maldini 87": "https://i.ibb.co/GvXpVHYS/maldini.png",
+  "ronaldinho 87": "https://i.ibb.co/1G1Tqxhh/ronaldinho.png",
+  "xavi 87": "https://i.ibb.co/w8XTqG3/xavi.png",
+  "thierry henry 86": "https://i.ibb.co/kgQV7K0F/henry.png",
+  "maradona 86": "https://i.ibb.co/YFPPdqSb/maradona.png",
+  "ricardo quaresma 86": "https://i.ibb.co/k2HvS9V7/quaresma.png",
+  "ibrahimovic 86": "https://i.ibb.co/Mks18Nm9/zlatan.png",
 
-"Moses Simon 77": { imagem: "https://image.png/", posicao: "EE", atributos: [92, 72, 65, 87, 29, 61] },
-"Bradley Barcola 77": { imagem: "https://image.png/", posicao: "ED", atributos: [94, 75, 68, 90, 27, 59] },
-"Florian Thauvin 77": { imagem: "https://image.png/", posicao: "ED", atributos: [75, 78, 81, 84, 31, 57] },
-"Václav Černý 77": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 73, 70, 81, 35, 59] },
-"Ismaïla Sarr 77": { imagem: "https://image.png/", posicao: "ED", atributos: [93, 73, 61, 81, 30, 65] },
-"Isi Palazón 77": { imagem: "https://image.png/", posicao: "MO", atributos: [72, 68, 82, 84, 34, 57] },
-"Vedat Muriqi 77": { imagem: "https://image.png/", posicao: "PL", atributos: [57, 83, 56, 54, 38, 88] },
-"Ricardo Rodríguez 77": { imagem: "https://image.png/", posicao: "LE", atributos: [68, 39, 79, 66, 76, 75] },
+  "amrabat 86": "https://i.ibb.co/VP0s2cc/amrabat86.png",
+  "bruno fernandes 86": "https://i.ibb.co/QjHQkGFn/brunofernandes86.png",
+  "griezmann 86": "https://i.ibb.co/V0KY5RzN/griezmann86.png",
+  "gvardiol 86": "https://i.ibb.co/3mt22NRP/gvardiol86.png",
+  "livakovic 86": "https://i.ibb.co/WvyKDQpK/livakovic86.png",
+  "pepe 86": "https://i.ibb.co/Rp9xf308/pepe86.png",
 
-"João Moutinho 76": { imagem: "https://image.png/", posicao: "MC", atributos: [57, 44, 89, 64, 69, 62] },
-"Tiago Silva 76": { imagem: "https://image.png/", posicao: "MC", atributos: [61, 56, 83, 75, 58, 64] },
-"Félix Correia 76": { imagem: "https://image.png/", posicao: "ED", atributos: [86, 67, 70, 84, 29, 57] },
-"Kanya Fujimoto 76": { imagem: "https://image.png/", posicao: "MO", atributos: [74, 63, 84, 82, 31, 55] },
-"Zaydou Youssouf 76": { imagem: "https://image.png/", posicao: "MC", atributos: [68, 48, 77, 67, 78, 77] },
-"Thomas Mangani 76": { imagem: "https://image.png/", posicao: "MC", atributos: [55, 45, 82, 61, 74, 64] },
-"Thomas Lemar 76": { imagem: "https://image.png/", posicao: "MO", atributos: [67, 61, 86, 79, 39, 57] },
-"James Maddison 76": { imagem: "https://image.png/", posicao: "MO", atributos: [70, 76, 88, 84, 32, 59] },
-"Alex Iwobi 76": { imagem: "https://image.png/", posicao: "MC", atributos: [83, 55, 80, 82, 38, 65] },
+  // 85 OVERALL
+  "unai simón 85": "https://i.ibb.co/1tP6SR0K/unaisimon85.png",
+  "rodri 85": "https://i.ibb.co/XrH16CKR/rodri85.png",
+  "pedro porro 85": "https://i.ibb.co/sJCBTG0L/pedroporro85.png",
+  "pedri 85": "https://i.ibb.co/Kx1WRGvw/pedri85.png",
+  "pau cubarsí 85": "https://i.ibb.co/PsrSRLgh/paucubarsi85.png",
+  "pablo gavi 85": "https://i.ibb.co/4g2mTJm8/pablogavi85.png",
+  "nico williams 85": "https://i.ibb.co/DgMnV7WG/nicowilliams85.png",
+  "merino 85": "https://i.ibb.co/DHLYFjSH/merino85.png",
+  "laporte 85": "https://i.ibb.co/NdHPPp1s/laporte85.png",
+  "joan garcía 85": "https://i.ibb.co/cq0JrjR/joangarcia85.png",
+  "grimaldo 85": "https://i.ibb.co/qYP8jdbk/grimaldo85.png",
+  "ferran torres 85": "https://i.ibb.co/tpY91PsB/ferrantorres85.png",
+  "david raya 85": "https://i.ibb.co/nqb1MhDL/davidraya85.png",
+  "cucurella 85": "https://i.ibb.co/xtC2sYfv/cucurella85.png",
+  "dani olmo 85": "https://i.ibb.co/xqR2zjwq/daniolmo85.png",
+  "lamine yamal 85": "https://i.ibb.co/DDn5tdCN/yamal85.png",
 
-"Vincent Sierro 75": { imagem: "https://image.png/", posicao: "MC", atributos: [62, 54, 85, 63, 68, 68] },
-"Yann Gboho 75": { imagem: "https://image.png/", posicao: "ED", atributos: [86, 66, 73, 84, 32, 58] },
-"Zakaria Aboukhlal 75": { imagem: "https://image.png/", posicao: "ED", atributos: [89, 72, 58, 76, 34, 68] },
-"Jean-Philippe Krasso 75": { imagem: "https://image.png/", posicao: "PL", atributos: [73, 78, 59, 70, 30, 76] },
-"Benjamin Bourigeaud 75": { imagem: "https://image.png/", posicao: "MC", atributos: [68, 75, 83, 76, 42, 63] },
-"Antonin Barak 75": { imagem: "https://image.png/", posicao: "MO", atributos: [61, 72, 78, 71, 39, 69] },
-"Nikola Vlašić 75": { imagem: "https://image.png/", posicao: "MO", atributos: [66, 72, 78, 76, 43, 68] },
-"Malinovskyi 75": { imagem: "https://image.png/", posicao: "MO", atributos: [63, 79, 82, 73, 38, 63] },
-"Man 75": { imagem: "https://image.png/", posicao: "ED", atributos: [91, 73, 64, 79, 31, 63] },
-"Abel Ruiz 75": { imagem: "https://image.png/", posicao: "PL", atributos: [74, 76, 63, 74, 33, 65] },
+  // 84 OVERALL
+  "ronaldo 84": "https://i.ibb.co/20gVWMFT/ronaldo84.png",
+  "lionel messi 84": "https://i.ibb.co/5XK1RhWz/messi84.png",
+  "bellingham 84": "https://i.ibb.co/f31P2Vq/bellingham.png",
+  "haaland 84": "https://i.ibb.co/yBS6Z4s0/haaland84.png",
+  "harry kane 84": "https://i.ibb.co/mF5fFLHR/harrykane.png",
+  "mbappé 84": "https://i.ibb.co/m5PjypFT/mbappe84.png",
+  "neymar jr 84": "https://i.ibb.co/ZpdBqzxF/neymar84.png",
+  "nuno mendes 84": "https://i.ibb.co/67yHcGp3/nunomendes84.png",
+  "vozinha 84": "https://i.ibb.co/PZyC4rDs/vozinha84.png",
 
-"Pedro Gonçalves 74": { imagem: "https://image.png/", posicao: "MO", atributos: [78, 72, 82, 84, 34, 58] },
-"Ricardo Horta 74": { imagem: "https://image.png/", posicao: "EE", atributos: [79, 75, 76, 81, 37, 63] },
-"Clayton 74": { imagem: "https://image.png/", posicao: "PL", atributos: [78, 80, 47, 65, 32, 75] },
-"Adrián Marín 74": { imagem: "https://image.png/", posicao: "LE", atributos: [78, 35, 72, 70, 68, 64] },
-"Fran Navarro 74": { imagem: "https://image.png/", posicao: "PL", atributos: [70, 78, 51, 61, 31, 72] },
-"Jorge de Frutos 74": { imagem: "https://image.png/", posicao: "ED", atributos: [90, 68, 56, 78, 34, 62] },
-"Dani Rodríguez 74": { imagem: "https://image.png/", posicao: "MC", atributos: [67, 65, 77, 74, 42, 61] },
-"Ademola Lookman 74": { imagem: "https://image.png/", posicao: "EE", atributos: [94, 79, 65, 87, 28, 62] },
-"Andrea Colpani 74": { imagem: "https://image.png/", posicao: "MO", atributos: [72, 63, 81, 79, 35, 58] },
-"Matías Soulé 74": { imagem: "https://image.png/", posicao: "ED", atributos: [78, 75, 82, 87, 30, 57] },
+  // 80 - 83 OVERALL
+  "vinicius júnior 83": "https://i.ibb.co/KMnsD2j/vini83.png",
+  "luka modric 83": "https://i.ibb.co/zWpt7p4w/modric83.png",
+  "michael olise 83": "https://i.ibb.co/9HVsPRfg/olise.png",
+  "ronaldo 83": "https://i.ibb.co/B2vyBJj1/ronaldo83.png",
+  "marcus rashford 83": "https://i.ibb.co/N6hSpRm7/rashford.png",
+  "diogo costa 83": "https://i.ibb.co/gLkfnyvc/diogocosta83.png",
+  "khvicha kvaratskhelia 82": "https://i.ibb.co/1GqXhm5N/kvara82.png",
+  "vitinha 82": "https://i.ibb.co/Kj7B9f57/vitinha82.png",
+  "joão neves 81": "https://i.ibb.co/mCvgB2hj/joaoneves81.png",
+  "rafael leão 81": "https://i.ibb.co/CKjMSjtJ/rafaleao81.png",
+  "bruno fernandes 80": "https://i.ibb.co/HpBJgxrb/brunofernandes80.png",
+  "ruben dias 80": "https://i.ibb.co/SLNg0bV/rubendias80.png",
+  "gonçalo ramos 80": "https://i.ibb.co/sJXr8Yd1/gon-aloramos80.png",
+  "neymar jr 80": "https://i.ibb.co/WNX88Xj1/neymar80.png",
 
-"Vitor Carvalho 73": { imagem: "https://image.png/", posicao: "MC", atributos: [64, 42, 76, 61, 76, 78] },
-"Gabri Martínez 73": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 66, 60, 78, 30, 63] },
-"João Marques 73": { imagem: "https://image.png/", posicao: "MO", atributos: [76, 58, 78, 75, 34, 55] },
-"Jérémy Boga 73": { imagem: "https://image.png/", posicao: "EE", atributos: [88, 67, 69, 86, 28, 54] },
-"Adrien Truffert 73": { imagem: "https://image.png/", posicao: "LE", atributos: [83, 38, 73, 76, 62, 65] },
-"Arnaut Danjuma 73": { imagem: "https://image.png/", posicao: "EE", atributos: [91, 71, 58, 78, 29, 60] },
-"Josh Dasilva 73": { imagem: "https://image.png/", posicao: "MC", atributos: [70, 52, 75, 72, 54, 65] },
+  // 75 - 79 OVERALL
+  "rodri 79": "https://i.ibb.co/NntbtcYh/rodri79r.png",
+  "vinicius júnior 78": "https://i.ibb.co/k6r70yqc/vini78r.png",
+  "kevin de bruyne 78": "https://i.ibb.co/PsFCVnHg/DEBRUYNE78r.png",
+  "lamine yamal 78": "https://i.ibb.co/rRR5jFSz/yamal78r.png",
+  "mbappé 78": "https://i.ibb.co/gMy5ZqkZ/mbappe78r.png",
+  "lionel messi 77": "https://i.ibb.co/RTTnXHHB/messi77r.png",
+  "harry kane 77": "https://i.ibb.co/7tbgyhq5/kane77r.png",
+  "bellingham 76": "https://i.ibb.co/21kPP49k/bellingham76r.png",
+  "haaland 76": "https://i.ibb.co/p66HPZYS/haaland76r.png",
+  "ricardo mangas 76": "https://i.ibb.co/fzPnT6BL/ricardomangas76.png",
+  "alisson 76": "https://i.ibb.co/WbRgQKQ/alisson76.png",
+  "neymar jr 75": "https://i.ibb.co/W49BM0m4/neymar75r.png",
+  "mohamed salah 75": "https://i.ibb.co/QF0RV1qn/salah75r.png",
+  "ronaldo 75": "https://i.ibb.co/CpsxPhQc/ronaldo75r.png",
+  "ederson 75": "https://i.ibb.co/dRMZpsv/ederson75.png",
 
-"Ricardo Mangas 72": { imagem: "https://image.png/", posicao: "LE", atributos: [86, 41, 63, 70, 64, 69] },
-"Fran Navarro 72": { imagem: "https://image.png/", posicao: "PL", atributos: [72, 77, 49, 62, 30, 71] },
-"Abde Ezzalzouli 72": { imagem: "https://image.png/", posicao: "EE", atributos: [93, 64, 60, 84, 27, 52] },
-"Jesús Areso 72": { imagem: "https://image.png/", posicao: "LD", atributos: [85, 36, 62, 72, 65, 67] },
-"Emmanuel Dennis 72": { imagem: "https://image.png/", posicao: "PL", atributos: [87, 70, 55, 75, 31, 64] },
+  // 70 - 74 OVERALL
+  "cucurella 74": "https://i.ibb.co/M52XXn3H/cucurella74.png",
+  "endrick 74": "https://i.ibb.co/jvzs7j4q/endrick74.png",
+  "estevão 74": "https://i.ibb.co/LdyFYYnK/estevao74.png",
+  "gyokeres 74": "https://i.ibb.co/TM2f0Mgg/gyokeres74.png",
+  "joão cancelo 74": "https://i.ibb.co/KcvmXmKR/joaocancelo75.png",
+  "vitor roque 74": "https://i.ibb.co/yMPG18g/vitorroque74.png",
+  "wendell 74": "https://i.ibb.co/fV2QtJSy/wendell74.png",
+  "evanilson 74": "https://i.ibb.co/nN2cMbWF/evanilson74.png",
+  "hwand din beom 74": "https://i.ibb.co/k2yKSdX0/hwandinbeom74.png",
+  "kaio césar 74": "https://i.ibb.co/Szqt9VW/kaioc-sar74.png",
+  "orkun kokçu 74": "https://i.ibb.co/k2CB7Jyc/kok-u74.png",
+  "richard ríos 74": "https://i.ibb.co/Dfm9pqf1/richardrios74.png",
+  "virgil van dijk 74": "https://i.ibb.co/B5TJ9ZP7/vandik74.png",
+  "igor thiago 73": "https://i.ibb.co/qY9k3vDK/igorthiago73.png",
+  "weston mckennie 73": "https://i.ibb.co/8DvLvMMZ/westonmckennie73.png",
+  "alejandro garnacho 73": "https://i.ibb.co/ksYjsC4f/garnacho73.png",
+  "facundo torres 73": "https://i.ibb.co/rf2LCz8t/facundotorres73.png",
+  "tiago santos 72": "https://i.ibb.co/dJ3j3ThW/tiago-santos72.png",
+  "gonçalo borges 71": "https://i.ibb.co/gbgtnk79/gon-aloborges71.png",
+  "pavlidis 71": "https://i.ibb.co/nNwYZXhW/pavlidis71.png",
+  "samuel portugal 70": "https://i.ibb.co/0y7cHN8d/samuelportugal74.png",
+  "trubin 70": "https://i.ibb.co/q3nBxygp/trubin70.png",
+  "ribamar 70": "https://i.ibb.co/XZ2FjFLp/ribamar70.png",
+  "igor jesus 70": "https://i.ibb.co/C3ByxRBk/igorjesus70.png",
+  "yuri alberto 70": "https://i.ibb.co/DPLcTQKY/yurialberto70.png",
 
-"João Mário 71": { imagem: "https://image.png/", posicao: "MC", atributos: [66, 52, 80, 74, 42, 65] },
-"Róber 71": { imagem: "https://image.png/", posicao: "DC", atributos: [58, 32, 57, 43, 82, 80] },
-"Lucas Mineiro 70": { imagem: "https://image.png/", posicao: "MC", atributos: [61, 39, 69, 56, 79, 81] },
+  // 65 - 69 OVERALL
+  "carlinhos 69": "https://i.ibb.co/6cXqTrRP/carlinhos69r.png",
+  "francisco moura 69": "https://i.ibb.co/1YtgK2QV/franciscomoura69r.png",
+  "gonçalo sá 69": "https://i.ibb.co/2Yd1XYnz/gon-alosa69r.png",
+  "joão ferreira 69": "https://i.ibb.co/WW78PcRq/joaoferreira69r.png",
+  "marcos leonardo 69": "https://i.ibb.co/sJWTH9s1/marcosleonardo69r.png",
+  "matheusinho 69": "https://i.ibb.co/yBF1cnvD/matheusinho69r.png",
+  "nathan silva 69": "https://i.ibb.co/s95s7B2z/nathansilva69r.png",
+  "paulo bernardo 69": "https://i.ibb.co/mF0tHxDv/paulobernardo69r.png",
+  "rodrigo riquelme 69": "https://i.ibb.co/LX1Y5XSt/rodrigoriqualme69r.png",
+  "tomás ribeiro 69": "https://i.ibb.co/Zpyg3Bnb/tomasribeiro68r.png",
+  "tiquinho soares 69": "https://i.ibb.co/bRF6S1Jq/tiquinhosoares69r.png",
+  "josé sá 69": "https://i.ibb.co/JWB6tzmd/josesa69r.png",
+  "gonçalo tabuaço 68": "https://i.ibb.co/390G8ZGT/gon-alotuabua-o68r.png",
+  "henrique araújo 68": "https://i.ibb.co/fYQNHLkw/henriquearaujo69r.png",
+  "rodrigo pinho 67": "https://i.ibb.co/hR1Cvs0f/rodrigopinho67r.png",
+  "tomas araújo 67": "https://i.ibb.co/LXTybjKP/tomasaraujo67r.png",
+  "martim martins 67": "https://i.ibb.co/Hp3yrG8N/martimmartins.png",
+  "fábio vieira 66": "https://i.ibb.co/JFWGB85y/fabiovieira66r.png",
+  "nuno tavares 65": "https://i.ibb.co/84Lqjh54/nunotacares65r.png",
+  "joão mário 65": "https://i.ibb.co/6jwS6H8/joaomario65r.png",
+  "toti gomes 65": "https://i.ibb.co/WWZ1hRSR/totigomes65r.png",
 
-"André Clóvis 69": { imagem: "https://image.png/", posicao: "PL", atributos: [58, 69, 58, 64, 32, 76] },
-"Zé Lucas 69": { imagem: "https://image.png/", posicao: "MC", atributos: [70, 51, 78, 70, 72, 75] },
-
-"Rafael Luís 68": { imagem: "https://image.png/", posicao: "MC", atributos: [65, 55, 72, 67, 68, 70] },
-"Tony Strata 68": { imagem: "https://image.png/", posicao: "LD", atributos: [82, 39, 62, 72, 67, 65] },
-"Tomás Pochettino 68": { imagem: "https://image.png/", posicao: "MO", atributos: [63, 70, 82, 79, 39, 58] },
-"João Pedro 68": { imagem: "https://image.png/", posicao: "ED", atributos: [67, 66, 58, 79, 30, 57] },
-
-"Daniel Banjaqui 67": { imagem: "https://image.png/", posicao: "LD", atributos: [68, 42, 62, 70, 65, 67] },
-"Ejike Opara 67": { imagem: "https://image.png/", posicao: "PL", atributos: [66, 78, 43, 66, 50, 70] },
-"Miguel Nogueira 67": { imagem: "https://image.png/", posicao: "ED", atributos: [85, 62, 65, 70, 34, 57] },
-"Ryan 67": { imagem: "https://image.png/", posicao: "MC", atributos: [73, 44, 75, 68, 70, 73] },
-"Gustavo Santos 67": { imagem: "https://image.png/", posicao: "PL", atributos: [70, 76, 46, 61, 29, 71] },
-
-"Gonçalo Oliveira 66": { imagem: "https://image.png/", posicao: "DC", atributos: [54, 48, 55, 48, 76, 74] },
-"Nuno Félix 66": { imagem: "https://image.png/", posicao: "MC", atributos: [62, 48, 70, 61, 69, 68] },
-"Thiago Balieiro 66": { imagem: "https://image.png/", posicao: "DC", atributos: [59, 34, 54, 45, 78, 75] },
-"Rômulo 66": { imagem: "https://image.png/", posicao: "MO", atributos: [67, 65, 77, 75, 42, 61] },
-"Lourenço 66": { imagem: "https://image.png/", posicao: "MC", atributos: [62, 58, 81, 68, 55, 67] },
-"Gustavo Prado 66": { imagem: "https://image.png/", posicao: "ED", atributos: [76, 64, 65, 80, 34, 55] },
-"Lucas Kallyel 66": { imagem: "https://image.png/", posicao: "MC", atributos: [69, 46, 73, 65, 67, 71] },
-
-"Gonçalo Moreira 65": { imagem: "https://image.png/", posicao: "MO", atributos: [74, 61, 69, 78, 38, 56] },
-"Pozo 65": { imagem: "https://image.png/", posicao: "MO", atributos: [63, 67, 73, 77, 32, 58] },
-"Juan Muñoz 65": { imagem: "https://image.png/", posicao: "PL", atributos: [61, 76, 57, 62, 31, 68] },
-"Vasco Santos 65": { imagem: "https://image.png/", posicao: "DC", atributos: [62, 36, 57, 48, 79, 72] },
-"Chrystian Barletta 65": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 73, 56, 81, 30, 59] },
-"Ronald 65": { imagem: "https://image.png/", posicao: "MC", atributos: [76, 48, 73, 67, 68, 72] },
-"Darlisson 65": { imagem: "https://image.png/", posicao: "DC", atributos: [58, 55, 52, 44, 77, 76] },
-
-"Carter 64": { imagem: "https://image.png/", posicao: "PL", atributos: [79, 72, 48, 68, 49, 61] },
-"Messeguem 64": { imagem: "https://image.png/", posicao: "MO", atributos: [67, 54, 75, 72, 42, 58] },
-"Bernardo 64": { imagem: "https://image.png/", posicao: "GR", atributos: [70, 68, 72, 69, 74, 72] },
-"Vlad 64": { imagem: "https://image.png/", posicao: "EE", atributos: [88, 58, 61, 62, 49, 52] },
-"Ronaldo Lumungo 64": { imagem: "https://image.png/", posicao: "ED", atributos: [69, 61, 53, 79, 32, 59] },
-"Luiz Fernando 64": { imagem: "https://image.png/", posicao: "EE", atributos: [82, 67, 61, 76, 35, 60] },
-"Gabriel Boschilia 64": { imagem: "https://image.png/", posicao: "MO", atributos: [61, 69, 79, 76, 31, 54] },
-"Cipriano 64": { imagem: "https://image.png/", posicao: "DC", atributos: [61, 34, 55, 46, 75, 74] },
-"Fabrício Daniel 64": { imagem: "https://image.png/", posicao: "ED", atributos: [68, 69, 56, 63, 43, 63] },
-
-"Rafael Nel 63": { imagem: "https://image.png/", posicao: "PL", atributos: [76, 70, 49, 63, 28, 62] },
-"Frederico Namora 63": { imagem: "https://image.png/", posicao: "DC", atributos: [55, 31, 52, 43, 80, 77] },
-"Armando Lopes 63": { imagem: "https://image.png/", posicao: "LE", atributos: [76, 38, 60, 68, 70, 65] },
-"João Silva 63": { imagem: "https://image.png/", posicao: "ED", atributos: [70, 59, 58, 76, 35, 57] },
-"Gustavo Coutinho 63": { imagem: "https://image.png/", posicao: "PL", atributos: [64, 77, 47, 58, 28, 69] },
-"Matheus Araújo 63": { imagem: "https://image.png/", posicao: "MO", atributos: [68, 57, 75, 72, 35, 55] },
-"Matheus Sales 63": { imagem: "https://image.png/", posicao: "MC", atributos: [61, 43, 69, 59, 73, 74] },
-"Clayson 63": { imagem: "https://image.png/", posicao: "EE", atributos: [70, 67, 63, 75, 36, 58] },
-
-"Pedro Martelo 62": { imagem: "https://image.png/", posicao: "PL", atributos: [68, 72, 45, 60, 27, 63] },
-"Rafa 62": { imagem: "https://image.png/", posicao: "GR", atributos: [68, 65, 70, 72, 76, 69] },
-"Daniel Penha 62": { imagem: "https://image.png/", posicao: "MO", atributos: [65, 62, 76, 73, 33, 55] },
-"Kevyson 62": { imagem: "https://image.png/", posicao: "LE", atributos: [79, 36, 62, 67, 61, 63] },
-
-"Andre Sousa 61": { imagem: "https://image.png/", posicao: "LE", atributos: [69, 36, 59, 64, 68, 62] },
-"Hereda 61": { imagem: "https://image.png/", posicao: "LD", atributos: [66, 54, 60, 64, 65, 66] },
-"Thiaguinho 61": { imagem: "https://image.png/", posicao: "ED", atributos: [64, 60, 52, 74, 39, 55] }
+  // 60 - 64 OVERALL
+  "marcano 64": "https://i.ibb.co/ymTyPkY1/marcano64.png",
+  "lukas ullrich 64": "https://i.ibb.co/Kj7B9f57/lukasullrish64.png",
+  "andré almeida 63": "https://i.ibb.co/Y7PGCHR3/andrealmeida63.png",
+  "nico schlotterbeck 63": "https://i.ibb.co/MkSDdfLz/nico63.png",
+  "de la cruz 62": "https://i.ibb.co/SwjyzpmJ/delacruz62.png",
+  "alexander bah 62": "https://i.ibb.co/fVB5JCPR/bah62.png",
+  "charles 60": "https://i.ibb.co/gMTdxy9D/charles60.png",
+  "joaquin lavega 60": "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png",
+  "caio césar 60": "https://i.ibb.co/67n1Lhkb/caiocesar60.png",
+  "caça rato 60": "https://i.ibb.co/hRNn6wPv/ca-a-rato60.png",
+  "andré pimenta 60": "https://i.ibb.co/gZFf9C7G/andrepimenta60.png",
+  "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
 };
 
 function removerAcentos(texto) {
   if (!texto) return "";
-  try { texto = decodeURIComponent(texto); } catch (e) {}
-  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  try {
+    texto = decodeURIComponent(texto);
+  } catch (e) {}
+
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO (CORRIGIDA)
+// ROTA 1: GERAR IMAGEM DO CAMPO
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -237,25 +238,14 @@ app.get('/gerar-campo', async (req, res) => {
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
-      let busca = removerAcentos(req.query[pos]);
+      const busca = removerAcentos(req.query[pos]);
 
       if (busca && busca !== 'vazio') {
-        // REMOVE NÚMEROS DO FINAL DA BUSCA (Ex: "lavega 30" vira "lavega")
-        busca = busca.replace(/\s+\d+$/, '').trim();
-
-        // Encontra a carta mesmo que o nome no banco tenha o overall original
-        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
-          const nomeLimpo = removerAcentos(nomeNoBanco).replace(/\s+\d+$/, '').trim();
-          return nomeLimpo.includes(busca) || busca.includes(nomeLimpo);
-        });
+        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(busca));
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
-            const cardData = BANCO_DE_CARTAS[chaveEncontrada];
-            const imgUrl = typeof cardData === 'string' ? cardData : cardData.imagem;
-            const cardImg = await loadImage(imgUrl);
-
-            // Desenha a carta na posição que foi requisitada no parâmetro do campo
+            const cardImg = await loadImage(BANCO_DE_CARTAS[chaveEncontrada]);
             ctx.drawImage(
               cardImg, 
               coord.x - cardWidth / 2, 
@@ -280,7 +270,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADOR (AUTOMÁTICO PARA GR OU LINHA)
+// ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -314,26 +304,7 @@ app.get('/buscar-jogador', (req, res) => {
 
     const partes = chaveEncontrada.split(' ');
     const overall = parseInt(partes[partes.length - 1]) || 60;
-    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
-
-    const imagem = typeof dadosCarta === 'string' ? dadosCarta : dadosCarta.imagem;
-    const posicao = (dadosCarta.posicao || "PL").toUpperCase().trim();
-    
-    // VERIFICA AUTOMATICAMENTE SE É GOLEIRO APENAS CONFERINDO A POSIÇÃO
-    const ehGoleiro = posicao === "GR";
-
-    // Extrai a lista de 6 números (ou preenche com o overall se não houver)
-    let listaAtributos = Array.isArray(dadosCarta.atributos) ? dadosCarta.atributos : [];
-    
-    const att1 = listaAtributos[0] !== undefined ? listaAtributos[0] : overall;
-    const att2 = listaAtributos[1] !== undefined ? listaAtributos[1] : overall;
-    const att3 = listaAtributos[2] !== undefined ? listaAtributos[2] : overall;
-    const att4 = listaAtributos[3] !== undefined ? listaAtributos[3] : overall;
-    const att5 = listaAtributos[4] !== undefined ? listaAtributos[4] : overall;
-    const att6 = listaAtributos[5] !== undefined ? listaAtributos[5] : overall;
-
-    // CÁLCULO DA FORÇA TOTAL (SOMA DOS 6 STATS)
-    const forcaTotal = att1 + att2 + att3 + att4 + att5 + att6;
+    const imagem = BANCO_DE_CARTAS[chaveEncontrada];
 
     let preco = 1000;
     if (overall === 99) preco = 100000;
@@ -376,22 +347,13 @@ app.get('/buscar-jogador', (req, res) => {
     else if (overall === 62) preco = 210;
     else if (overall === 61) preco = 180;
     else if (overall <= 60) preco = 150;
-
+    
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
       overall: overall,
-      posicao: posicao,
-      ehGoleiro: ehGoleiro,
       imagem: imagem,
-      preco: preco,
-      att1: att1,
-      att2: att2,
-      att3: att3,
-      att4: att4,
-      att5: att5,
-      att6: att6,
-      forcaTotal: forcaTotal
+      preco: preco
     });
   } catch (error) {
     console.error("Erro interno no /buscar-jogador:", error);
@@ -421,6 +383,7 @@ app.get('/obter-aleatorio', (req, res) => {
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
       let peso = 100;
+
       if (overall >= 90) peso = 1;
       else if (overall >= 88) peso = 3;
       else if (overall >= 85) peso = 8;
@@ -431,6 +394,7 @@ app.get('/obter-aleatorio', (req, res) => {
     });
 
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
+
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -442,8 +406,7 @@ app.get('/obter-aleatorio', (req, res) => {
       numeroSorteado -= jogador.peso;
     }
 
-    const dadosCarta = BANCO_DE_CARTAS[cartaSorteada.chave];
-    const imagem = typeof dadosCarta === 'string' ? dadosCarta : dadosCarta.imagem;
+    const imagem = BANCO_DE_CARTAS[cartaSorteada.chave];
 
     return res.status(200).json({
       sucesso: true,
@@ -458,7 +421,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (ALINHAMENTO ANTIQUEBRA)
+// ROTA 4: LISTAR JOGADORES NO MERCADO
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -481,33 +444,16 @@ app.get('/listar-mercado', (req, res) => {
     else if (faixa === '6064') { min = 60; max = 64; }
 
     const filtrados = chaves.map(chave => {
-      // 1. Extrai o overall do final
-      const partes = chave.trim().split(/\s+/);
+      const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
+      
+      const nomeSemOverall = partes.slice(0, -1).join(' ');
+      const nomeFormatado = nomeSemOverall
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
 
-      // 2. Isola o nome (sem o overall)
-      let palavrasNome = partes.slice(0, -1);
-      if (palavrasNome.length === 0) palavrasNome = [chave];
-
-      // 3. Formatação inteligente do nome
-      let nomeFormatado = "";
-      if (palavrasNome.length > 1) {
-        const primeiraInicial = palavrasNome[0].charAt(0).toUpperCase() + ".";
-        const restoDoNome = palavrasNome.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        nomeFormatado = `${primeiraInicial} ${restoDoNome}`;
-      } else {
-        nomeFormatado = palavrasNome[0].charAt(0).toUpperCase() + palavrasNome[0].slice(1).toLowerCase();
-      }
-
-      // 4. Limita o nome para caber no bloco sem estourar o Discord
-      if (nomeFormatado.length > 11) {
-        nomeFormatado = nomeFormatado.substring(0, 10) + ".";
-      }
-
-      const dadosCarta = BANCO_DE_CARTAS[chave];
-      const posicao = (dadosCarta.posicao || "PL").toUpperCase().trim();
-
-      return { nome: nomeFormatado, overall, posicao };
+      return { nome: nomeFormatado, overall };
     })
     .filter(j => j.overall >= min && j.overall <= max)
     .sort((a, b) => b.overall - a.overall);
@@ -523,15 +469,11 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Monta o item garantindo tamanho compacto
-      const item1 = `[${j1.overall}] ${j1.nome} (${j1.posicao})`;
+      const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
       
-      // Trava a Coluna 1 em exatamente 23 caracteres (tamanho perfeito para o Discord)
-      const col1 = item1.padEnd(23, ' '); 
-
       if (j2) {
-        const item2 = `[${j2.overall}] ${j2.nome} (${j2.posicao})`;
-        linhas.push(`${col1} ${item2}`);
+        const col2 = `[${j2.overall}] ${j2.nome}`;
+        linhas.push(`${col1}  ${col2}`);
       } else {
         linhas.push(col1);
       }
