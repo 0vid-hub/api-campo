@@ -15,6 +15,57 @@ const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 // Ordem para GR:    [ALC, CON, REP, REF, POS, FIS]
 // -------------------------------------------------------------
 const BANCO_DE_CARTAS = {
+"Kylian Mbappé 89": { imagem: "https://image.png/", posicao: "PL", atributos: [91, 92, 83, 90, 38, 84] },
+"Lamine Yamal 89": { imagem: "https://image.png/", posicao: "ED", atributos: [89, 86, 91, 92, 32, 68] },
+"Harry Kane 89": { imagem: "https://image.png/", posicao: "PL", atributos: [78, 93, 91, 79, 42, 87] },
+"Cristiano Ronaldo 89": { imagem: "https://image.png/", posicao: "PL", atributos: [78, 93, 82, 79, 35, 88] },
+"Lionel Messi 89": { imagem: "https://image.png/", posicao: "ED", atributos: [75, 89, 92, 93, 28, 58] },
+"Neymar Jr. 89": { imagem: "https://image.png/", posicao: "EE", atributos: [77, 86, 91, 92, 30, 63] },
+
+"Ousmane Dembélé 88": { imagem: "https://image.png/", posicao: "ED", atributos: [91, 87, 82, 92, 32, 70] },
+"Erling Haaland 88": { imagem: "https://image.png/", posicao: "PL", atributos: [90, 94, 70, 78, 38, 94] },
+"Jude Bellingham 88": { imagem: "https://image.png/", posicao: "MC", atributos: [84, 80, 88, 84, 79, 87] },
+"Vinícius Júnior 88": { imagem: "https://image.png/", posicao: "EE", atributos: [93, 87, 80, 92, 31, 72] },
+
+"Michael Olise 87": { imagem: "https://image.png/", posicao: "ED", atributos: [84, 83, 89, 89, 31, 68] },
+"Rodri 87": { imagem: "https://image.png/", posicao: "MC", atributos: [68, 70, 91, 76, 90, 87] },
+"Jamal Musiala 87": { imagem: "https://image.png/", posicao: "MO", atributos: [86, 82, 89, 91, 29, 66] },
+"Pedri 87": { imagem: "https://image.png/", posicao: "MC", atributos: [72, 66, 92, 87, 67, 70] },
+"Federico Valverde 87": { imagem: "https://image.png/", posicao: "MC", atributos: [88, 78, 86, 81, 82, 90] },
+
+"Raphinha 86": { imagem: "https://image.png/", posicao: "EE", atributos: [88, 88, 82, 89, 32, 72] },
+"Florian Wirtz 86": { imagem: "https://image.png/", posicao: "MO", atributos: [79, 81, 90, 88, 31, 65] },
+"Vitinha 86": { imagem: "https://image.png/", posicao: "MC", atributos: [77, 67, 91, 86, 65, 70] },
+"Declan Rice 86": { imagem: "https://image.png/", posicao: "MC", atributos: [79, 68, 87, 76, 88, 89] },
+"Achraf Hakimi 86": { imagem: "https://image.png/", posicao: "LD", atributos: [91, 68, 81, 87, 78, 86] },
+
+"Bernardo Silva 85": { imagem: "https://image.png/", posicao: "MC", atributos: [78, 72, 89, 90, 47, 64] },
+"Bruno Fernandes 85": { imagem: "https://image.png/", posicao: "MO", atributos: [72, 86, 89, 83, 42, 72] },
+"Martin Ødegaard 85": { imagem: "https://image.png/", posicao: "MO", atributos: [74, 71, 90, 87, 48, 65] },
+"Khvicha Kvaratskhelia 85": { imagem: "https://image.png/", posicao: "EE", atributos: [87, 83, 84, 90, 31, 70] },
+"William Saliba 85": { imagem: "https://image.png/", posicao: "DC", atributos: [78, 35, 70, 57, 89, 88] },
+
+"Virgil van Dijk 84": { imagem: "https://image.png/", posicao: "DC", atributos: [72, 35, 71, 51, 91, 88] },
+"Antonio Rüdiger 84": { imagem: "https://image.png/", posicao: "DC", atributos: [81, 33, 62, 48, 88, 91] },
+"Alphonso Davies 84": { imagem: "https://image.png/", posicao: "LE", atributos: [92, 34, 72, 82, 76, 83] },
+"Marquinhos 84": { imagem: "https://image.png/", posicao: "DC", atributos: [77, 32, 75, 56, 87, 82] },
+
+"Julián Álvarez 83": { imagem: "https://image.png/", posicao: "PL", atributos: [85, 88, 76, 82, 36, 79] },
+"Lautaro Martínez 83": { imagem: "https://image.png/", posicao: "PL", atributos: [82, 90, 73, 77, 39, 84] },
+"Victor Osimhen 83": { imagem: "https://image.png/", posicao: "PL", atributos: [92, 91, 61, 72, 30, 91] },
+"Rodrygo 83": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 81, 77, 87, 29, 67] },
+"Phil Foden 83": { imagem: "https://image.png/", posicao: "ED", atributos: [84, 82, 86, 88, 29, 64] },
+"Bukayo Saka 83": { imagem: "https://image.png/", posicao: "ED", atributos: [87, 84, 81, 87, 36, 72] },
+
+"Rúben Dias 82": { imagem: "https://image.png/", posicao: "DC", atributos: [68, 31, 68, 47, 88, 85] },
+"Gabriel Magalhães 82": { imagem: "https://image.png/", posicao: "DC", atributos: [70, 37, 64, 45, 88, 89] },
+"William Pacho 82": { imagem: "https://image.png/", posicao: "DC", atributos: [78, 30, 61, 44, 86, 84] },
+
+"Alisson 81": { imagem: "https://image.png/", posicao: "GR", atributos: [88, 87, 90, 84, 91, 87] },
+"Thibaut Courtois 81": { imagem: "https://image.png/", posicao: "GR", atributos: [92, 86, 89, 87, 93, 91] },
+"Emiliano Martínez 81": { imagem: "https://image.png/", posicao: "GR", atributos: [89, 88, 91, 85, 92, 89] },
+"Diogo Costa 81": { imagem: "https://image.png/", posicao: "GR", atributos: [87, 90, 88, 84, 90, 86] },
+  
 "Ricardo Horta 79": { imagem: "https://image.png/", posicao: "EE", atributos: [78, 79, 76, 82, 38, 65] },
 "Riccardo Orsolini 79": { imagem: "https://image.png/", posicao: "ED", atributos: [82, 81, 73, 84, 35, 61] },
 "Vincenzo Grifo 79": { imagem: "https://image.png/", posicao: "EE", atributos: [76, 82, 79, 81, 32, 57] },
