@@ -10,14 +10,16 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
 // -------------------------------------------------------------
-// BANCO DE CARTAS (POSIÇÕES APENAS COM ABREVIAÇÕES: PL, MC, GR, ETC.)
+// BANCO DE CARTAS (AGORA COM APENAS OS 6 NÚMEROS DE ATRIBUTOS EM ORDEM)
+// Ordem para LINHA: [VEL, REM, PAS, DRI, DEF, FIS]
+// Ordem para GR:    [ALC, CON, REP, REF, POS, FIS]
 // -------------------------------------------------------------
 const BANCO_DE_CARTAS = {
-  "luka modric 94": { imagem: "https://i.ibb.co/5WvWtzPq/modric94.png", posicao: "MC", atributos: { vel: 78, rem: 84, pas: 95, dri: 92, def: 75, fis: 72 } },
-  "charles 60": { imagem: "https://i.ibb.co/gMTdxy9D/charles60.png", posicao: "PL", atributos: { vel: 62, rem: 63, pas: 55, dri: 60, def: 35, fis: 60 } },
-  "joaquin lavega 60": { imagem: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", posicao: "EE", atributos: { vel: 68, rem: 57, pas: 58, dri: 62, def: 30, fis: 55 } },
-  "zé ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: { vel: 55, rem: 50, pas: 60, dri: 56, def: 62, fis: 65 } },
-  "thibaut courtois 90": { imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", posicao: "GR", atributos: { alc: 85, con: 89, rep: 76, ref: 93, pos: 90, fis: 88 } }
+  "luka modric 94": { imagem: "https://i.ibb.co/5WvWtzPq/modric94.png", posicao: "MC", atributos: [78, 84, 95, 92, 75, 72] },
+  "charles 60": { imagem: "https://i.ibb.co/gMTdxy9D/charles60.png", posicao: "GR", atributos: [62, 63, 55, 60, 35, 60] },
+  "joaquin lavega 60": { imagem: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", posicao: "EE", atributos: [68, 57, 58, 62, 30, 55] },
+  "zé ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: [55, 50, 60, 56, 62, 65] },
+  "thibaut courtois 90": { imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", posicao: "GR", atributos: [85, 89, 76, 93, 90, 88] }
 };
 
 function removerAcentos(texto) {
@@ -97,7 +99,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADOR
+// ROTA 2: BUSCAR JOGADOR (AUTOMÁTICO PARA GR OU LINHA)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -134,17 +136,20 @@ app.get('/buscar-jogador', (req, res) => {
     const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
     const imagem = typeof dadosCarta === 'string' ? dadosCarta : dadosCarta.imagem;
-    const posicao = dadosCarta.posicao || "PL";
-    const ehGoleiro = posicao.toUpperCase() === "GR";
+    const posicao = (dadosCarta.posicao || "PL").toUpperCase().trim();
+    
+    // VERIFICA AUTOMATICAMENTE SE É GOLEIRO APENAS CONFERINDO A POSIÇÃO
+    const ehGoleiro = posicao === "GR";
 
-    let atributos = dadosCarta.atributos;
-    if (!atributos) {
-      if (ehGoleiro) {
-        atributos = { alc: overall, con: overall, rep: overall, ref: overall, pos: overall, fis: overall };
-      } else {
-        atributos = { vel: overall, rem: overall, pas: overall, dri: overall, def: overall, fis: overall };
-      }
-    }
+    // Extrai a lista de 6 números (ou preenche com o overall se não houver)
+    let listaAtributos = Array.isArray(dadosCarta.atributos) ? dadosCarta.atributos : [];
+    
+    const att1 = listaAtributos[0] !== undefined ? listaAtributos[0] : overall;
+    const att2 = listaAtributos[1] !== undefined ? listaAtributos[1] : overall;
+    const att3 = listaAtributos[2] !== undefined ? listaAtributos[2] : overall;
+    const att4 = listaAtributos[3] !== undefined ? listaAtributos[3] : overall;
+    const att5 = listaAtributos[4] !== undefined ? listaAtributos[4] : overall;
+    const att6 = listaAtributos[5] !== undefined ? listaAtributos[5] : overall;
 
     let preco = 1000;
     if (overall === 99) preco = 100000;
@@ -196,12 +201,12 @@ app.get('/buscar-jogador', (req, res) => {
       ehGoleiro: ehGoleiro,
       imagem: imagem,
       preco: preco,
-      att1: ehGoleiro ? (atributos.alc || overall) : (atributos.vel || overall),
-      att2: ehGoleiro ? (atributos.con || overall) : (atributos.rem || overall),
-      att3: ehGoleiro ? (atributos.rep || overall) : (atributos.pas || overall),
-      att4: ehGoleiro ? (atributos.ref || overall) : (atributos.dri || overall),
-      att5: ehGoleiro ? (atributos.pos || overall) : (atributos.def || overall),
-      att6: atributos.fis || overall
+      att1: att1,
+      att2: att2,
+      att3: att3,
+      att4: att4,
+      att5: att5,
+      att6: att6
     });
   } catch (error) {
     console.error("Erro interno no /buscar-jogador:", error);
