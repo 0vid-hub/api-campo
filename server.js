@@ -16,7 +16,7 @@ const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 // -------------------------------------------------------------
 const BANCO_DE_CARTAS = {
   "luka modric 94": { imagem: "https://i.ibb.co/5WvWtzPq/modric94.png", posicao: "MC", atributos: [78, 84, 95, 92, 75, 72] },
-  "charles 60": { imagem: "https://i.ibb.co/gMTdxy9D/charles60.png", posicao: "GR", atributos: [62, 63, 55, 60, 35, 60] },
+  "charles 60": { imagem: "https://i.ibb.co/QFSyBFRv/charles60.png", posicao: "GR", atributos: [62, 63, 55, 60, 35, 60] },
   "joaquin lavega 60": { imagem: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", posicao: "EE", atributos: [68, 57, 58, 62, 30, 55] },
   "zé ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: [55, 50, 60, 56, 62, 65] },
   "thibaut courtois 90": { imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", posicao: "GR", atributos: [85, 89, 76, 93, 90, 88] }
