@@ -338,7 +338,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (FORMATADO & ALINHADO)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (ALINHAMENTO PERFEITO)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -361,26 +361,27 @@ app.get('/listar-mercado', (req, res) => {
     else if (faixa === '6064') { min = 60; max = 64; }
 
     const filtrados = chaves.map(chave => {
-      const partes = chave.split(' ');
+      // 1. Extrai o overall do final
+      const partes = chave.trim().split(/\s+/);
       const overall = parseInt(partes[partes.length - 1]) || 60;
-      const palavrasNome = partes.slice(0, -1);
 
-      // --- ABREVIAÇÃO INTELIGENTE ---
+      // 2. Isolamento estrito do nome (remove o overall do final)
+      let palavrasNome = partes.slice(0, -1);
+      if (palavrasNome.length === 0) palavrasNome = [chave];
+
+      // 3. Abreviação da PRIMEIRA palavra (ex: Gabriel Boschilia -> G. Boschilia)
       let nomeFormatado = "";
       if (palavrasNome.length > 1) {
-        // Pega a primeira letra da 1ª palavra (ex: "Gabriel" -> "G.") + o restante
         const primeiraInicial = palavrasNome[0].charAt(0).toUpperCase() + ".";
-        const restoDoNome = palavrasNome.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const restoDoNome = palavrasNome.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         nomeFormatado = `${primeiraInicial} ${restoDoNome}`;
-      } else if (palavrasNome.length === 1) {
-        nomeFormatado = palavrasNome[0].charAt(0).toUpperCase() + palavrasNome[0].slice(1);
       } else {
-        nomeFormatado = "Jogador";
+        nomeFormatado = palavrasNome[0].charAt(0).toUpperCase() + palavrasNome[0].slice(1).toLowerCase();
       }
 
-      // Se ainda assim o nome for gigante, limita o tamanho para não quebrar a coluna
-      if (nomeFormatado.length > 12) {
-        nomeFormatado = nomeFormatado.substring(0, 11) + ".";
+      // 4. Limita o tamanho do nome em até 13 caracteres para NUNCA estourar a coluna
+      if (nomeFormatado.length > 13) {
+        nomeFormatado = nomeFormatado.substring(0, 12) + ".";
       }
 
       const dadosCarta = BANCO_DE_CARTAS[chave];
@@ -402,13 +403,15 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Formata cada item garantindo um tamanho fixo exato
-      const textoCol1 = `[${j1.overall}] ${j1.nome} (${j1.posicao})`;
-      const col1 = textoCol1.padEnd(24, ' '); // 24 caracteres cravados na Coluna 1
+      // Monta o texto base do jogador: ex "[64] G. Boschilia (MO)"
+      const item1 = `[${j1.overall}] ${j1.nome} (${j1.posicao})`;
       
+      // Trava a primeira coluna em exatos 25 caracteres de largura
+      const col1 = item1.padEnd(25, ' '); 
+
       if (j2) {
-        const col2 = `[${j2.overall}] ${j2.nome} (${j2.posicao})`;
-        linhas.push(`${col1}  ${col2}`);
+        const item2 = `[${j2.overall}] ${j2.nome} (${j2.posicao})`;
+        linhas.push(`${col1}  ${item2}`);
       } else {
         linhas.push(col1);
       }
@@ -425,3 +428,5 @@ app.get('/listar-mercado', (req, res) => {
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
+
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
