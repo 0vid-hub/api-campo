@@ -9,25 +9,21 @@ app.use(express.urlencoded({ extended: true }));
 
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
+// -------------------------------------------------------------
+// BANCO DE CARTAS (POSIÇÕES APENAS COM ABREVIAÇÕES: PL, MC, GR, ETC.)
+// -------------------------------------------------------------
 const BANCO_DE_CARTAS = {
-  // 90-94 OVERALL
-  "luka modric 94": "https://i.ibb.co/5WvWtzPq/modric94.png",
-  "charles 60": "https://i.ibb.co/gMTdxy9D/charles60.png",
-  "joaquin lavega 60": "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png",
-  "zé ricardo 60": "https://i.ibb.co/G3C6JhmD/zericardo60.png"
+  "luka modric 94": { imagem: "https://i.ibb.co/5WvWtzPq/modric94.png", posicao: "MC", atributos: { vel: 78, rem: 84, pas: 95, dri: 92, def: 75, fis: 72 } },
+  "charles 60": { imagem: "https://i.ibb.co/gMTdxy9D/charles60.png", posicao: "PL", atributos: { vel: 62, rem: 63, pas: 55, dri: 60, def: 35, fis: 60 } },
+  "joaquin lavega 60": { imagem: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", posicao: "EE", atributos: { vel: 68, rem: 57, pas: 58, dri: 62, def: 30, fis: 55 } },
+  "zé ricardo 60": { imagem: "https://i.ibb.co/G3C6JhmD/zericardo60.png", posicao: "MC", atributos: { vel: 55, rem: 50, pas: 60, dri: 56, def: 62, fis: 65 } },
+  "thibaut courtois 90": { imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png", posicao: "GR", atributos: { alc: 85, con: 89, rep: 76, ref: 93, pos: 90, fis: 88 } }
 };
 
 function removerAcentos(texto) {
   if (!texto) return "";
-  try {
-    texto = decodeURIComponent(texto);
-  } catch (e) {}
-
-  return texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+  try { texto = decodeURIComponent(texto); } catch (e) {}
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
 // -------------------------------------------------------------
@@ -74,7 +70,9 @@ app.get('/gerar-campo', async (req, res) => {
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
-            const cardImg = await loadImage(BANCO_DE_CARTAS[chaveEncontrada]);
+            const cardData = BANCO_DE_CARTAS[chaveEncontrada];
+            const imgUrl = typeof cardData === 'string' ? cardData : cardData.imagem;
+            const cardImg = await loadImage(imgUrl);
             ctx.drawImage(
               cardImg, 
               coord.x - cardWidth / 2, 
@@ -99,7 +97,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES
+// ROTA 2: BUSCAR JOGADOR
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -133,7 +131,20 @@ app.get('/buscar-jogador', (req, res) => {
 
     const partes = chaveEncontrada.split(' ');
     const overall = parseInt(partes[partes.length - 1]) || 60;
-    const imagem = BANCO_DE_CARTAS[chaveEncontrada];
+    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
+
+    const imagem = typeof dadosCarta === 'string' ? dadosCarta : dadosCarta.imagem;
+    const posicao = dadosCarta.posicao || "PL";
+    const ehGoleiro = posicao.toUpperCase() === "GR";
+
+    let atributos = dadosCarta.atributos;
+    if (!atributos) {
+      if (ehGoleiro) {
+        atributos = { alc: overall, con: overall, rep: overall, ref: overall, pos: overall, fis: overall };
+      } else {
+        atributos = { vel: overall, rem: overall, pas: overall, dri: overall, def: overall, fis: overall };
+      }
+    }
 
     let preco = 1000;
     if (overall === 99) preco = 100000;
@@ -176,13 +187,21 @@ app.get('/buscar-jogador', (req, res) => {
     else if (overall === 62) preco = 210;
     else if (overall === 61) preco = 180;
     else if (overall <= 60) preco = 150;
-    
+
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
       overall: overall,
+      posicao: posicao,
+      ehGoleiro: ehGoleiro,
       imagem: imagem,
-      preco: preco
+      preco: preco,
+      att1: ehGoleiro ? (atributos.alc || overall) : (atributos.vel || overall),
+      att2: ehGoleiro ? (atributos.con || overall) : (atributos.rem || overall),
+      att3: ehGoleiro ? (atributos.rep || overall) : (atributos.pas || overall),
+      att4: ehGoleiro ? (atributos.ref || overall) : (atributos.dri || overall),
+      att5: ehGoleiro ? (atributos.pos || overall) : (atributos.def || overall),
+      att6: atributos.fis || overall
     });
   } catch (error) {
     console.error("Erro interno no /buscar-jogador:", error);
@@ -212,7 +231,6 @@ app.get('/obter-aleatorio', (req, res) => {
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
       let peso = 100;
-
       if (overall >= 90) peso = 1;
       else if (overall >= 88) peso = 3;
       else if (overall >= 85) peso = 8;
@@ -223,7 +241,6 @@ app.get('/obter-aleatorio', (req, res) => {
     });
 
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
-
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -235,7 +252,8 @@ app.get('/obter-aleatorio', (req, res) => {
       numeroSorteado -= jogador.peso;
     }
 
-    const imagem = BANCO_DE_CARTAS[cartaSorteada.chave];
+    const dadosCarta = BANCO_DE_CARTAS[cartaSorteada.chave];
+    const imagem = typeof dadosCarta === 'string' ? dadosCarta : dadosCarta.imagem;
 
     return res.status(200).json({
       sucesso: true,
