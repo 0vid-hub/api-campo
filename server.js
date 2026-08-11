@@ -407,7 +407,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (FORMATAÇÃO INTELIGENTE)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (ALINHAMENTO ANTIQUEBRA)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -434,11 +434,11 @@ app.get('/listar-mercado', (req, res) => {
       const partes = chave.trim().split(/\s+/);
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      // 2. Isola as palavras do nome
+      // 2. Isola o nome (sem o overall)
       let palavrasNome = partes.slice(0, -1);
       if (palavrasNome.length === 0) palavrasNome = [chave];
 
-      // 3. Abrevia apenas o primeiro nome se houver mais de uma palavra
+      // 3. Formatação inteligente do nome
       let nomeFormatado = "";
       if (palavrasNome.length > 1) {
         const primeiraInicial = palavrasNome[0].charAt(0).toUpperCase() + ".";
@@ -448,9 +448,9 @@ app.get('/listar-mercado', (req, res) => {
         nomeFormatado = palavrasNome[0].charAt(0).toUpperCase() + palavrasNome[0].slice(1).toLowerCase();
       }
 
-      // 4. Limite de segurança: só corta se o nome isolado passar de 20 caracteres!
-      if (nomeFormatado.length > 20) {
-        nomeFormatado = nomeFormatado.substring(0, 19) + ".";
+      // 4. Limita o nome para caber no bloco sem estourar o Discord
+      if (nomeFormatado.length > 11) {
+        nomeFormatado = nomeFormatado.substring(0, 10) + ".";
       }
 
       const dadosCarta = BANCO_DE_CARTAS[chave];
@@ -472,15 +472,15 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Monta a string completa do jogador 1
+      // Monta o item garantindo tamanho compacto
       const item1 = `[${j1.overall}] ${j1.nome} (${j1.posicao})`;
       
-      // Expande a coluna 1 para 32 caracteres (dá espaço de sobra para nomes longos como "G. Boschilia")
-      const col1 = item1.padEnd(32, ' '); 
+      // Trava a Coluna 1 em exatamente 23 caracteres (tamanho perfeito para o Discord)
+      const col1 = item1.padEnd(23, ' '); 
 
       if (j2) {
         const item2 = `[${j2.overall}] ${j2.nome} (${j2.posicao})`;
-        linhas.push(`${col1}  ${item2}`);
+        linhas.push(`${col1} ${item2}`);
       } else {
         linhas.push(col1);
       }
@@ -497,4 +497,5 @@ app.get('/listar-mercado', (req, res) => {
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
+
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
