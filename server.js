@@ -202,7 +202,7 @@ function removerAcentos(texto) {
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO
+// ROTA 1: GERAR IMAGEM DO CAMPO (COM FIX DE FORA DE POSIÇÃO)
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -241,7 +241,15 @@ app.get('/gerar-campo', async (req, res) => {
       const busca = removerAcentos(req.query[pos]);
 
       if (busca && busca !== 'vazio') {
-        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => removerAcentos(nome).includes(busca));
+        // --- CORREÇÃO AQUI ---
+        // Se o BDFD mandar "mbappe 42" (com GER alterado), isso limpa para "mbappe"
+        const buscaSemNumero = busca.replace(/\s+\d+$/, '').trim();
+
+        // Busca a carta no banco comparando apenas o nome, ignorando números/GER
+        const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => {
+          const nomeBancoLimpo = removerAcentos(nome).replace(/\s+\d+$/, '').trim();
+          return nomeBancoLimpo.includes(buscaSemNumero) || buscaSemNumero.includes(nomeBancoLimpo);
+        });
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
