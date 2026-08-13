@@ -173,19 +173,17 @@ const BANCO_DE_CARTAS = {
   "joão mário 65": { img: "https://i.ibb.co/6jwS6H8/joaomario65r.png", pos: "ld" },
   "toti gomes 65": { img: "https://i.ibb.co/WWZ1hRSR/totigomes65r.png", pos: "dc" },
 
-  // 60 - 64 OVERALL
-  "marcano 64": { img: "https://i.ibb.co/ymTyPkY1/marcano64.png", pos: "dc" },
-  "lukas ullrich 64": { img: "https://i.ibb.co/Kj7B9f57/lukasullrish64.png", pos: "le" },
-  "andré almeida 63": { img: "https://i.ibb.co/Y7PGCHR3/andrealmeida63.png", pos: "mc" },
-  "nico schlotterbeck 63": { img: "https://i.ibb.co/MkSDdfLz/nico63.png", pos: "dc" },
-  "de la cruz 62": { img: "https://i.ibb.co/SwjyzpmJ/delacruz62.png", pos: "mc" },
-  "alexander bah 62": { img: "https://i.ibb.co/fVB5JCPR/bah62.png", pos: "ld" },
-  "charles 60": { img: "https://i.ibb.co/gMTdxy9D/charles60.png", pos: "gr" },
-  "joaquin lavega 60": { img: "https://i.ibb.co/wZHHhNkR/joaquinlavega60.png", pos: "ee" },
-  "caio césar 60": { img: "https://i.ibb.co/67n1Lhkb/caiocesar60.png", pos: "mc" },
-  "caça rato 60": { img: "https://i.ibb.co/hRNn6wPv/ca-a-rato60.png", pos: "pl" },
-  "andré pimenta 60": { img: "https://i.ibb.co/gZFf9C7G/andrepimenta60.png", pos: "dc" },
-  "zé ricardo 60": { img: "https://i.ibb.co/G3C6JhmD/zericardo60.png", pos: "mc" }
+// 60 - 64 OVERALL
+  "joaquin lavega 64": { img: "https://i.ibb.co/jkJBjvYv/joaquinlavega64.png", pos: "ee" },
+  "nico schlotterbeck 64": { img: "https://i.ibb.co/mFJcHvQg/nicoschlotterbeck64.png", pos: "dc" },
+  "andré almeida 63": { img: "https://i.ibb.co/WppPRkhV/andrealmeida63.png", pos: "mo" },
+  "de la cruz 63": { img: "https://i.ibb.co/kVyTc0xz/delacruz63.png", pos: "mo" },
+  "caça rato 62": { img: "https://i.ibb.co/wb1PLJ8/cacarato62.png", pos: "pl" },
+  "tiquinho soares 62": { img: "https://i.ibb.co/xQJwrjB/tiquinho62.png", pos: "pl" },
+  "luan silva 61": { img: "https://i.ibb.co/5hbcfFcw/luansilva61.png", pos: "pl" },
+  "mikael 61": { img: "https://i.ibb.co/6cNWrn4Y/mikael61.png", pos: "pl" },
+  "charles 60": { img: "https://i.ibb.co/bMNsWjZS/charles60.png", pos: "gr" },
+  "chrystian barletta 60": { img: "https://i.ibb.co/gMmYRhmy/Chrystian-Barletta60.png", pos: "ee" }
 };
 
 function removerAcentos(texto) {
