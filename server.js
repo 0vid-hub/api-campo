@@ -477,7 +477,11 @@ app.get('/listar-mercado', (req, res) => {
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
 
-      return { nome: nomeFormatado, overall };
+      // Resgata a posição do banco de dados e converte para maiúsculo
+      const dadosCarta = BANCO_DE_CARTAS[chave];
+      const posicao = (dadosCarta && dadosCarta.pos) ? dadosCarta.pos.toUpperCase() : "??";
+
+      return { nome: nomeFormatado, overall, posicao };
     })
     .filter(j => j.overall >= min && j.overall <= max)
     .sort((a, b) => b.overall - a.overall);
@@ -493,10 +497,12 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      const col1 = `[${j1.overall}] ${j1.nome.padEnd(16, ' ')}`;
+      // Formatação incluindo a Posição: [88 MO] Zidane
+      const item1 = `[${j1.overall} ${j1.posicao}] ${j1.nome}`;
+      const col1 = item1.padEnd(20, ' ');
       
       if (j2) {
-        const col2 = `[${j2.overall}] ${j2.nome}`;
+        const col2 = `[${j2.overall} ${j2.posicao}] ${j2.nome}`;
         linhas.push(`${col1}  ${col2}`);
       } else {
         linhas.push(col1);
