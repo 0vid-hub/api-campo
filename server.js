@@ -202,7 +202,7 @@ function removerAcentos(texto) {
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO (CORRIGIDO BUGS DE OVERALL)
+// ROTA 1: GERAR IMAGEM DO CAMPO
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -243,23 +243,17 @@ app.get('/gerar-campo', async (req, res) => {
       if (busca && busca !== 'vazio') {
         let chaveEncontrada = null;
 
-        // 1. Tenta achar EXATAMENTE o nome + overall (Ex: "ronaldo 75")
+        // 1. Exato
         if (BANCO_DE_CARTAS[busca]) {
           chaveEncontrada = busca;
         } else {
-          // 2. Se não achar exato, procura por chave do banco que inclua a busca inteira
+          // 2. Busca sem números no final
+          const buscaSemNumero = busca.replace(/\s+\d+$/, '').trim();
           chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => {
-            return removerAcentos(nome) === busca;
+            const nomeBancoLimpo = removerAcentos(nome);
+            const nomeSemOver = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
+            return nomeBancoLimpo === busca || nomeSemOver === buscaSemNumero;
           });
-
-          // 3. Se ainda não achar, aí sim tenta pela busca sem o número no final (Fallback)
-          if (!chaveEncontrada) {
-            const buscaSemNumero = busca.replace(/\s+\d+$/, '').trim();
-            chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => {
-              const nomeBancoLimpo = removerAcentos(nome).replace(/\s+\d+$/, '').trim();
-              return nomeBancoLimpo.includes(buscaSemNumero) || buscaSemNumero.includes(nomeBancoLimpo);
-            });
-          }
         }
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
@@ -289,7 +283,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES
+// ROTA 2: BUSCAR JOGADORES (CORRIGIDA DEFINITIVAMENTE)
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -308,10 +302,23 @@ app.get('/buscar-jogador', (req, res) => {
       });
     }
 
-    const chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
-      const nomeLimpo = removerAcentos(nomeNoBanco);
-      return nomeLimpo.includes(buscaLimpa);
+    // Isola apenas as palavras e remove números de overall da consulta
+    const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
+
+    // 1. Tenta encontrar exato (se o usuário mandou "diogo costa 83")
+    let chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
+      return removerAcentos(nomeNoBanco) === buscaLimpa;
     });
+
+    // 2. Se não achou exato, busca pelo NOME LIMPO sem números
+    if (!chaveEncontrada) {
+      chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
+        const nomeBancoLimpo = removerAcentos(nomeNoBanco);
+        const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
+        
+        return nomeBancoSemNumero === buscaSemNumero || nomeBancoLimpo.includes(buscaSemNumero);
+      });
+    }
 
     if (!chaveEncontrada) {
       return res.status(200).json({ 
@@ -328,47 +335,10 @@ app.get('/buscar-jogador', (req, res) => {
     const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
     let preco = 1000;
-    if (overall === 99) preco = 100000;
-    else if (overall === 98) preco = 80000;
-    else if (overall === 97) preco = 65000;
-    else if (overall === 96) preco = 52000;
-    else if (overall === 95) preco = 42000;
-    else if (overall === 94) preco = 34000;
-    else if (overall === 93) preco = 28000;
-    else if (overall === 92) preco = 23000;
-    else if (overall === 91) preco = 19000;
-    else if (overall === 90) preco = 16000;
-    else if (overall === 89) preco = 13500;
-    else if (overall === 88) preco = 11500;
-    else if (overall === 87) preco = 9800;
-    else if (overall === 86) preco = 8300;
-    else if (overall === 85) preco = 7000;
-    else if (overall === 84) preco = 5800;
-    else if (overall === 83) preco = 4800;
-    else if (overall === 82) preco = 3900;
-    else if (overall === 81) preco = 3100;
-    else if (overall === 80) preco = 2500;
-    else if (overall === 79) preco = 2100;
-    else if (overall === 78) preco = 1800;
-    else if (overall === 77) preco = 1550;
-    else if (overall === 76) preco = 1350;
-    else if (overall === 75) preco = 1200;
-    else if (overall === 74) preco = 1050;
-    else if (overall === 73) preco = 920;
-    else if (overall === 72) preco = 810;
-    else if (overall === 71) preco = 710;
-    else if (overall === 70) preco = 620;
-    else if (overall === 69) preco = 540;
-    else if (overall === 68) preco = 470;
-    else if (overall === 67) preco = 410;
-    else if (overall === 66) preco = 360;
-    else if (overall === 65) preco = 310;
-    else if (overall === 64) preco = 270;
-    else if (overall === 63) preco = 240;
-    else if (overall === 62) preco = 210;
-    else if (overall === 61) preco = 180;
-    else if (overall <= 60) preco = 150;
-    
+    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
+    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
+    else preco = 150 + (overall - 60) * 100;
+
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
@@ -406,7 +376,6 @@ app.get('/obter-aleatorio', (req, res) => {
       const overall = parseInt(partes[partes.length - 1]) || 60;
 
       let peso = 100;
-
       if (overall >= 90) peso = 1;
       else if (overall >= 88) peso = 3;
       else if (overall >= 85) peso = 8;
@@ -417,7 +386,6 @@ app.get('/obter-aleatorio', (req, res) => {
     });
 
     const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
-
     let numeroSorteado = Math.random() * pesoTotal;
     let cartaSorteada = jogadoresComPeso[0];
 
@@ -445,7 +413,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (2 COLUNAS - CORTE DE 2 PONTOS)
+// ROTA 4: LISTAR JOGADORES NO MERCADO
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -496,11 +464,8 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Se passar de 13 caracteres, pega as 11 primeiras letras e adiciona ".."
       const nome1 = j1.nome.length > 13 ? j1.nome.slice(0, 11) + ".." : j1.nome;
       const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
-      
-      // Mantém a coluna com 24 caracteres exatos de largura
       const col1 = item1.padEnd(24, ' ');
       
       if (j2) {
