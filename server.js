@@ -201,6 +201,38 @@ function removerAcentos(texto) {
     .trim();
 }
 
+// FUNÇÃO DE BUSCA UNIFICADA (Encontra jogadoes exatos, parciais e sem overall)
+function encontrarChaveJogador(termoBusca) {
+  const buscaLimpa = removerAcentos(termoBusca);
+  if (!buscaLimpa) return null;
+
+  const chaves = Object.keys(BANCO_DE_CARTAS);
+
+  // 1. Match Exato (ex: "diogo costa 83")
+  let achado = chaves.find(chave => removerAcentos(chave) === buscaLimpa);
+  if (achado) return achado;
+
+  // Isola nome sem números de overall ao final
+  const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
+
+  // 2. Match sem considerar números (ex: "diogo costa" bate com "diogo costa 83")
+  achado = chaves.find(chave => {
+    const nomeBancoLimpo = removerAcentos(chave);
+    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
+    return nomeBancoSemNumero === buscaSemNumero;
+  });
+  if (achado) return achado;
+
+  // 3. Match Parcial Inteligente (ex: digitar "diogo" ou "costa" acha "diogo costa 83")
+  achado = chaves.find(chave => {
+    const nomeBancoLimpo = removerAcentos(chave);
+    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
+    return nomeBancoSemNumero.includes(buscaSemNumero) || buscaSemNumero.includes(nomeBancoSemNumero);
+  });
+
+  return achado || null;
+}
+
 // -------------------------------------------------------------
 // ROTA 1: GERAR IMAGEM DO CAMPO
 // -------------------------------------------------------------
@@ -238,23 +270,10 @@ app.get('/gerar-campo', async (req, res) => {
     };
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
-      const busca = removerAcentos(req.query[pos]);
+      const termo = req.query[pos];
 
-      if (busca && busca !== 'vazio') {
-        let chaveEncontrada = null;
-
-        // 1. Exato
-        if (BANCO_DE_CARTAS[busca]) {
-          chaveEncontrada = busca;
-        } else {
-          // 2. Busca sem números no final
-          const buscaSemNumero = busca.replace(/\s+\d+$/, '').trim();
-          chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nome => {
-            const nomeBancoLimpo = removerAcentos(nome);
-            const nomeSemOver = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
-            return nomeBancoLimpo === busca || nomeSemOver === buscaSemNumero;
-          });
-        }
+      if (termo && termo !== 'vazio') {
+        const chaveEncontrada = encontrarChaveJogador(termo);
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
@@ -267,7 +286,7 @@ app.get('/gerar-campo', async (req, res) => {
               cardHeight
             );
           } catch (err) {
-            console.error(`Erro ao carregar imagem para ${busca}:`, err.message);
+            console.error(`Erro ao carregar imagem para ${termo}:`, err.message);
           }
         }
       }
@@ -290,35 +309,7 @@ app.get('/buscar-jogador', (req, res) => {
 
   try {
     const queryBruta = req.query.q || "";
-    const buscaLimpa = removerAcentos(queryBruta);
-
-    if (!buscaLimpa) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "busca_vazia",
-        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-        posicao: "desconhecida",
-        overall: 60 
-      });
-    }
-
-    // Isola apenas as palavras e remove números de overall da consulta
-    const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
-
-    // 1. Tenta encontrar exato (se o usuário mandou "diogo costa 83")
-    let chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
-      return removerAcentos(nomeNoBanco) === buscaLimpa;
-    });
-
-    // 2. Se não achou exato, busca pelo NOME LIMPO sem números
-    if (!chaveEncontrada) {
-      chaveEncontrada = Object.keys(BANCO_DE_CARTAS).find(nomeNoBanco => {
-        const nomeBancoLimpo = removerAcentos(nomeNoBanco);
-        const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
-        
-        return nomeBancoSemNumero === buscaSemNumero || nomeBancoLimpo.includes(buscaSemNumero);
-      });
-    }
+    const chaveEncontrada = encontrarChaveJogador(queryBruta);
 
     if (!chaveEncontrada) {
       return res.status(200).json({ 
