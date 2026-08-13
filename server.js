@@ -445,7 +445,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO
+// ROTA 4: LISTAR JOGADORES NO MERCADO (2 COLUNAS ALINHADASC)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -477,7 +477,6 @@ app.get('/listar-mercado', (req, res) => {
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
 
-      // Resgata a posição do banco de dados e converte para maiúsculo
       const dadosCarta = BANCO_DE_CARTAS[chave];
       const posicao = (dadosCarta && dadosCarta.pos) ? dadosCarta.pos.toUpperCase() : "??";
 
@@ -497,13 +496,17 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Formatação incluindo a Posição: [88 MO] Zidane
-      const item1 = `[${j1.overall} ${j1.posicao}] ${j1.nome}`;
-      const col1 = item1.padEnd(20, ' ');
+      // Se o nome passar de 12 caracteres, limita para caber perfeitamente na coluna
+      const nome1 = j1.nome.length > 12 ? j1.nome.slice(0, 11) + "…" : j1.nome;
+      const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
+      
+      // Fixa o tamanho da primeira coluna em 24 caracteres com espaços à direita
+      const col1 = item1.padEnd(24, ' ');
       
       if (j2) {
-        const col2 = `[${j2.overall} ${j2.posicao}] ${j2.nome}`;
-        linhas.push(`${col1}  ${col2}`);
+        const nome2 = j2.nome.length > 12 ? j2.nome.slice(0, 11) + "…" : j2.nome;
+        const col2 = `[${j2.overall} ${j2.posicao}] ${nome2}`;
+        linhas.push(`${col1}${col2}`);
       } else {
         linhas.push(col1);
       }
