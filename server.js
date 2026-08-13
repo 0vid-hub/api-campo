@@ -445,7 +445,7 @@ app.get('/obter-aleatorio', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO (2 COLUNAS ALINHADASC)
+// ROTA 4: LISTAR JOGADORES NO MERCADO (2 COLUNAS - CORTE DE 2 PONTOS)
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -496,15 +496,15 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      // Se o nome passar de 12 caracteres, limita para caber perfeitamente na coluna
-      const nome1 = j1.nome.length > 12 ? j1.nome.slice(0, 11) + "…" : j1.nome;
+      // Se passar de 13 caracteres, pega as 11 primeiras letras e adiciona ".."
+      const nome1 = j1.nome.length > 13 ? j1.nome.slice(0, 11) + ".." : j1.nome;
       const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
       
-      // Fixa o tamanho da primeira coluna em 24 caracteres com espaços à direita
+      // Mantém a coluna com 24 caracteres exatos de largura
       const col1 = item1.padEnd(24, ' ');
       
       if (j2) {
-        const nome2 = j2.nome.length > 12 ? j2.nome.slice(0, 11) + "…" : j2.nome;
+        const nome2 = j2.nome.length > 13 ? j2.nome.slice(0, 11) + ".." : j2.nome;
         const col2 = `[${j2.overall} ${j2.posicao}] ${nome2}`;
         linhas.push(`${col1}${col2}`);
       } else {
