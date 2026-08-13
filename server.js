@@ -170,7 +170,7 @@ const BANCO_DE_CARTAS = {
   "martim martins 67": { img: "https://i.ibb.co/Hp3yrG8N/martimmartins.png", pos: "ld" },
   "fábio vieira 66": { img: "https://i.ibb.co/JFWGB85y/fabiovieira66r.png", pos: "mo" },
   "nuno tavares 65": { img: "https://i.ibb.co/84Lqjh54/nunotacares65r.png", pos: "le" },
-  "joão mário 65": { img: "https://i.ibb.co/6jwS6H8/joaomario65r.png", pos: "mc" },
+  "joão mário 65": { img: "https://i.ibb.co/6jwS6H8/joaomario65r.png", pos: "ld" },
   "toti gomes 65": { img: "https://i.ibb.co/WWZ1hRSR/totigomes65r.png", pos: "dc" },
 
   // 60 - 64 OVERALL
