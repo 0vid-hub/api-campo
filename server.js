@@ -149,7 +149,7 @@ const BANCO_DE_CARTAS = {
   "ribamar 70": { img: "https://i.ibb.co/XZ2FjFLp/ribamar70.png", pos: "pl" },
   "igor jesus 70": { img: "https://i.ibb.co/C3ByxRBk/igorjesus70.png", pos: "pl" },
   "yuri alberto 70": { img: "https://i.ibb.co/DPLcTQKY/yurialberto70.png", pos: "pl" },
-
+  
   "martim martins 69": { img: "https://i.ibb.co/3xGRbf6/martimmartins68.png", pos: "mc" },
   "tomás ribeiro 69": { img: "https://i.ibb.co/Qjpf21xG/tomasribeiro69.png", pos: "dc" },
   "fábio vieira 68": { img: "https://i.ibb.co/JRWMMz7z/fabiovieira68.png", pos: "mo" },
@@ -159,7 +159,7 @@ const BANCO_DE_CARTAS = {
   "marcos leonardo 66": { img: "https://i.ibb.co/HTwcfpbQ/marcosleonardo66.png", pos: "pl" },
   "nathan silva 66": { img: "https://i.ibb.co/fYm7Lqdy/nathansilva66.png", pos: "dc" },
   "carlinhos 65": { img: "https://i.ibb.co/fVR6b5wx/carlinhos65.png", pos: "ee" },
-  "gonçalo sá 65": { img: "https://i.ibb.co/gLvjtSjj/gon-alos-65.png", pos: "mo" }
+  "gonçalo sá 65": { img: "https://i.ibb.co/gLvjtSjj/gon-alos-65.png", pos: "mo" },
     
   "joaquin lavega 64": { img: "https://i.ibb.co/jkJBjvYv/joaquinlavega64.png", pos: "ee" },
   "nico schlotterbeck 64": { img: "https://i.ibb.co/mFJcHvQg/nicoschlotterbeck64.png", pos: "dc" },
