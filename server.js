@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
 const BANCO_DE_CARTAS = {
-  "endrick 74": { img: "hhtps://i.ibb.co/Ld5CyX6n/edrick72.png", pos: "pl" },
+  "endrick 74": { img: "hhtps://i.ibb.co/Ld5CyX6n/endrick72.png", pos: "pl" },
   "estevão 74": { img: "https://i.ibb.co/SXLGjWgZ/estevao74.png", pos: "ed" },
   "joão mário 74": { img: "https://i.ibb.co/5h2v9q6h/joaomario74.png", pos: "ld" },
   "nuno tavares 74": { img: "https://i.ibb.co/RTtF9KLJ/nunotavares74.png", pos: "le" },
