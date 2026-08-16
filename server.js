@@ -3,6 +3,7 @@ const { createCanvas, loadImage } = require('canvas');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const os = require('os');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -357,5 +358,31 @@ app.get('/listar-mercado', (req, res) => {
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
+
+// ROTA DE STATUS DA RAM
+app.get('/status', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  try {
+    const totalMemBytes = os.totalmem();
+    const freeMemBytes = os.freemem();
+    const usedMemBytes = totalMemBytes - freeMemBytes;
+
+    const totalRAM = (totalMemBytes / (1024 * 1024)).toFixed(0);
+    const usedRAM = (usedMemBytes / (1024 * 1024)).toFixed(0);
+    const freeRAM = (freeMemBytes / (1024 * 1024)).toFixed(0);
+    const usagePercent = ((usedMemBytes / totalMemBytes) * 100).toFixed(1);
+
+    return res.status(200).json({
+      sucesso: true,
+      ram_total: `${totalRAM} MB`,
+      ram_usada: `${usedRAM} MB`,
+      ram_livre: `${freeRAM} MB`,
+      uso_porcentagem: `${usagePercent}%`
+    });
+  } catch (error) {
+    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+  }
+});
+
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
