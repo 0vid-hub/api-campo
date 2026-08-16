@@ -35,16 +35,16 @@ const BANCO_DE_CARTAS = {
   "carlinhos 65": { img: "https://i.ibb.co/HLb7ZCw4/carlinhos65.png", pos: "ee" },
   "gonçalo sá 65": { img: "https://i.ibb.co/15xrqCq/goncalosa65.png", pos: "mo" },
     
-  "joaquin lavega 64": { img: "https://i.ibb.co/jkJBjvYv/joaquinlavega64.png", pos: "ee" },
-  "nico schlotterbeck 64": { img: "https://i.ibb.co/mFJcHvQg/nicoschlotterbeck64.png", pos: "dc" },
-  "andré almeida 63": { img: "https://i.ibb.co/WppPRkhV/andrealmeida63.png", pos: "mo" },
-  "de la cruz 63": { img: "https://i.ibb.co/kVyTc0xz/delacruz63.png", pos: "mo" },
-  "caça rato 62": { img: "https://i.ibb.co/wb1PLJ8/cacarato62.png", pos: "pl" },
-  "tiquinho soares 62": { img: "https://i.ibb.co/xQJwrjB/tiquinho62.png", pos: "pl" },
-  "luan silva 61": { img: "https://i.ibb.co/5hbcfFcw/luansilva61.png", pos: "pl" },
-  "mikael 61": { img: "https://i.ibb.co/6cNWrn4Y/mikael61.png", pos: "pl" },
+  "joaquin lavega 64": { img: "https://i.ibb.co/cSpm4G86/joaquinlavega64.png", pos: "ee" },
+  "nico schlotterbeck 64": { img: "https://i.ibb.co/rGz7JbhZ/NICO-SCHLOTTERBECK64.png", pos: "dc" },
+  "andré almeida 63": { img: "https://i.ibb.co/MDNsBFSz/andrealmeida63.png", pos: "mo" },
+  "de la cruz 63": { img: "https://i.ibb.co/S4y4fG3k/delacruz63.png", pos: "mo" },
+  "caça rato 62": { img: "https://i.ibb.co/GQW9wXGb/cacarato62.png", pos: "pl" },
+  "tiquinho soares 62": { img: "https://i.ibb.co/bRXv4xYB/tiquinhosoares62.png", pos: "pl" },
+  "luan silva 61": { img: "https://i.ibb.co/5NgjYtt/luansilva61.png", pos: "pl" },
+  "mikael 61": { img: "https://i.ibb.co/4RyT75Rb/mikael61.png", pos: "pl" },
   "charles 60": { img: "https://i.ibb.co/Kxn9y0yY/charles60.png", pos: "gr" },
-  "chrystian barletta 60": { img: "https://i.ibb.co/gMmYRhmy/Chrystian-Barletta60.png", pos: "ee" }
+  "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
 function removerAcentos(texto) {
