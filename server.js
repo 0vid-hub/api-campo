@@ -359,27 +359,29 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// ROTA DE STATUS DA RAM
+// -------------------------------------------------------------
+// ROTA 5: CONSULTAR RAM REAL DA APLICAÇÃO (USO DO PROCESSO)
+// -------------------------------------------------------------
 app.get('/status', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   try {
-    const totalMemBytes = os.totalmem();
-    const freeMemBytes = os.freemem();
-    const usedMemBytes = totalMemBytes - freeMemBytes;
-
-    const totalRAM = (totalMemBytes / (1024 * 1024)).toFixed(0);
-    const usedRAM = (usedMemBytes / (1024 * 1024)).toFixed(0);
-    const freeRAM = (freeMemBytes / (1024 * 1024)).toFixed(0);
-    const usagePercent = ((usedMemBytes / totalMemBytes) * 100).toFixed(1);
+    const memory = process.memoryUsage();
+    
+    // Converte de Bytes para MB
+    const usedRAM = (memory.rss / (1024 * 1024)).toFixed(1); // RAM alocada para o processo
+    const maxRAM = 512; // Limite do plano gratuito do Render (512 MB)
+    const freeRAM = (maxRAM - usedRAM).toFixed(1);
+    const usagePercent = ((usedRAM / maxRAM) * 100).toFixed(1);
 
     return res.status(200).json({
       sucesso: true,
-      ram_total: `${totalRAM} MB`,
+      ram_total: `${maxRAM} MB`,
       ram_usada: `${usedRAM} MB`,
-      ram_livre: `${freeRAM} MB`,
+      ram_livre: `${freeRAM > 0 ? freeRAM : 0} MB`,
       uso_porcentagem: `${usagePercent}%`
     });
   } catch (error) {
+    console.error("Erro no /status:", error);
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
 });
