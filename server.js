@@ -182,75 +182,52 @@ const POSICOES = {
 // -------------------------------------------------------------
 // ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
-// -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (COM VALIDAÇÃO DE LINK DE IMAGEM)
-// -------------------------------------------------------------
-app.get('/buscar-jogador', async (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+app.get('/buscar-jogador', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  try {
-    const queryBruta = req.query.q || "";
-    const chaveEncontrada = encontrarChaveJogador(queryBruta);
+  try {
+    const queryBruta = req.query.q || "";
+    const chaveEncontrada = encontrarChaveJogador(queryBruta);
 
-    if (!chaveEncontrada) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "nao_encontrado",
-        imagem: "",
-        posicao: "desconhecida",
-        overall: 60 
-      });
-    }
+    if (!chaveEncontrada) {
+      return res.status(200).json({ 
+        sucesso: false, 
+        erro: "nao_encontrado",
+        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+        posicao: "desconhecida",
+        overall: 60 
+      });
+    }
 
-    const partes = chaveEncontrada.split(' ');
-    const overall = parseInt(partes[partes.length - 1]) || 60;
-    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
+    const partes = chaveEncontrada.split(' ');
+    const overall = parseInt(partes[partes.length - 1]) || 60;
+    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
-    let preco = 1000;
-    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
-    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
-    else preco = 150 + (overall - 60) * 100;
+    let preco = 1000;
+    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
+    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
+    else preco = 150 + (overall - 60) * 100;
 
-    let imagemValida = true;
-    const urlImagem = dadosCarta ? dadosCarta.img : "";
-
-    // Teste de ping rápido no link da imagem antes de mandar pro Discord
-    if (urlImagem) {
-      try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 2000); // 2 segundos max
-        const check = await fetch(urlImagem, { method: 'HEAD', signal: controller.signal });
-        clearTimeout(timer);
-        
-        if (!check.ok) imagemValida = false;
-      } catch (e) {
-        imagemValida = false; // Se der timeout ou erro de conexão, marca como inválida
-      }
-    } else {
-      imagemValida = false;
-    }
-
-    return res.status(200).json({
-      sucesso: true,
-      nome: chaveEncontrada,
-      overall: overall,
-      imagem: urlImagem,
-      imagemValida: imagemValida,
-      posicao: dadosCarta.pos,
-      preco: preco
-    });
-  } catch (error) {
-    console.error("Erro interno no /buscar-jogador:", error);
-    return res.status(200).json({ 
-      sucesso: false, 
-      erro: "erro_interno",
-      imagem: "",
-      imagemValida: false,
-      posicao: "desconhecida",
-      overall: 60 
-    });
-  }
+    return res.status(200).json({
+      sucesso: true,
+      nome: chaveEncontrada,
+      overall: overall,
+      imagem: dadosCarta.img,
+      posicao: dadosCarta.pos,
+      preco: preco
+    });
+  } catch (error) {
+    console.error("Erro interno no /buscar-jogador:", error);
+    return res.status(200).json({ 
+      sucesso: false, 
+      erro: "erro_interno",
+      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+      posicao: "desconhecida",
+      overall: 60 
+    });
+  }
 });
+
 // -------------------------------------------------------------
 // ROTA 3: OBTER JOGADOR ALEATÓRIO
 // -------------------------------------------------------------
