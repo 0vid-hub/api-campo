@@ -132,13 +132,13 @@ app.get('/gerar-campo', async (req, res) => {
     // Coordenadas ajustadas com MC no centro perfeito (400, 400)
 const POSICOES = {
       gr:  { x: 400, y: 705 },
-      le:  { x: 100, y: 550 },
+      le:  { x: 100, y: 580 }, // Desceu para ficar ligeiramente abaixo dos DCs (y: 580)
       dc1: { x: 270, y: 565 },
       dc2: { x: 530, y: 565 },
-      ld:  { x: 700, y: 550 },
-      mc:  { x: 400, y: 380 }, // Subiu de 400 para 380 (mais à frente)
-      mo1: { x: 220, y: 260 }, // Desceu de 245 para 260 e afastou para a esquerda (x: 220)
-      mo2: { x: 580, y: 260 }, // Desceu de 245 para 260 e afastou para a direita (x: 580)
+      ld:  { x: 700, y: 580 }, // Desceu para ficar ligeiramente abaixo dos DCs (y: 580)
+      mc:  { x: 400, y: 395 }, // Ajustado para dar espaço perfeito aos MOs acima
+      mo1: { x: 220, y: 280 }, // Desceu para y: 280 (espaço total de sobra do EE)
+      mo2: { x: 580, y: 280 }, // Desceu para y: 280 (espaço total de sobra do ED)
       ee:  { x: 110, y: 100 },
       pl:  { x: 400, y: 85 },
       ed:  { x: 690, y: 100 }
