@@ -51,7 +51,6 @@ const imageCache = new Map();
 async function preCarregarImagens() {
   console.log("🔄 Pré-carregando imagens na memória RAM...");
 
-  // 1. Carrega Fundo
   try {
     const bg = await loadImage(URL_FUNDO);
     imageCache.set(URL_FUNDO, bg);
@@ -59,7 +58,6 @@ async function preCarregarImagens() {
     console.error("❌ Erro ao carregar fundo:", e.message);
   }
 
-  // 2. Carrega todas as cartas em paralelo
   const promessas = Object.values(BANCO_DE_CARTAS).map(async (carta) => {
     try {
       const img = await loadImage(carta.img);
@@ -114,16 +112,16 @@ function encontrarChaveJogador(termoBusca) {
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO (OTIMIZADA)
+// ROTA 1: GERAR IMAGEM DO CAMPO (OTIMIZADA - 600x600)
 // -------------------------------------------------------------
 app.get('/gerar-campo', (req, res) => {
   try {
-    const width = 800;
-    const height = 800;
+    const width = 600;
+    const height = 600;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Desativa a renderização pesada/suavização para máxima velocidade
+    // Desativa a suavização para ganho de performance no Canvas
     ctx.imageSmoothingEnabled = false;
 
     // Desenha a imagem de fundo direto da RAM
@@ -135,24 +133,26 @@ app.get('/gerar-campo', (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-    const cardWidth = 120;
-    const cardHeight = 165;
+    // Proporção das cartas ajustada para a tela 600x600
+    const cardWidth = 90;
+    const cardHeight = 124;
 
+    // Coordenadas das posições recalculadas proporcionalmente para 600x600
     const POSICOES = {
-      gr:  { x: 400, y: 705 },
-      le:  { x: 100, y: 580 },
-      dc1: { x: 270, y: 565 },
-      dc2: { x: 530, y: 565 },
-      ld:  { x: 700, y: 580 },
-      mc:  { x: 400, y: 395 },
-      mo1: { x: 220, y: 280 },
-      mo2: { x: 580, y: 280 },
-      ee:  { x: 110, y: 100 },
-      pl:  { x: 400, y: 85 },
-      ed:  { x: 690, y: 100 }
+      gr:  { x: 300, y: 528 },
+      le:  { x: 75,  y: 435 },
+      dc1: { x: 202, y: 423 },
+      dc2: { x: 397, y: 423 },
+      ld:  { x: 525, y: 435 },
+      mc:  { x: 300, y: 296 },
+      mo1: { x: 165, y: 210 },
+      mo2: { x: 435, y: 210 },
+      ee:  { x: 82,  y: 75  },
+      pl:  { x: 300, y: 63  },
+      ed:  { x: 517, y: 75  }
     };
 
-    // Leitura síncrona direto da RAM - sem requisições HTTP ou timers
+    // Renderização síncrona dos cards buscando direto da RAM
     Object.entries(POSICOES).forEach(([pos, coord]) => {
       const termo = req.query[pos];
 
@@ -177,6 +177,8 @@ app.get('/gerar-campo', (req, res) => {
     });
 
     res.setHeader('Content-Type', 'image/png');
+    // Adiciona cache HTTP para evitar reprocessar a mesma requisição
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     canvas.createPNGStream().pipe(res);
 
   } catch (error) {
@@ -364,7 +366,6 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// Inicialização segura com pré-carregamento das imagens
 preCarregarImagens().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Servidor e API rodando na porta ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Servidor rodando a 600x600 na porta ${PORT}`));
 });
