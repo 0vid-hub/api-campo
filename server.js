@@ -322,77 +322,80 @@ app.get('/obter-aleatorio', (req, res) => {
 // ROTA 4: LISTAR JOGADORES NO MERCADO
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  try {
-    const faixa = req.query.faixa;
-    const chaves = Object.keys(BANCO_DE_CARTAS);
+  try {
+    const faixa = req.query.faixa;
+    const chaves = Object.keys(BANCO_DE_CARTAS);
+    const totalGeral = chaves.length; // <--- Conta o total de cartas no banco
 
-    let min = 0;
-    let max = 99;
+    let min = 0;
+    let max = 99;
 
-    if (faixa === '9999') { min = 99; max = 99; }
-    else if (faixa === '9598') { min = 95; max = 98; }
-    else if (faixa === '9094') { min = 90; max = 94; }
-    else if (faixa === '8589') { min = 85; max = 89; }
-    else if (faixa === '8084') { min = 80; max = 84; }
-    else if (faixa === '7579') { min = 75; max = 79; }
-    else if (faixa === '7074') { min = 70; max = 74; }
-    else if (faixa === '6569') { min = 65; max = 69; }
-    else if (faixa === '6064') { min = 60; max = 64; }
+    if (faixa === '9999') { min = 99; max = 99; }
+    else if (faixa === '9598') { min = 95; max = 98; }
+    else if (faixa === '9094') { min = 90; max = 94; }
+    else if (faixa === '8589') { min = 85; max = 89; }
+    else if (faixa === '8084') { min = 80; max = 84; }
+    else if (faixa === '7579') { min = 75; max = 79; }
+    else if (faixa === '7074') { min = 70; max = 74; }
+    else if (faixa === '6569') { min = 65; max = 69; }
+    else if (faixa === '6064') { min = 60; max = 64; }
 
-    const filtrados = chaves.map(chave => {
-      const partes = chave.split(' ');
-      const overall = parseInt(partes[partes.length - 1]) || 60;
+    const filtrados = chaves.map(chave => {
+      const partes = chave.split(' ');
+      const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      const nomeSemOverall = partes.slice(0, -1).join(' ');
-      const nomeFormatado = nomeSemOverall
-        .split(' ')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
+      const nomeSemOverall = partes.slice(0, -1).join(' ');
+      const nomeFormatado = nomeSemOverall
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
 
-      const dadosCarta = BANCO_DE_CARTAS[chave];
-      const posicao = (dadosCarta && dadosCarta.pos) ? dadosCarta.pos.toUpperCase() : "??";
+      const dadosCarta = BANCO_DE_CARTAS[chave];
+      const posicao = (dadosCarta && dadosCarta.pos) ? dadosCarta.pos.toUpperCase() : "??";
 
-      return { nome: nomeFormatado, overall, posicao };
-    })
-    .filter(j => j.overall >= min && j.overall <= max)
-    .sort((a, b) => b.overall - a.overall);
+      return { nome: nomeFormatado, overall, posicao };
+    })
+    .filter(j => j.overall >= min && j.overall <= max)
+    .sort((a, b) => b.overall - a.overall);
 
-    if (filtrados.length === 0) {
-      return res.status(200).json({
-        texto: "*(Ainda não há jogadores disponíveis nesta faixa.)*"
-      });
-    }
+    if (filtrados.length === 0) {
+      return res.status(200).json({
+        total: totalGeral,
+        texto: "*(Ainda não há jogadores disponíveis nesta faixa.)*"
+      });
+    }
 
-    let linhas = [];
-    for (let i = 0; i < filtrados.length; i += 2) {
-      const j1 = filtrados[i];
-      const j2 = filtrados[i + 1];
+    let linhas = [];
+    for (let i = 0; i < filtrados.length; i += 2) {
+      const j1 = filtrados[i];
+      const j2 = filtrados[i + 1];
 
-      const nome1 = j1.nome.length > 13 ? j1.nome.slice(0, 11) + ".." : j1.nome;
-      const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
-      const col1 = item1.padEnd(24, ' ');
+      const nome1 = j1.nome.length > 13 ? j1.nome.slice(0, 11) + ".." : j1.nome;
+      const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
+      const col1 = item1.padEnd(24, ' ');
 
-      if (j2) {
-        const nome2 = j2.nome.length > 13 ? j2.nome.slice(0, 11) + ".." : j2.nome;
-        const col2 = `[${j2.overall} ${j2.posicao}] ${nome2}`;
-        linhas.push(`${col1}${col2}`);
-      } else {
-        linhas.push(col1);
-      }
-    }
+      if (j2) {
+        const nome2 = j2.nome.length > 13 ? j2.nome.slice(0, 11) + ".." : j2.nome;
+        const col2 = `[${j2.overall} ${j2.posicao}] ${nome2}`;
+        linhas.push(`${col1}${col2}`);
+      } else {
+        linhas.push(col1);
+      }
+    }
 
-    const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
+    const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
 
-    return res.status(200).json({
-      texto: resultadoFinal
-    });
+    return res.status(200).json({
+      total: totalGeral, // <--- Retorna o total aqui
+      texto: resultadoFinal
+    });
 
-  } catch (error) {
-    console.error("Erro no /listar-mercado:", error);
-    return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
-  }
+  } catch (error) {
+    console.error("Erro no /listar-mercado:", error);
+    return res.status(200).json({ total: 0, texto: "Erro ao carregar a lista de jogadores." });
+  }
 });
 
 // Inicialização segura com pré-carregamento das imagens
