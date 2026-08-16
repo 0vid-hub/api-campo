@@ -10,7 +10,6 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
 const BANCO_DE_CARTAS = {
-  
   "endrick 74": { img: "https://i.ibb.co/Ld5CyX6n/endrick72.png", pos: "pl" },
   "estevão 74": { img: "https://i.ibb.co/SXLGjWgZ/estevao74.png", pos: "ed" },
   "joão mário 74": { img: "https://i.ibb.co/5h2v9q6h/joaomario74.png", pos: "ld" },
@@ -23,7 +22,6 @@ const BANCO_DE_CARTAS = {
   "trincão 71": { img: "https://i.ibb.co/JjXTft5p/trincao71.png", pos: "mo" },
   "igor jesus 70": { img: "https://i.ibb.co/C33xqWvb/igorjesus70.png", pos: "pl" },
   "yuri alberto 70": { img: "https://i.ibb.co/HTxK0kg8/yurialberto70.png", pos: "pl" },
-  
   "martim martins 69": { img: "https://i.ibb.co/1G0ryHzM/martimmartins69.png", pos: "mc" },
   "tomás ribeiro 69": { img: "https://i.ibb.co/v4NKCnhb/tomasribeiro69.png", pos: "dc" },
   "fábio vieira 68": { img: "https://i.ibb.co/TMV1qDwq/fabiovieira68.png", pos: "mo" },
@@ -34,7 +32,6 @@ const BANCO_DE_CARTAS = {
   "nathan silva 66": { img: "https://i.ibb.co/V0BFyhKk/nathansilva66.png", pos: "dc" },
   "carlinhos 65": { img: "https://i.ibb.co/HLb7ZCw4/carlinhos65.png", pos: "ee" },
   "gonçalo sá 65": { img: "https://i.ibb.co/15xrqCq/goncalosa65.png", pos: "mo" },
-    
   "joaquin lavega 64": { img: "https://i.ibb.co/cSpm4G86/joaquinlavega64.png", pos: "ee" },
   "nico schlotterbeck 64": { img: "https://i.ibb.co/rGz7JbhZ/NICO-SCHLOTTERBECK64.png", pos: "dc" },
   "andré almeida 63": { img: "https://i.ibb.co/MDNsBFSz/andrealmeida63.png", pos: "mo" },
@@ -46,6 +43,27 @@ const BANCO_DE_CARTAS = {
   "charles 60": { img: "https://i.ibb.co/q3z1R6pd/charles60.png", pos: "gr" },
   "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
+
+// CACHE EM MEMÓRIA DE IMAGENS
+const imageCache = new Map();
+
+// FUNÇÃO PARA CARREGAR IMAGENS COM TIMEOUT E CACHE
+async function carregarImagemComTimeout(url, timeoutMs = 4000) {
+  if (imageCache.has(url)) {
+    return imageCache.get(url);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const img = await loadImage(url, { signal: controller.signal });
+    imageCache.set(url, img);
+    return img;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function removerAcentos(texto) {
   if (!texto) return "";
@@ -60,21 +78,17 @@ function removerAcentos(texto) {
     .trim();
 }
 
-// FUNÇÃO DE BUSCA UNIFICADA (Encontra jogadoes exatos, parciais e sem overall)
 function encontrarChaveJogador(termoBusca) {
   const buscaLimpa = removerAcentos(termoBusca);
   if (!buscaLimpa) return null;
 
   const chaves = Object.keys(BANCO_DE_CARTAS);
 
-  // 1. Match Exato (ex: "diogo costa 83")
   let achado = chaves.find(chave => removerAcentos(chave) === buscaLimpa);
   if (achado) return achado;
 
-  // Isola nome sem números de overall ao final
   const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
 
-  // 2. Match sem considerar números (ex: "diogo costa" bate com "diogo costa 83")
   achado = chaves.find(chave => {
     const nomeBancoLimpo = removerAcentos(chave);
     const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
@@ -82,7 +96,6 @@ function encontrarChaveJogador(termoBusca) {
   });
   if (achado) return achado;
 
-  // 3. Match Parcial Inteligente (ex: digitar "diogo" ou "costa" acha "diogo costa 83")
   achado = chaves.find(chave => {
     const nomeBancoLimpo = removerAcentos(chave);
     const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
@@ -102,11 +115,12 @@ app.get('/gerar-campo', async (req, res) => {
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
+    // Carregar imagem de fundo com fallback em caso de erro/timeout
     try {
-      const bgImg = await loadImage(URL_FUNDO);
+      const bgImg = await carregarImagemComTimeout(URL_FUNDO);
       ctx.drawImage(bgImg, 0, 0, width, height);
     } catch (bgErr) {
-      console.error("Erro ao carregar fundo:", bgErr.message);
+      console.error("Erro/Timeout ao carregar fundo:", bgErr.message);
       ctx.fillStyle = '#12141d';
       ctx.fillRect(0, 0, width, height);
     }
@@ -128,7 +142,8 @@ app.get('/gerar-campo', async (req, res) => {
       ed:  { x: 695, y: 100 }
     };
 
-    for (const [pos, coord] of Object.entries(POSICOES)) {
+    // Montar tarefas de renderização em paralelo
+    const tarefasRender = Object.entries(POSICOES).map(async ([pos, coord]) => {
       const termo = req.query[pos];
 
       if (termo && termo !== 'vazio') {
@@ -136,7 +151,7 @@ app.get('/gerar-campo', async (req, res) => {
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           try {
-            const cardImg = await loadImage(BANCO_DE_CARTAS[chaveEncontrada].img);
+            const cardImg = await carregarImagemComTimeout(BANCO_DE_CARTAS[chaveEncontrada].img);
             ctx.drawImage(
               cardImg, 
               coord.x - cardWidth / 2, 
@@ -145,11 +160,13 @@ app.get('/gerar-campo', async (req, res) => {
               cardHeight
             );
           } catch (err) {
-            console.error(`Erro ao carregar imagem para ${termo}:`, err.message);
+            console.error(`Erro/Timeout ao carregar imagem para ${termo}:`, err.message);
           }
         }
       }
-    }
+    });
+
+    await Promise.all(tarefasRender);
 
     res.setHeader('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
@@ -161,7 +178,7 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES (CORRIGIDA DEFINITIVAMENTE)
+// ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -288,7 +305,7 @@ app.get('/listar-mercado', (req, res) => {
     const filtrados = chaves.map(chave => {
       const partes = chave.split(' ');
       const overall = parseInt(partes[partes.length - 1]) || 60;
-      
+
       const nomeSemOverall = partes.slice(0, -1).join(' ');
       const nomeFormatado = nomeSemOverall
         .split(' ')
@@ -317,7 +334,7 @@ app.get('/listar-mercado', (req, res) => {
       const nome1 = j1.nome.length > 13 ? j1.nome.slice(0, 11) + ".." : j1.nome;
       const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
       const col1 = item1.padEnd(24, ' ');
-      
+
       if (j2) {
         const nome2 = j2.nome.length > 13 ? j2.nome.slice(0, 11) + ".." : j2.nome;
         const col2 = `[${j2.overall} ${j2.posicao}] ${nome2}`;
