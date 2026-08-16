@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
 const BANCO_DE_CARTAS = {
-  "alisson 79": { img: "https://i.ibb.co/v69SKZmq/alisson79.png", pos: "gr" },
+  "alisson 79": { img: "https://i.ibb.co/NgRk2shj/alisson79.png", pos: "gr" },
   "alexander bah 75": { img: "https://i.ibb.co/shfFSZX/bah75.png", pos: "ld" },
   "ben chilwell 75": { img: "https://i.ibb.co/Hf9zwRGw/BEN-CHILWELL75.png", pos: "le" },
   "bruno fernandes 78": { img: "https://i.ibb.co/4gCs3xGd/brunofernandes78.png", pos: "mo" },
