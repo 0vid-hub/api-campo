@@ -125,23 +125,23 @@ app.get('/gerar-campo', async (req, res) => {
       ctx.fillRect(0, 0, width, height);
     }
 
-// Novas dimensões proporcionais
-    const cardWidth = 110;
-    const cardHeight = 150;
+// Tamanho levemente maior e proporcional
+    const cardWidth = 120;
+    const cardHeight = 165;
 
-    // Coordenadas recalculadas e distribuídas (Layout 4-3-3)
+    // Coordenadas ajustadas com MC no centro perfeito (400, 400)
     const POSICOES = {
-      gr:  { x: 400, y: 700 },
+      gr:  { x: 400, y: 705 },
       le:  { x: 100, y: 550 },
-      dc1: { x: 280, y: 570 },
-      dc2: { x: 520, y: 570 },
+      dc1: { x: 270, y: 565 },
+      dc2: { x: 530, y: 565 },
       ld:  { x: 700, y: 550 },
-      mc:  { x: 400, y: 410 },
-      mo1: { x: 240, y: 260 },
-      mo2: { x: 560, y: 260 },
-      ee:  { x: 110, y: 110 },
-      pl:  { x: 400, y: 95 },
-      ed:  { x: 690, y: 110 }
+      mc:  { x: 400, y: 400 }, // Centralizado exatamente no meio do campo
+      mo1: { x: 230, y: 245 },
+      mo2: { x: 570, y: 245 },
+      ee:  { x: 110, y: 105 },
+      pl:  { x: 400, y: 90 },
+      ed:  { x: 690, y: 105 }
     };
 
     // Montar tarefas de renderização em paralelo
