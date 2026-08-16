@@ -182,7 +182,10 @@ const POSICOES = {
 // -------------------------------------------------------------
 // ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
-app.get('/buscar-jogador', (req, res) => {
+// -------------------------------------------------------------
+// ROTA 2: BUSCAR JOGADORES (COM VALIDAÇÃO DE LINK DE IMAGEM)
+// -------------------------------------------------------------
+app.get('/buscar-jogador', async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
@@ -193,7 +196,7 @@ app.get('/buscar-jogador', (req, res) => {
       return res.status(200).json({ 
         sucesso: false, 
         erro: "nao_encontrado",
-        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+        imagem: "",
         posicao: "desconhecida",
         overall: 60 
       });
@@ -208,11 +211,31 @@ app.get('/buscar-jogador', (req, res) => {
     else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
     else preco = 150 + (overall - 60) * 100;
 
+    let imagemValida = true;
+    const urlImagem = dadosCarta ? dadosCarta.img : "";
+
+    // Teste de ping rápido no link da imagem antes de mandar pro Discord
+    if (urlImagem) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 2000); // 2 segundos max
+        const check = await fetch(urlImagem, { method: 'HEAD', signal: controller.signal });
+        clearTimeout(timer);
+        
+        if (!check.ok) imagemValida = false;
+      } catch (e) {
+        imagemValida = false; // Se der timeout ou erro de conexão, marca como inválida
+      }
+    } else {
+      imagemValida = false;
+    }
+
     return res.status(200).json({
       sucesso: true,
       nome: chaveEncontrada,
       overall: overall,
-      imagem: dadosCarta.img,
+      imagem: urlImagem,
+      imagemValida: imagemValida,
       posicao: dadosCarta.pos,
       preco: preco
     });
@@ -221,13 +244,13 @@ app.get('/buscar-jogador', (req, res) => {
     return res.status(200).json({ 
       sucesso: false, 
       erro: "erro_interno",
-      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+      imagem: "",
+      imagemValida: false,
       posicao: "desconhecida",
       overall: 60 
     });
   }
 });
-
 // -------------------------------------------------------------
 // ROTA 3: OBTER JOGADOR ALEATÓRIO
 // -------------------------------------------------------------
