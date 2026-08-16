@@ -1,4 +1,3 @@
-deixa quero o original mesmo:
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
 
