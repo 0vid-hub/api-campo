@@ -43,7 +43,7 @@ const BANCO_DE_CARTAS = {
   "tiquinho soares 62": { img: "https://i.ibb.co/bRXv4xYB/tiquinhosoares62.png", pos: "pl" },
   "luan silva 61": { img: "https://i.ibb.co/5NgjYtt/luansilva61.png", pos: "pl" },
   "mikael 61": { img: "https://i.ibb.co/4RyT75Rb/mikael61.png", pos: "pl" },
-  "charles 60": { img: "https://i.ibb.co/Kxn9y0yY/charles60.png", pos: "gr" },
+  "charles 60": { img: "https://i.ibb.co/q3z1R6pd/charles60.png", pos: "gr" },
   "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
