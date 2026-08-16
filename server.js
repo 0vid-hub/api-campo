@@ -44,25 +44,33 @@ const BANCO_DE_CARTAS = {
   "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
-// CACHE EM MEMÓRIA DE IMAGENS
+// CACHE PERMANENTE EM MEMÓRIA
 const imageCache = new Map();
 
-// FUNÇÃO PARA CARREGAR IMAGENS COM TIMEOUT E CACHE
-async function carregarImagemComTimeout(url, timeoutMs = 4000) {
-  if (imageCache.has(url)) {
-    return imageCache.get(url);
-  }
+// PRÉ-CARREGAMENTO DE TODAS AS IMAGENS NA INICIALIZAÇÃO
+async function preCarregarImagens() {
+  console.log("🔄 Pré-carregando imagens na memória RAM...");
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
+  // 1. Carrega Fundo
   try {
-    const img = await loadImage(url, { signal: controller.signal });
-    imageCache.set(url, img);
-    return img;
-  } finally {
-    clearTimeout(timer);
+    const bg = await loadImage(URL_FUNDO);
+    imageCache.set(URL_FUNDO, bg);
+  } catch (e) {
+    console.error("❌ Erro ao carregar fundo:", e.message);
   }
+
+  // 2. Carrega todas as cartas em paralelo
+  const promessas = Object.values(BANCO_DE_CARTAS).map(async (carta) => {
+    try {
+      const img = await loadImage(carta.img);
+      imageCache.set(carta.img, img);
+    } catch (e) {
+      console.error(`❌ Erro ao carregar imagem (${carta.img}):`, e.message);
+    }
+  });
+
+  await Promise.all(promessas);
+  console.log("⚡ Todas as imagens foram armazenadas na RAM com sucesso!");
 }
 
 function removerAcentos(texto) {
@@ -106,54 +114,56 @@ function encontrarChaveJogador(termoBusca) {
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO
+// ROTA 1: GERAR IMAGEM DO CAMPO (OTIMIZADA)
 // -------------------------------------------------------------
-app.get('/gerar-campo', async (req, res) => {
+app.get('/gerar-campo', (req, res) => {
   try {
     const width = 800;
     const height = 800;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // Carregar imagem de fundo com fallback em caso de erro/timeout
-    try {
-      const bgImg = await carregarImagemComTimeout(URL_FUNDO);
+    // Desativa a renderização pesada/suavização para máxima velocidade
+    ctx.imageSmoothingEnabled = false;
+
+    // Desenha a imagem de fundo direto da RAM
+    const bgImg = imageCache.get(URL_FUNDO);
+    if (bgImg) {
       ctx.drawImage(bgImg, 0, 0, width, height);
-    } catch (bgErr) {
-      console.error("Erro/Timeout ao carregar fundo:", bgErr.message);
+    } else {
       ctx.fillStyle = '#12141d';
       ctx.fillRect(0, 0, width, height);
     }
 
-// Tamanho levemente maior e proporcional
     const cardWidth = 120;
     const cardHeight = 165;
 
-    // Coordenadas ajustadas com MC no centro perfeito (400, 400)
-const POSICOES = {
+    const POSICOES = {
       gr:  { x: 400, y: 705 },
-      le:  { x: 100, y: 580 }, // Desceu para ficar ligeiramente abaixo dos DCs (y: 580)
+      le:  { x: 100, y: 580 },
       dc1: { x: 270, y: 565 },
       dc2: { x: 530, y: 565 },
-      ld:  { x: 700, y: 580 }, // Desceu para ficar ligeiramente abaixo dos DCs (y: 580)
-      mc:  { x: 400, y: 395 }, // Ajustado para dar espaço perfeito aos MOs acima
-      mo1: { x: 220, y: 280 }, // Desceu para y: 280 (espaço total de sobra do EE)
-      mo2: { x: 580, y: 280 }, // Desceu para y: 280 (espaço total de sobra do ED)
+      ld:  { x: 700, y: 580 },
+      mc:  { x: 400, y: 395 },
+      mo1: { x: 220, y: 280 },
+      mo2: { x: 580, y: 280 },
       ee:  { x: 110, y: 100 },
       pl:  { x: 400, y: 85 },
       ed:  { x: 690, y: 100 }
     };
 
-    // Montar tarefas de renderização em paralelo
-    const tarefasRender = Object.entries(POSICOES).map(async ([pos, coord]) => {
+    // Leitura síncrona direto da RAM - sem requisições HTTP ou timers
+    Object.entries(POSICOES).forEach(([pos, coord]) => {
       const termo = req.query[pos];
 
       if (termo && termo !== 'vazio') {
         const chaveEncontrada = encontrarChaveJogador(termo);
 
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
-          try {
-            const cardImg = await carregarImagemComTimeout(BANCO_DE_CARTAS[chaveEncontrada].img);
+          const urlCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
+          const cardImg = imageCache.get(urlCarta);
+
+          if (cardImg) {
             ctx.drawImage(
               cardImg, 
               coord.x - cardWidth / 2, 
@@ -161,14 +171,10 @@ const POSICOES = {
               cardWidth, 
               cardHeight
             );
-          } catch (err) {
-            console.error(`Erro/Timeout ao carregar imagem para ${termo}:`, err.message);
           }
         }
       }
     });
-
-    await Promise.all(tarefasRender);
 
     res.setHeader('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
@@ -183,49 +189,49 @@ const POSICOES = {
 // ROTA 2: BUSCAR JOGADORES
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  try {
-    const queryBruta = req.query.q || "";
-    const chaveEncontrada = encontrarChaveJogador(queryBruta);
+  try {
+    const queryBruta = req.query.q || "";
+    const chaveEncontrada = encontrarChaveJogador(queryBruta);
 
-    if (!chaveEncontrada) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "nao_encontrado",
-        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-        posicao: "desconhecida",
-        overall: 60 
-      });
-    }
+    if (!chaveEncontrada) {
+      return res.status(200).json({ 
+        sucesso: false, 
+        erro: "nao_encontrado",
+        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+        posicao: "desconhecida",
+        overall: 60 
+      });
+    }
 
-    const partes = chaveEncontrada.split(' ');
-    const overall = parseInt(partes[partes.length - 1]) || 60;
-    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
+    const partes = chaveEncontrada.split(' ');
+    const overall = parseInt(partes[partes.length - 1]) || 60;
+    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
-    let preco = 1000;
-    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
-    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
-    else preco = 150 + (overall - 60) * 100;
+    let preco = 1000;
+    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
+    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
+    else preco = 150 + (overall - 60) * 100;
 
-    return res.status(200).json({
-      sucesso: true,
-      nome: chaveEncontrada,
-      overall: overall,
-      imagem: dadosCarta.img,
-      posicao: dadosCarta.pos,
-      preco: preco
-    });
-  } catch (error) {
-    console.error("Erro interno no /buscar-jogador:", error);
-    return res.status(200).json({ 
-      sucesso: false, 
-      erro: "erro_interno",
-      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-      posicao: "desconhecida",
-      overall: 60 
-    });
-  }
+    return res.status(200).json({
+      sucesso: true,
+      nome: chaveEncontrada,
+      overall: overall,
+      imagem: dadosCarta.img,
+      posicao: dadosCarta.pos,
+      preco: preco
+    });
+  } catch (error) {
+    console.error("Erro interno no /buscar-jogador:", error);
+    return res.status(200).json({ 
+      sucesso: false, 
+      erro: "erro_interno",
+      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+      posicao: "desconhecida",
+      overall: 60 
+    });
+  }
 });
 
 // -------------------------------------------------------------
@@ -358,4 +364,7 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+// Inicialização segura com pré-carregamento das imagens
+preCarregarImagens().then(() => {
+  app.listen(PORT, () => console.log(`🚀 Servidor e API rodando na porta ${PORT}`));
+});
