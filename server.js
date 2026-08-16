@@ -3,7 +3,6 @@ const { createCanvas, loadImage } = require('canvas');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const os = require('os');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -358,33 +357,5 @@ app.get('/listar-mercado', (req, res) => {
     return res.status(200).json({ texto: "Erro ao carregar a lista de jogadores." });
   }
 });
-
-// -------------------------------------------------------------
-// ROTA 5: CONSULTAR RAM REAL DA APLICAÇÃO (USO DO PROCESSO)
-// -------------------------------------------------------------
-app.get('/status', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  try {
-    const memory = process.memoryUsage();
-    
-    // Converte de Bytes para MB
-    const usedRAM = (memory.rss / (1024 * 1024)).toFixed(1); // RAM alocada para o processo
-    const maxRAM = 512; // Limite do plano gratuito do Render (512 MB)
-    const freeRAM = (maxRAM - usedRAM).toFixed(1);
-    const usagePercent = ((usedRAM / maxRAM) * 100).toFixed(1);
-
-    return res.status(200).json({
-      sucesso: true,
-      ram_total: `${maxRAM} MB`,
-      ram_usada: `${usedRAM} MB`,
-      ram_livre: `${freeRAM > 0 ? freeRAM : 0} MB`,
-      uso_porcentagem: `${usagePercent}%`
-    });
-  } catch (error) {
-    console.error("Erro no /status:", error);
-    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
-  }
-});
-
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
