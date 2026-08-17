@@ -10,6 +10,28 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
 const BANCO_DE_CARTAS = {
+  "luka modric 84": { img: "https://i.ibb.co/0VVdS7HQ/modric84.png", pos: "mc" },
+  "rúben dias 84": { img: "https://i.ibb.co/p67d0TB2/rubendias84.png", pos: "dc" },
+  "mohamed salah 84": { img: "https://i.ibb.co/tpHZWkM7/salah84.png", pos: "pl" },
+  "vitinha 84": { img: "https://i.ibb.co/YBqXRXp4/vitinha84.png", pos: "mc" },
+  "álex baena 83": { img: "https://i.ibb.co/JRM9NMPw/LEX-BAENA83.png", pos: "mc" },
+  "nico williams 83": { img: "https://i.ibb.co/6R1bnsZ1/nicowilliams83.png", pos: "ee" },
+  "rodri 83": { img: "https://i.ibb.co/99xbsqNc/rodri83.png", pos: "mc" },
+  "samu omorodion 83": { img: "https://i.ibb.co/hxq3WtvC/SAMU-OMORODION83.png", pos: "pl" },
+  "bellingham 82": { img: "https://i.ibb.co/HpNckJTs/bellingham82.png", pos: "mo" },
+  "giorgi mamardashvili 82": { img: "https://i.ibb.co/d019csVk/GIORGI-MAMARDASHVILI82.png", pos: "gr" },
+  "kobbie mainoo 82": { img: "https://i.ibb.co/BH4Jh8Ny/KOBBIE-MAINOO82.png", pos: "mc" },
+  "marquinhos 82": { img: "https://i.ibb.co/twpxPc3z/marquinhos82.png", pos: "dc" },
+  "martinez 82": { img: "https://i.ibb.co/Y7TM8Hp4/martinez82.png", pos: "gr" },
+  "morten hjulmand 82": { img: "https://i.ibb.co/0j2kn5Lj/MORTEN-HJULMAND82.png", pos: "mc" },
+  "guglielmo vicario 81": { img: "https://i.ibb.co/NdpzTGgj/GUGLIELMO-VICARIO81.png", pos: "gr" },
+  "e. haaland 81": { img: "https://i.ibb.co/7xcXp3T2/haaland81.png", pos: "pl" },
+  "benjamin šeško 80": { img: "https://i.ibb.co/gZ96ns0S/BENJAMIN-E-KO80.png", pos: "pl" },
+  "joshua zirkzee 80": { img: "https://i.ibb.co/Kx5m6Dq5/JOSHUA-ZIRKZEE80.png", pos: "pl" },
+  "pepe 80": { img: "https://i.ibb.co/TDG5jK2k/pepe80.png", pos: "dc" },
+  "savinho 80": { img: "https://i.ibb.co/1fbQfgj0/SAVINHO80.png", pos: "le" },
+  "yangel herrera 80": { img: "https://i.ibb.co/q3BRdHfh/YANGEL-HERRERA80.png", pos: "mc" },
+  
   "alisson 79": { img: "https://i.ibb.co/NgRk2shj/alisson79.png", pos: "gr" },
   "cucurella 79": { img: "https://i.ibb.co/bjP7Tb0g/cucurella79.png", pos: "le" },
   "diogo costa 79": { img: "https://i.ibb.co/wZxt4Qn4/diogocosta79.png", pos: "gr" },
