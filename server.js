@@ -130,6 +130,7 @@ const BANCO_DE_CARTAS = {
 };
 
 const imageCache = new Map();
+const cardBufferCache = new Map();
 const buscaIndexMap = new Map();
 let jogadoresPreProcessados = [];
 let pesoTotalSorteio = 0;
@@ -257,17 +258,24 @@ app.get('/gerar-campo', async (req, res) => {
       ed:  { x: 690, y: 100 }
     };
 
+    const promessas = [];
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const termo = req.query[pos];
       if (termo && termo !== 'vazio') {
         const chaveEncontrada = encontrarChaveJogador(termo);
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           const urlCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
-          const cardImg = await obterImagemOuCarregar(urlCarta);
-          if (cardImg) {
-            ctx.drawImage(cardImg, coord.x - cardWidth / 2, coord.y - cardHeight / 2, cardWidth, cardHeight);
-          }
+          promessas.push(
+            obterImagemOuCarregar(urlCarta).then(cardImg => ({ cardImg, coord }))
+          );
         }
+      }
+    }
+
+    const resultados = await Promise.all(promessas);
+    for (const { cardImg, coord } of resultados) {
+      if (cardImg) {
+        ctx.drawImage(cardImg, coord.x - cardWidth / 2, coord.y - cardHeight / 2, cardWidth, cardHeight);
       }
     }
 
@@ -281,8 +289,8 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// Redirecionamento instantâneo sem Canvas para evitar o erro de imagem quebrada no Discord
-app.get('/render-carta', (req, res) => {
+// Renderização otimizada com Buffer em RAM permanente
+app.get('/render-carta', async (req, res) => {
   try {
     const termo = req.query.q || "";
     const chaveEncontrada = encontrarChaveJogador(termo);
@@ -291,8 +299,32 @@ app.get('/render-carta', (req, res) => {
       return res.status(404).send('Carta não encontrada');
     }
 
-    const urlOriginal = BANCO_DE_CARTAS[chaveEncontrada].img;
-    return res.redirect(302, urlOriginal);
+    // Se já estiver no cache, devolve imediatamente o Buffer em PNG
+    if (cardBufferCache.has(chaveEncontrada)) {
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(cardBufferCache.get(chaveEncontrada));
+    }
+
+    const url = BANCO_DE_CARTAS[chaveEncontrada].img;
+    const img = await obterImagemOuCarregar(url);
+
+    if (!img) {
+      return res.status(500).send('Erro ao descarregar imagem');
+    }
+
+    const canvas = createCanvas(img.width, img.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const buffer = canvas.toBuffer('image/png');
+    
+    // Salva no Cache para as próximas chamadas não precisarem de baixar
+    cardBufferCache.set(chaveEncontrada, buffer);
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(buffer);
 
   } catch (error) {
     console.error("Erro no /render-carta:", error);
