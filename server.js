@@ -41,7 +41,8 @@ const BANCO_DE_CARTAS = {
   "wilfried singo 75": { img: "https://i.ibb.co/7NRFGQYz/WILFRIED-SINGO75.png", pos: "ld" },
   
   "endrick 74": { img: "https://i.ibb.co/Ld5CyX6n/endrick72.png", pos: "pl" },
-  "estevão 74": { img: "https://i.ibb.co/SXLGjWgZ/estevao74.png", pos: "ed" },
+  "ricardo mangas 74": { img: "https://i.ibb.co/My02Sgx3/ricardomangas74.png", pos: "ed" },
+  "estevão 74": { img: "https://i.ibb.co/nNvsxvWr/estevao74.png", pos: "le" },
   "joão mário 74": { img: "https://i.ibb.co/5h2v9q6h/joaomario74.png", pos: "ld" },
   "nuno tavares 74": { img: "https://i.ibb.co/RTtF9KLJ/nunotavares74.png", pos: "le" },
   "josé sá 73": { img: "https://i.ibb.co/hR3CyMZc/joseja73.png", pos: "gr" },
