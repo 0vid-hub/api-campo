@@ -231,7 +231,7 @@ app.get('/gerar-campo', async (req, res) => {
       mo1: { x: 220, y: 280 },
       mo2: { x: 580, y: 280 },
       ee:  { x: 110, y: 100 },
-      pl:  { x: 400, y: 85 },
+      pl:  { x: 400, y: 95 },
       ed:  { x: 690, y: 100 }
     };
 
