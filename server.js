@@ -39,287 +39,331 @@ const BANCO_DE_CARTAS = {
   "vitor roque 75": { img: "https://i.ibb.co/gMXfW5k1/vitorroque75.png", pos: "pl" },
   "wilfried singo 75": { img: "https://i.ibb.co/7NRFGQYz/WILFRIED-SINGO75.png", pos: "ld" },
   
-  "endrick 74": { img: "https://i.ibb.co/Ld5CyX6n/endrick72.png", pos: "pl" },
-  "estevão 74": { img: "https://i.ibb.co/SXLGjWgZ/estevao74.png", pos: "ed" },
-  "joão mário 74": { img: "https://i.ibb.co/5h2v9q6h/joaomario74.png", pos: "ld" },
-  "nuno tavares 74": { img: "https://i.ibb.co/RTtF9KLJ/nunotavares74.png", pos: "le" },
-  "josé sá 73": { img: "https://i.ibb.co/hR3CyMZc/joseja73.png", pos: "gr" },
-  "vozinha 73": { img: "https://i.ibb.co/1G5zQXWB/vozinha73.png", pos: "gr" },
-  "raphael veiga 72": { img: "https://i.ibb.co/gFH4WCwY/RAPHAEL-VEIGA72.png", pos: "mo" },
-  "trubin 72": { img: "https://i.ibb.co/FbRtb41T/trubin72.png", pos: "gr" },
-  "pavlidis 71": { img: "https://i.ibb.co/kVvbXxC0/pavlidis71.png", pos: "pl" },
-  "trincão 71": { img: "https://i.ibb.co/JjXTft5p/trincao71.png", pos: "mo" },
-  "igor jesus 70": { img: "https://i.ibb.co/C33xqWvb/igorjesus70.png", pos: "pl" },
-  "yuri alberto 70": { img: "https://i.ibb.co/HTxK0kg8/yurialberto70.png", pos: "pl" },
+  "endrick 74": { img: "https://i.ibb.co/Ld5CyX6n/endrick72.png", pos: "pl" },
+  "estevão 74": { img: "https://i.ibb.co/SXLGjWgZ/estevao74.png", pos: "ed" },
+  "joão mário 74": { img: "https://i.ibb.co/5h2v9q6h/joaomario74.png", pos: "ld" },
+  "nuno tavares 74": { img: "https://i.ibb.co/RTtF9KLJ/nunotavares74.png", pos: "le" },
+  "josé sá 73": { img: "https://i.ibb.co/hR3CyMZc/joseja73.png", pos: "gr" },
+  "vozinha 73": { img: "https://i.ibb.co/1G5zQXWB/vozinha73.png", pos: "gr" },
+  "raphael veiga 72": { img: "https://i.ibb.co/gFH4WCwY/RAPHAEL-VEIGA72.png", pos: "mo" },
+  "trubin 72": { img: "https://i.ibb.co/FbRtb41T/trubin72.png", pos: "gr" },
+  "pavlidis 71": { img: "https://i.ibb.co/kVvbXxC0/pavlidis71.png", pos: "pl" },
+  "trincão 71": { img: "https://i.ibb.co/JjXTft5p/trincao71.png", pos: "mo" },
+  "igor jesus 70": { img: "https://i.ibb.co/C33xqWvb/igorjesus70.png", pos: "pl" },
+  "yuri alberto 70": { img: "https://i.ibb.co/HTxK0kg8/yurialberto70.png", pos: "pl" },
   
-  "martim martins 69": { img: "https://i.ibb.co/1G0ryHzM/martimmartins69.png", pos: "mc" },
-  "tomás ribeiro 69": { img: "https://i.ibb.co/v4NKCnhb/tomasribeiro69.png", pos: "dc" },
-  "fábio vieira 68": { img: "https://i.ibb.co/TMV1qDwq/fabiovieira68.png", pos: "mo" },
-  "matheusinho 68": { img: "https://i.ibb.co/zT98cV5F/MATHEUSINHO68.png", pos: "mo" },
-  "rodrigo pinho 67": { img: "https://i.ibb.co/ynC3qk1f/RODRIGO-PINHO67.png", pos: "pl" },
-  "toti gomes 67": { img: "https://i.ibb.co/hR5zvkRR/totigomes67.png", pos: "dc" },
-  "marcos leonardo 66": { img: "https://i.ibb.co/FLpqKXVD/marcosleonardo66.png", pos: "pl" },
-  "nathan silva 66": { img: "https://i.ibb.co/V0BFyhKk/nathansilva66.png", pos: "dc" },
-  "carlinhos 65": { img: "https://i.ibb.co/HLb7ZCw4/carlinhos65.png", pos: "ee" },
-  "gonçalo sá 65": { img: "https://i.ibb.co/15xrqCq/goncalosa65.png", pos: "mo" },
+  "martim martins 69": { img: "https://i.ibb.co/1G0ryHzM/martimmartins69.png", pos: "mc" },
+  "tomás ribeiro 69": { img: "https://i.ibb.co/v4NKCnhb/tomasribeiro69.png", pos: "dc" },
+  "fábio vieira 68": { img: "https://i.ibb.co/TMV1qDwq/fabiovieira68.png", pos: "mo" },
+  "matheusinho 68": { img: "https://i.ibb.co/zT98cV5F/MATHEUSINHO68.png", pos: "mo" },
+  "rodrigo pinho 67": { img: "https://i.ibb.co/ynC3qk1f/RODRIGO-PINHO67.png", pos: "pl" },
+  "toti gomes 67": { img: "https://i.ibb.co/hR5zvkRR/totigomes67.png", pos: "dc" },
+  "marcos leonardo 66": { img: "https://i.ibb.co/FLpqKXVD/marcosleonardo66.png", pos: "pl" },
+  "nathan silva 66": { img: "https://i.ibb.co/V0BFyhKk/nathansilva66.png", pos: "dc" },
+  "carlinhos 65": { img: "https://i.ibb.co/HLb7ZCw4/carlinhos65.png", pos: "ee" },
+  "gonçalo sá 65": { img: "https://i.ibb.co/15xrqCq/goncalosa65.png", pos: "mo" },
   
-  "joaquin lavega 64": { img: "https://i.ibb.co/cSpm4G86/joaquinlavega64.png", pos: "ee" },
-  "nico schlotterbeck 64": { img: "https://i.ibb.co/rGz7JbhZ/NICO-SCHLOTTERBECK64.png", pos: "dc" },
-  "andré almeida 63": { img: "https://i.ibb.co/MDNsBFSz/andrealmeida63.png", pos: "mo" },
-  "de la cruz 63": { img: "https://i.ibb.co/S4y4fG3k/delacruz63.png", pos: "mo" },
-  "caça rato 62": { img: "https://i.ibb.co/GQW9wXGb/cacarato62.png", pos: "pl" },
-  "tiquinho soares 62": { img: "https://i.ibb.co/bRXv4xYB/tiquinhosoares62.png", pos: "pl" },
-  "luan silva 61": { img: "https://i.ibb.co/5NgjYtt/luansilva61.png", pos: "pl" },
-  "mikael 61": { img: "https://i.ibb.co/4RyT75Rb/mikael61.png", pos: "pl" },
-  "charles 60": { img: "https://i.ibb.co/q3z1R6pd/charles60.png", pos: "gr" },
-  "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
+  "joaquin lavega 64": { img: "https://i.ibb.co/cSpm4G86/joaquinlavega64.png", pos: "ee" },
+  "nico schlotterbeck 64": { img: "https://i.ibb.co/rGz7JbhZ/NICO-SCHLOTTERBECK64.png", pos: "dc" },
+  "andré almeida 63": { img: "https://i.ibb.co/MDNsBFSz/andrealmeida63.png", pos: "mo" },
+  "de la cruz 63": { img: "https://i.ibb.co/S4y4fG3k/delacruz63.png", pos: "mo" },
+  "caça rato 62": { img: "https://i.ibb.co/GQW9wXGb/cacarato62.png", pos: "pl" },
+  "tiquinho soares 62": { img: "https://i.ibb.co/bRXv4xYB/tiquinhosoares62.png", pos: "pl" },
+  "luan silva 61": { img: "https://i.ibb.co/5NgjYtt/luansilva61.png", pos: "pl" },
+  "mikael 61": { img: "https://i.ibb.co/4RyT75Rb/mikael61.png", pos: "pl" },
+  "charles 60": { img: "https://i.ibb.co/q3z1R6pd/charles60.png", pos: "gr" },
+  "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
-// CACHE PERMANENTE EM MEMÓRIA
+// CACHE PERMANENTE EM MEMÓRIA (Guarda as imagens carregadas)
 const imageCache = new Map();
 
-// PRÉ-CARREGAMENTO DE TODAS AS IMAGENS NA INICIALIZAÇÃO
+// Função para buscar do cache ou baixar na hora se não existir (evita falhas de inicialização)
+async function obterImagemOuCarregar(url) {
+  if (imageCache.has(url)) {
+    return imageCache.get(url);
+  }
+  try {
+    const img = await loadImage(url);
+    imageCache.set(url, img);
+    return img;
+  } catch (e) {
+    console.error(`❌ Erro ao baixar imagem sob demanda (${url}):`, e.message);
+    return null;
+  }
+}
+
+// PRÉ-CARREGAMENTO
 async function preCarregarImagens() {
-  console.log("🔄 Pré-carregando imagens na memória RAM...");
+  console.log("🔄 Pré-carregando imagens na memória RAM...");
 
-  // 1. Carrega Fundo
-  try {
-    const bg = await loadImage(URL_FUNDO);
-    imageCache.set(URL_FUNDO, bg);
-  } catch (e) {
-    console.error("❌ Erro ao carregar fundo:", e.message);
-  }
+  await obterImagemOuCarregar(URL_FUNDO);
 
-  // 2. Carrega todas as cartas em paralelo
-  const promessas = Object.values(BANCO_DE_CARTAS).map(async (carta) => {
-    try {
-      const img = await loadImage(carta.img);
-      imageCache.set(carta.img, img);
-    } catch (e) {
-      console.error(`❌ Erro ao carregar imagem (${carta.img}):`, e.message);
-    }
-  });
+  const cartas = Object.values(BANCO_DE_CARTAS);
+  for (const carta of cartas) {
+    await obterImagemOuCarregar(carta.img);
+  }
 
-  await Promise.all(promessas);
-  console.log("⚡ Todas as imagens foram armazenadas na RAM com sucesso!");
+  console.log("⚡ Todas as imagens carregadas e mantidas na memória RAM!");
 }
 
 function removerAcentos(texto) {
-  if (!texto) return "";
-  try {
-    texto = decodeURIComponent(texto);
-  } catch (e) {}
+  if (!texto) return "";
+  try {
+    texto = decodeURIComponent(texto);
+  } catch (e) {}
 
-  return texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function encontrarChaveJogador(termoBusca) {
-  const buscaLimpa = removerAcentos(termoBusca);
-  if (!buscaLimpa) return null;
+  const buscaLimpa = removerAcentos(termoBusca);
+  if (!buscaLimpa) return null;
 
-  const chaves = Object.keys(BANCO_DE_CARTAS);
+  const chaves = Object.keys(BANCO_DE_CARTAS);
 
-  let achado = chaves.find(chave => removerAcentos(chave) === buscaLimpa);
-  if (achado) return achado;
+  let achado = chaves.find(chave => removerAcentos(chave) === buscaLimpa);
+  if (achado) return achado;
 
-  const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
+  const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
 
-  achado = chaves.find(chave => {
-    const nomeBancoLimpo = removerAcentos(chave);
-    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
-    return nomeBancoSemNumero === buscaSemNumero;
-  });
-  if (achado) return achado;
+  achado = chaves.find(chave => {
+    const nomeBancoLimpo = removerAcentos(chave);
+    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
+    return nomeBancoSemNumero === buscaSemNumero;
+  });
+  if (achado) return achado;
 
-  achado = chaves.find(chave => {
-    const nomeBancoLimpo = removerAcentos(chave);
-    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
-    return nomeBancoSemNumero.includes(buscaSemNumero) || buscaSemNumero.includes(nomeBancoSemNumero);
-  });
+  achado = chaves.find(chave => {
+    const nomeBancoLimpo = removerAcentos(chave);
+    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
+    return nomeBancoSemNumero.includes(buscaSemNumero) || buscaSemNumero.includes(nomeBancoSemNumero);
+  });
 
-  return achado || null;
+  return achado || null;
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO (OTIMIZADA)
+// ROTA 1: GERAR IMAGEM DO CAMPO (ULTRA RÁPIDA)
 // -------------------------------------------------------------
-app.get('/gerar-campo', (req, res) => {
-  try {
-    const width = 800;
-    const height = 800;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+app.get('/gerar-campo', async (req, res) => {
+  try {
+    const width = 800;
+    const height = 800;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
 
-    // Desativa a renderização pesada/suavização para máxima velocidade
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
 
-    // Desenha a imagem de fundo direto da RAM
-    const bgImg = imageCache.get(URL_FUNDO);
-    if (bgImg) {
-      ctx.drawImage(bgImg, 0, 0, width, height);
-    } else {
-      ctx.fillStyle = '#12141d';
-      ctx.fillRect(0, 0, width, height);
-    }
+    const bgImg = await obterImagemOuCarregar(URL_FUNDO);
+    if (bgImg) {
+      ctx.drawImage(bgImg, 0, 0, width, height);
+    } else {
+      ctx.fillStyle = '#12141d';
+      ctx.fillRect(0, 0, width, height);
+    }
 
-    const cardWidth = 120;
-    const cardHeight = 165;
+    const cardWidth = 120;
+    const cardHeight = 165;
 
-    const POSICOES = {
-      gr:  { x: 400, y: 705 },
-      le:  { x: 100, y: 580 },
-      dc1: { x: 270, y: 565 },
-      dc2: { x: 530, y: 565 },
-      ld:  { x: 700, y: 580 },
-      mc:  { x: 400, y: 395 },
-      mo1: { x: 220, y: 280 },
-      mo2: { x: 580, y: 280 },
-      ee:  { x: 110, y: 100 },
-      pl:  { x: 400, y: 85 },
-      ed:  { x: 690, y: 100 }
-    };
+    const POSICOES = {
+      gr:  { x: 400, y: 705 },
+      le:  { x: 100, y: 580 },
+      dc1: { x: 270, y: 565 },
+      dc2: { x: 530, y: 565 },
+      ld:  { x: 700, y: 580 },
+      mc:  { x: 400, y: 395 },
+      mo1: { x: 220, y: 280 },
+      mo2: { x: 580, y: 280 },
+      ee:  { x: 110, y: 100 },
+      pl:  { x: 400, y: 85 },
+      ed:  { x: 690, y: 100 }
+    };
 
-    // Leitura síncrona direto da RAM - sem requisições HTTP ou timers
-    Object.entries(POSICOES).forEach(([pos, coord]) => {
-      const termo = req.query[pos];
+    for (const [pos, coord] of Object.entries(POSICOES)) {
+      const termo = req.query[pos];
 
-      if (termo && termo !== 'vazio') {
-        const chaveEncontrada = encontrarChaveJogador(termo);
+      if (termo && termo !== 'vazio') {
+        const chaveEncontrada = encontrarChaveJogador(termo);
 
-        if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
-          const urlCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
-          const cardImg = imageCache.get(urlCarta);
+        if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
+          const urlCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
+          const cardImg = await obterImagemOuCarregar(urlCarta);
 
-          if (cardImg) {
-            ctx.drawImage(
-              cardImg, 
-              coord.x - cardWidth / 2, 
-              coord.y - cardHeight / 2, 
-              cardWidth, 
-              cardHeight
-            );
-          }
-        }
-      }
-    });
+          if (cardImg) {
+            ctx.drawImage(
+              cardImg, 
+              coord.x - cardWidth / 2, 
+              coord.y - cardHeight / 2, 
+              cardWidth, 
+              cardHeight
+            );
+          }
+        }
+      }
+    }
 
-    res.setHeader('Content-Type', 'image/png');
-    canvas.createPNGStream().pipe(res);
+    res.setHeader('Content-Type', 'image/png');
+    canvas.createPNGStream().pipe(res);
 
-  } catch (error) {
-    console.error("Erro ao gerar campo:", error);
-    res.status(500).send('Erro ao gerar imagem.');
-  }
+  } catch (error) {
+    console.error("Erro ao gerar campo:", error);
+    res.status(500).send('Erro ao gerar imagem.');
+  }
 });
 
 // -------------------------------------------------------------
-// ROTA 2: BUSCAR JOGADORES
+// ROTA 2: RENDERIZAR CARTA INDIVIDUAL DIRETO DA RAM (NOVA / OTIMIZADA)
+// Usar nos comandos: 'contratar', 'negociar', 'show'
+// -------------------------------------------------------------
+app.get('/render-carta', async (req, res) => {
+  try {
+    const termo = req.query.q || "";
+    const chaveEncontrada = encontrarChaveJogador(termo);
+
+    if (!chaveEncontrada) {
+      return res.status(404).send('Carta não encontrada');
+    }
+
+    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
+    const cardImg = await obterImagemOuCarregar(dadosCarta.img);
+
+    if (!cardImg) {
+      return res.status(500).send('Erro ao carregar a imagem da carta');
+    }
+
+    // Desenha e devolve como PNG instantâneo sem depender de CDN externo
+    const canvas = createCanvas(cardImg.width, cardImg.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(cardImg, 0, 0);
+
+    res.setHeader('Content-Type', 'image/png');
+    canvas.createPNGStream().pipe(res);
+  } catch (error) {
+    console.error("Erro no /render-carta:", error);
+    res.status(500).send('Erro ao renderizar carta');
+  }
+});
+
+// -------------------------------------------------------------
+// ROTA 3: BUSCAR JOGADORES
 // -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  try {
-    const queryBruta = req.query.q || "";
-    const chaveEncontrada = encontrarChaveJogador(queryBruta);
+  try {
+    const queryBruta = req.query.q || "";
+    const chaveEncontrada = encontrarChaveJogador(queryBruta);
 
-    if (!chaveEncontrada) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "nao_encontrado",
-        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-        posicao: "desconhecida",
-        overall: 60 
-      });
-    }
+    if (!chaveEncontrada) {
+      return res.status(200).json({ 
+        sucesso: false, 
+        erro: "nao_encontrado",
+        imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+        posicao: "desconhecida",
+        overall: 60 
+      });
+    }
 
-    const partes = chaveEncontrada.split(' ');
-    const overall = parseInt(partes[partes.length - 1]) || 60;
-    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
+    const partes = chaveEncontrada.split(' ');
+    const overall = parseInt(partes[partes.length - 1]) || 60;
+    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
 
-    let preco = 1000;
-    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
-    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
-    else preco = 150 + (overall - 60) * 100;
+    let preco = 1000;
+    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
+    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
+    else preco = 150 + (overall - 60) * 100;
 
-    return res.status(200).json({
-      sucesso: true,
-      nome: chaveEncontrada,
-      overall: overall,
-      imagem: dadosCarta.img,
-      posicao: dadosCarta.pos,
-      preco: preco
-    });
-  } catch (error) {
-    console.error("Erro interno no /buscar-jogador:", error);
-    return res.status(200).json({ 
-      sucesso: false, 
-      erro: "erro_interno",
-      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-      posicao: "desconhecida",
-      overall: 60 
-    });
-  }
+    // Retorna a URL da própria API /render-carta para ser instantâneo!
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const urlRenderAPI = `${protocol}://${host}/render-carta?q=${encodeURIComponent(chaveEncontrada)}`;
+
+    return res.status(200).json({
+      sucesso: true,
+      nome: chaveEncontrada,
+      overall: overall,
+      imagem: urlRenderAPI, // <--- Agora devolve o link da sua API nativa!
+      imagemOriginal: dadosCarta.img,
+      posicao: dadosCarta.pos,
+      preco: preco
+    });
+  } catch (error) {
+    console.error("Erro interno no /buscar-jogador:", error);
+    return res.status(200).json({ 
+      sucesso: false, 
+      erro: "erro_interno",
+      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
+      posicao: "desconhecida",
+      overall: 60 
+    });
+  }
 });
 
 // -------------------------------------------------------------
-// ROTA 3: OBTER JOGADOR ALEATÓRIO
+// ROTA 4: OBTER JOGADOR ALEATÓRIO
 // -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  try {
-    const chaves = Object.keys(BANCO_DE_CARTAS);
-    if (chaves.length === 0) {
-      return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
-    }
+  try {
+    const chaves = Object.keys(BANCO_DE_CARTAS);
+    if (chaves.length === 0) {
+      return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
+    }
 
-    const jogadoresComPeso = chaves.map(chave => {
-      const partes = chave.split(' ');
-      const overall = parseInt(partes[partes.length - 1]) || 60;
+    const jogadoresComPeso = chaves.map(chave => {
+      const partes = chave.split(' ');
+      const overall = parseInt(partes[partes.length - 1]) || 60;
 
-      let peso = 100;
-      if (overall >= 90) peso = 1;
-      else if (overall >= 88) peso = 3;
-      else if (overall >= 85) peso = 8;
-      else if (overall >= 80) peso = 25;
-      else if (overall >= 75) peso = 60;
+      let peso = 100;
+      if (overall >= 90) peso = 1;
+      else if (overall >= 88) peso = 3;
+      else if (overall >= 85) peso = 8;
+      else if (overall >= 80) peso = 25;
+      else if (overall >= 75) peso = 60;
 
-      return { chave, overall, peso };
-    });
+      return { chave, overall, peso };
+    });
 
-    const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
-    let numeroSorteado = Math.random() * pesoTotal;
-    let cartaSorteada = jogadoresComPeso[0];
+    const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
+    let numeroSorteado = Math.random() * pesoTotal;
+    let cartaSorteada = jogadoresComPeso[0];
 
-    for (const jogador of jogadoresComPeso) {
-      if (numeroSorteado < jogador.peso) {
-        cartaSorteada = jogador;
-        break;
-      }
-      numeroSorteado -= jogador.peso;
-    }
+    for (const jogador of jogadoresComPeso) {
+      if (numeroSorteado < jogador.peso) {
+        cartaSorteada = jogador;
+        break;
+      }
+      numeroSorteado -= jogador.peso;
+    }
 
-    const dadosCarta = BANCO_DE_CARTAS[cartaSorteada.chave];
+    const dadosCarta = BANCO_DE_CARTAS[cartaSorteada.chave];
 
-    return res.status(200).json({
-      sucesso: true,
-      nome: cartaSorteada.chave,
-      overall: cartaSorteada.overall,
-      imagem: dadosCarta.img,
-      posicao: dadosCarta.pos
-    });
-  } catch (error) {
-    console.error("Erro interno no /obter-aleatorio:", error);
-    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
-  }
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const urlRenderAPI = `${protocol}://${host}/render-carta?q=${encodeURIComponent(cartaSorteada.chave)}`;
+
+    return res.status(200).json({
+      sucesso: true,
+      nome: cartaSorteada.chave,
+      overall: cartaSorteada.overall,
+      imagem: urlRenderAPI, // <--- Agora devolve a imagem direto da API!
+      imagemOriginal: dadosCarta.img,
+      posicao: dadosCarta.pos
+    });
+  } catch (error) {
+    console.error("Erro interno no /obter-aleatorio:", error);
+    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+  }
 });
 
 // -------------------------------------------------------------
-// ROTA 4: LISTAR JOGADORES NO MERCADO
+// ROTA 5: LISTAR JOGADORES NO MERCADO
 // -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -327,7 +371,7 @@ app.get('/listar-mercado', (req, res) => {
   try {
     const faixa = req.query.faixa;
     const chaves = Object.keys(BANCO_DE_CARTAS);
-    const totalGeral = chaves.length; // <--- Conta o total de cartas no banco
+    const totalGeral = chaves.length;
 
     let min = 0;
     let max = 99;
@@ -388,7 +432,7 @@ app.get('/listar-mercado', (req, res) => {
     const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
 
     return res.status(200).json({
-      total: totalGeral, // <--- Retorna o total aqui
+      total: totalGeral,
       texto: resultadoFinal
     });
 
@@ -398,7 +442,7 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// Inicialização segura com pré-carregamento das imagens
+// Inicialização segura
 preCarregarImagens().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Servidor e API rodando na porta ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Servidor e API rodando na porta ${PORT}`));
 });
