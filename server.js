@@ -34,6 +34,7 @@ const BANCO_DE_CARTAS = {
   
   "alisson 79": { img: "https://i.ibb.co/NgRk2shj/alisson79.png", pos: "gr" },
   "cucurella 79": { img: "https://i.ibb.co/bjP7Tb0g/cucurella79.png", pos: "le" },
+  "prestianni 79": { img: "https://i.ibb.co/j9XqtGmc/PRESTIANNI79.png", pos: "pl" },
   "diogo costa 79": { img: "https://i.ibb.co/wZxt4Qn4/diogocosta79.png", pos: "gr" },
   "harry kane 79": { img: "https://i.ibb.co/NgnsgrC7/harrykane79.png", pos: "pl" },
   "richard ríos 79": { img: "https://i.ibb.co/J0Gx9Qk/richardrios79.png", pos: "mc" },
