@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const URL_FUNDO = "https://i.ibb.co/1J4MZTKw/time.png";
 
 const BANCO_DE_CARTAS = {
-"karim benzema 87": { img: "https://i.ibb.co/P71ZdBJ/benzema87.png", pos: "pl" },
+  "karim benzema 87": { img: "https://i.ibb.co/P71ZdBJ/benzema87.png", pos: "pl" },
   "kevin de bruyne 87": { img: "https://i.ibb.co/spZnmMKS/kevindebruyne87.png", pos: "mc" },
   "mbappé 87": { img: "https://i.ibb.co/21kpGtmD/mbappe87.png", pos: "pl" },
   "lionel messi 87": { img: "https://i.ibb.co/Z1ppqF9t/messi87.png", pos: "ed" },
@@ -121,7 +121,6 @@ const BANCO_DE_CARTAS = {
   "nathan silva 66": { img: "https://i.ibb.co/V0BFyhKk/nathansilva66.png", pos: "dc" },
   "carlinhos 65": { img: "https://i.ibb.co/HLb7ZCw4/carlinhos65.png", pos: "ee" },
   "gonçalo sá 65": { img: "https://i.ibb.co/15xrqCq/goncalosa65.png", pos: "mo" },
-  
   "joaquin lavega 64": { img: "https://i.ibb.co/cSpm4G86/joaquinlavega64.png", pos: "ee" },
   "nico schlotterbeck 64": { img: "https://i.ibb.co/rGz7JbhZ/NICO-SCHLOTTERBECK64.png", pos: "dc" },
   "andré almeida 63": { img: "https://i.ibb.co/MDNsBFSz/andrealmeida63.png", pos: "mo" },
@@ -134,7 +133,6 @@ const BANCO_DE_CARTAS = {
   "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
-// CACHE DE ESTRUTURAS DE DADOS
 const imageCache = new Map();
 const cardBuffers = new Map();
 const buscaIndexMap = new Map();
@@ -143,10 +141,7 @@ let pesoTotalSorteio = 0;
 
 function removerAcentos(texto) {
   if (!texto) return "";
-  try {
-    texto = decodeURIComponent(texto);
-  } catch (e) {}
-
+  try { texto = decodeURIComponent(texto); } catch (e) {}
   return texto
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -155,37 +150,20 @@ function removerAcentos(texto) {
 }
 
 async function obterImagemOuCarregar(url) {
-  if (imageCache.has(url)) {
-    return imageCache.get(url);
-  }
+  if (imageCache.has(url)) return imageCache.get(url);
   try {
     const img = await loadImage(url);
     imageCache.set(url, img);
     return img;
   } catch (e) {
-    console.error(`❌ Erro ao baixar imagem sob demanda (${url}):`, e.message);
+    console.error(`❌ Erro ao baixar imagem: ${url}`);
     return null;
   }
 }
 
-async function preCarregarEIndexar() {
-  console.log("🔄 Inicializando cache e otimização de dados...");
-
-  // 1. Pré-carrega Fundo e Cartas em Memória
-  await obterImagemOuCarregar(URL_FUNDO);
-
+// Processa dados numéricos e constrói o índice Instantaneamente (Sem downloads)
+function inicializarMetadados() {
   for (const [chave, dados] of Object.entries(BANCO_DE_CARTAS)) {
-    const img = await obterImagemOuCarregar(dados.img);
-    
-    // Converte a carta individual diretamente num Buffer PNG para servir no /render-carta sem recalcular
-    if (img) {
-      const c = createCanvas(img.width, img.height);
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      cardBuffers.set(chave, c.toBuffer('image/png'));
-    }
-
-    // 2. Pré-processa Dados numéricos, nomes formatados e pesos de sorteio
     const partes = chave.split(' ');
     const overall = parseInt(partes[partes.length - 1]) || 60;
     const nomeSemOverall = partes.slice(0, -1).join(' ');
@@ -219,7 +197,6 @@ async function preCarregarEIndexar() {
 
     jogadoresPreProcessados.push(objetoJogador);
 
-    // 3. Constrói o Índice de Busca Instantânea (O(1))
     const chaveLimpa = removerAcentos(chave);
     const nomeSemNumeroLimpo = removerAcentos(nomeSemOverall);
 
@@ -230,35 +207,27 @@ async function preCarregarEIndexar() {
   }
 
   pesoTotalSorteio = jogadoresPreProcessados.reduce((acc, j) => acc + j.peso, 0);
-  console.log("⚡ Servidor 100% otimizado e pronto!");
 }
 
 function encontrarChaveJogador(termoBusca) {
   const buscaLimpa = removerAcentos(termoBusca);
   if (!buscaLimpa) return null;
 
-  // Busca ultra rápida via Mapa
-  if (buscaIndexMap.has(buscaLimpa)) {
-    return buscaIndexMap.get(buscaLimpa);
-  }
+  if (buscaIndexMap.has(buscaLimpa)) return buscaIndexMap.get(buscaLimpa);
 
   const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
-  if (buscaIndexMap.has(buscaSemNumero)) {
-    return buscaIndexMap.get(buscaSemNumero);
-  }
+  if (buscaIndexMap.has(buscaSemNumero)) return buscaIndexMap.get(buscaSemNumero);
 
-  // Fallback para buscas parciais
   for (const [termoIndex, chaveReal] of buscaIndexMap.entries()) {
     if (termoIndex.includes(buscaSemNumero) || buscaSemNumero.includes(termoIndex)) {
       return chaveReal;
     }
   }
-
   return null;
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO
+// ROTAS DA API
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -266,7 +235,6 @@ app.get('/gerar-campo', async (req, res) => {
     const height = 800;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
-
     ctx.imageSmoothingEnabled = false;
 
     const bgImg = await obterImagemOuCarregar(URL_FUNDO);
@@ -296,22 +264,13 @@ app.get('/gerar-campo', async (req, res) => {
 
     for (const [pos, coord] of Object.entries(POSICOES)) {
       const termo = req.query[pos];
-
       if (termo && termo !== 'vazio') {
         const chaveEncontrada = encontrarChaveJogador(termo);
-
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           const urlCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
           const cardImg = await obterImagemOuCarregar(urlCarta);
-
           if (cardImg) {
-            ctx.drawImage(
-              cardImg, 
-              coord.x - cardWidth / 2, 
-              coord.y - cardHeight / 2, 
-              cardWidth, 
-              cardHeight
-            );
+            ctx.drawImage(cardImg, coord.x - cardWidth / 2, coord.y - cardHeight / 2, cardWidth, cardHeight);
           }
         }
       }
@@ -321,40 +280,53 @@ app.get('/gerar-campo', async (req, res) => {
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=86400');
     return res.send(buffer);
-
   } catch (error) {
     console.error("Erro ao gerar campo:", error);
     res.status(500).send('Erro ao gerar imagem.');
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 2: RENDERIZAR CARTA INDIVIDUAL DIRETO DO BUFFER (RAM)
-// -------------------------------------------------------------
-app.get('/render-carta', (req, res) => {
+app.get('/render-carta', async (req, res) => {
   try {
     const termo = req.query.q || "";
     const chaveEncontrada = encontrarChaveJogador(termo);
 
-    if (!chaveEncontrada || !cardBuffers.has(chaveEncontrada)) {
+    if (!chaveEncontrada) {
       return res.status(404).send('Carta não encontrada');
     }
 
+    // Retorna direto da cache em RAM se já existir
+    if (cardBuffers.has(chaveEncontrada)) {
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(cardBuffers.get(chaveEncontrada));
+    }
+
+    // Senão baixa a imagem no momento da requisição
+    const url = BANCO_DE_CARTAS[chaveEncontrada].img;
+    const img = await obterImagemOuCarregar(url);
+
+    if (!img) return res.status(500).send('Erro ao carregar imagem');
+
+    const c = createCanvas(img.width, img.height);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const buf = c.toBuffer('image/png');
+    
+    cardBuffers.set(chaveEncontrada, buf);
+
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=86400');
-    return res.send(cardBuffers.get(chaveEncontrada));
+    return res.send(buf);
+
   } catch (error) {
     console.error("Erro no /render-carta:", error);
     res.status(500).send('Erro ao renderizar carta');
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 3: BUSCAR JOGADORES
-// -------------------------------------------------------------
 app.get('/buscar-jogador', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
   try {
     const queryBruta = req.query.q || "";
     const chaveEncontrada = encontrarChaveJogador(queryBruta);
@@ -384,28 +356,13 @@ app.get('/buscar-jogador', (req, res) => {
       preco: jogador.preco
     });
   } catch (error) {
-    console.error("Erro interno no /buscar-jogador:", error);
-    return res.status(200).json({ 
-      sucesso: false, 
-      erro: "erro_interno",
-      imagem: "https://i.ibb.co/sd3x55sR/desconhecido.png",
-      posicao: "desconhecida",
-      overall: 60 
-    });
+    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 4: OBTER JOGADOR ALEATÓRIO
-// -------------------------------------------------------------
 app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
   try {
-    if (jogadoresPreProcessados.length === 0) {
-      return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
-    }
-
     let numeroSorteado = Math.random() * pesoTotalSorteio;
     let cartaSorteada = jogadoresPreProcessados[0];
 
@@ -430,24 +387,17 @@ app.get('/obter-aleatorio', (req, res) => {
       posicao: cartaSorteada.posicao
     });
   } catch (error) {
-    console.error("Erro interno no /obter-aleatorio:", error);
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
   }
 });
 
-// -------------------------------------------------------------
-// ROTA 5: LISTAR JOGADORES NO MERCADO
-// -------------------------------------------------------------
 app.get('/listar-mercado', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
   try {
     const faixa = req.query.faixa;
     const totalGeral = jogadoresPreProcessados.length;
 
-    let min = 0;
-    let max = 99;
-
+    let min = 0, max = 99;
     if (faixa === '9999') { min = 99; max = 99; }
     else if (faixa === '9598') { min = 95; max = 98; }
     else if (faixa === '9094') { min = 90; max = 94; }
@@ -487,20 +437,20 @@ app.get('/listar-mercado', (req, res) => {
       }
     }
 
-    const resultadoFinal = "```ansi\n" + linhas.join('\n') + "\n```";
-
     return res.status(200).json({
       total: totalGeral,
-      texto: resultadoFinal
+      texto: "```ansi\n" + linhas.join('\n') + "\n```"
     });
-
   } catch (error) {
-    console.error("Erro no /listar-mercado:", error);
     return res.status(200).json({ total: 0, texto: "Erro ao carregar a lista de jogadores." });
   }
 });
 
-// Inicialização otimizada
-preCarregarEIndexar().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Servidor e API rodando na porta ${PORT}`));
+// Inicialização Instantânea
+inicializarMetadados();
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  // Carrega a imagem de fundo em segundo plano
+  obterImagemOuCarregar(URL_FUNDO);
 });
