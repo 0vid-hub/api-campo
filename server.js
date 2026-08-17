@@ -1,5 +1,6 @@
 const express = require('express');
 const { createCanvas, loadImage } = require('canvas');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -148,11 +149,21 @@ function removerAcentos(texto) {
 async function obterImagemOuCarregar(url) {
   if (imageCache.has(url)) return imageCache.get(url);
   try {
-    const img = await loadImage(url);
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+      }
+    });
+
+    const buffer = Buffer.from(response.data, 'binary');
+    const img = await loadImage(buffer);
+    
     imageCache.set(url, img);
     return img;
   } catch (e) {
-    console.error(`❌ Erro ao baixar imagem: ${url}`);
+    console.error(`❌ Erro ao baixar imagem (${e.response?.status || e.message}): ${url}`);
     return null;
   }
 }
@@ -289,7 +300,6 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-// Renderização otimizada com Buffer em RAM permanente
 app.get('/render-carta', async (req, res) => {
   try {
     const termo = req.query.q || "";
@@ -299,7 +309,6 @@ app.get('/render-carta', async (req, res) => {
       return res.status(404).send('Carta não encontrada');
     }
 
-    // Se já estiver no cache, devolve imediatamente o Buffer em PNG
     if (cardBufferCache.has(chaveEncontrada)) {
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -319,7 +328,6 @@ app.get('/render-carta', async (req, res) => {
 
     const buffer = canvas.toBuffer('image/png');
     
-    // Salva no Cache para as próximas chamadas não precisarem de baixar
     cardBufferCache.set(chaveEncontrada, buffer);
 
     res.setHeader('Content-Type', 'image/png');
