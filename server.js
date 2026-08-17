@@ -43,7 +43,6 @@ const BANCO_DE_CARTAS = {
   "pavlidis 85": { img: "https://i.ibb.co/Qv0C4JDy/pavlidis85.png", pos: "pl" },
   "rafa silva 85": { img: "https://i.ibb.co/1YRsyydJ/rafasilva85.png", pos: "pl" },
   "raphinha 85": { img: "https://i.ibb.co/RTYFqj59/raphinha85.png", pos: "pl" },
-  
   "luka modric 84": { img: "https://i.ibb.co/0VVdS7HQ/modric84.png", pos: "mc" },
   "rúben dias 84": { img: "https://i.ibb.co/p67d0TB2/rubendias84.png", pos: "dc" },
   "mohamed salah 84": { img: "https://i.ibb.co/tpHZWkM7/salah84.png", pos: "pl" },
@@ -65,7 +64,6 @@ const BANCO_DE_CARTAS = {
   "pepe 80": { img: "https://i.ibb.co/TDG5jK2k/pepe80.png", pos: "dc" },
   "savinho 80": { img: "https://i.ibb.co/1fbQfgj0/SAVINHO80.png", pos: "le" },
   "yangel herrera 80": { img: "https://i.ibb.co/q3BRdHfh/YANGEL-HERRERA80.png", pos: "mc" },
-  
   "alisson 79": { img: "https://i.ibb.co/NgRk2shj/alisson79.png", pos: "gr" },
   "cucurella 79": { img: "https://i.ibb.co/bjP7Tb0g/cucurella79.png", pos: "le" },
   "prestianni 79": { img: "https://i.ibb.co/j9XqtGmc/PRESTIANNI79.png", pos: "pl" },
@@ -96,7 +94,6 @@ const BANCO_DE_CARTAS = {
   "tomás araújo 75": { img: "https://i.ibb.co/V0VCNfdp/tomasaraujo75-2.png", pos: "dc" },
   "vitor roque 75": { img: "https://i.ibb.co/gMXfW5k1/vitorroque75.png", pos: "pl" },
   "wilfried singo 75": { img: "https://i.ibb.co/7NRFGQYz/WILFRIED-SINGO75.png", pos: "ld" },
-  
   "endrick 74": { img: "https://i.ibb.co/Ld5CyX6n/endrick72.png", pos: "pl" },
   "ricardo mangas 74": { img: "https://i.ibb.co/My02Sgx3/ricardomangas74.png", pos: "ed" },
   "estevão 74": { img: "https://i.ibb.co/nNvsxvWr/estevao74.png", pos: "le" },
@@ -110,7 +107,6 @@ const BANCO_DE_CARTAS = {
   "trincão 71": { img: "https://i.ibb.co/JjXTft5p/trincao71.png", pos: "mo" },
   "igor jesus 70": { img: "https://i.ibb.co/C33xqWvb/igorjesus70.png", pos: "pl" },
   "yuri alberto 70": { img: "https://i.ibb.co/HTxK0kg8/yurialberto70.png", pos: "pl" },
-  
   "martim martins 69": { img: "https://i.ibb.co/1G0ryHzM/martimmartins69.png", pos: "mc" },
   "tomás ribeiro 69": { img: "https://i.ibb.co/v4NKCnhb/tomasribeiro69.png", pos: "dc" },
   "fábio vieira 68": { img: "https://i.ibb.co/TMV1qDwq/fabiovieira68.png", pos: "mo" },
@@ -134,7 +130,6 @@ const BANCO_DE_CARTAS = {
 };
 
 const imageCache = new Map();
-const cardBuffers = new Map();
 const buscaIndexMap = new Map();
 let jogadoresPreProcessados = [];
 let pesoTotalSorteio = 0;
@@ -161,7 +156,6 @@ async function obterImagemOuCarregar(url) {
   }
 }
 
-// Processa dados numéricos e constrói o índice Instantaneamente (Sem downloads)
 function inicializarMetadados() {
   for (const [chave, dados] of Object.entries(BANCO_DE_CARTAS)) {
     const partes = chave.split(' ');
@@ -229,6 +223,7 @@ function encontrarChaveJogador(termoBusca) {
 // -------------------------------------------------------------
 // ROTAS DA API
 // -------------------------------------------------------------
+
 app.get('/gerar-campo', async (req, res) => {
   try {
     const width = 800;
@@ -286,38 +281,18 @@ app.get('/gerar-campo', async (req, res) => {
   }
 });
 
-app.get('/render-carta', async (req, res) => {
+// Redirecionamento instantâneo sem Canvas para evitar o erro de imagem quebrada no Discord
+app.get('/render-carta', (req, res) => {
   try {
     const termo = req.query.q || "";
     const chaveEncontrada = encontrarChaveJogador(termo);
 
-    if (!chaveEncontrada) {
+    if (!chaveEncontrada || !BANCO_DE_CARTAS[chaveEncontrada]) {
       return res.status(404).send('Carta não encontrada');
     }
 
-    // Retorna direto da cache em RAM se já existir
-    if (cardBuffers.has(chaveEncontrada)) {
-      res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.send(cardBuffers.get(chaveEncontrada));
-    }
-
-    // Senão baixa a imagem no momento da requisição
-    const url = BANCO_DE_CARTAS[chaveEncontrada].img;
-    const img = await obterImagemOuCarregar(url);
-
-    if (!img) return res.status(500).send('Erro ao carregar imagem');
-
-    const c = createCanvas(img.width, img.height);
-    const ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    const buf = c.toBuffer('image/png');
-    
-    cardBuffers.set(chaveEncontrada, buf);
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    return res.send(buf);
+    const urlOriginal = BANCO_DE_CARTAS[chaveEncontrada].img;
+    return res.redirect(302, urlOriginal);
 
   } catch (error) {
     console.error("Erro no /render-carta:", error);
@@ -446,11 +421,9 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// Inicialização Instantânea
 inicializarMetadados();
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  // Carrega a imagem de fundo em segundo plano
   obterImagemOuCarregar(URL_FUNDO);
 });
