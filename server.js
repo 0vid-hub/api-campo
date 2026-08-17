@@ -75,37 +75,12 @@ const BANCO_DE_CARTAS = {
   "chrystian barletta 60": { img: "https://i.ibb.co/fYdw1Wgr/CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
-// CACHE PERMANENTE EM MEMÓRIA (Guarda as imagens carregadas)
+// CACHE DE ESTRUTURAS DE DADOS
 const imageCache = new Map();
-
-// Função para buscar do cache ou baixar na hora se não existir (evita falhas de inicialização)
-async function obterImagemOuCarregar(url) {
-  if (imageCache.has(url)) {
-    return imageCache.get(url);
-  }
-  try {
-    const img = await loadImage(url);
-    imageCache.set(url, img);
-    return img;
-  } catch (e) {
-    console.error(`❌ Erro ao baixar imagem sob demanda (${url}):`, e.message);
-    return null;
-  }
-}
-
-// PRÉ-CARREGAMENTO
-async function preCarregarImagens() {
-  console.log("🔄 Pré-carregando imagens na memória RAM...");
-
-  await obterImagemOuCarregar(URL_FUNDO);
-
-  const cartas = Object.values(BANCO_DE_CARTAS);
-  for (const carta of cartas) {
-    await obterImagemOuCarregar(carta.img);
-  }
-
-  console.log("⚡ Todas as imagens carregadas e mantidas na memória RAM!");
-}
+const cardBuffers = new Map();
+const buscaIndexMap = new Map();
+let jogadoresPreProcessados = [];
+let pesoTotalSorteio = 0;
 
 function removerAcentos(texto) {
   if (!texto) return "";
@@ -120,35 +95,111 @@ function removerAcentos(texto) {
     .trim();
 }
 
+async function obterImagemOuCarregar(url) {
+  if (imageCache.has(url)) {
+    return imageCache.get(url);
+  }
+  try {
+    const img = await loadImage(url);
+    imageCache.set(url, img);
+    return img;
+  } catch (e) {
+    console.error(`❌ Erro ao baixar imagem sob demanda (${url}):`, e.message);
+    return null;
+  }
+}
+
+async function preCarregarEIndexar() {
+  console.log("🔄 Inicializando cache e otimização de dados...");
+
+  // 1. Pré-carrega Fundo e Cartas em Memória
+  await obterImagemOuCarregar(URL_FUNDO);
+
+  for (const [chave, dados] of Object.entries(BANCO_DE_CARTAS)) {
+    const img = await obterImagemOuCarregar(dados.img);
+    
+    // Converte a carta individual diretamente num Buffer PNG para servir no /render-carta sem recalcular
+    if (img) {
+      const c = createCanvas(img.width, img.height);
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      cardBuffers.set(chave, c.toBuffer('image/png'));
+    }
+
+    // 2. Pré-processa Dados numéricos, nomes formatados e pesos de sorteio
+    const partes = chave.split(' ');
+    const overall = parseInt(partes[partes.length - 1]) || 60;
+    const nomeSemOverall = partes.slice(0, -1).join(' ');
+    const nomeFormatado = nomeSemOverall
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+
+    let preco = 1000;
+    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
+    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
+    else preco = 150 + (overall - 60) * 100;
+
+    let peso = 100;
+    if (overall >= 90) peso = 1;
+    else if (overall >= 88) peso = 3;
+    else if (overall >= 85) peso = 8;
+    else if (overall >= 80) peso = 25;
+    else if (overall >= 75) peso = 60;
+
+    const objetoJogador = {
+      chave,
+      nomeFormatado,
+      overall,
+      posicao: dados.pos,
+      posicaoUpper: dados.pos ? dados.pos.toUpperCase() : "??",
+      preco,
+      peso,
+      imgOriginal: dados.img
+    };
+
+    jogadoresPreProcessados.push(objetoJogador);
+
+    // 3. Constrói o Índice de Busca Instantânea (O(1))
+    const chaveLimpa = removerAcentos(chave);
+    const nomeSemNumeroLimpo = removerAcentos(nomeSemOverall);
+
+    buscaIndexMap.set(chaveLimpa, chave);
+    if (!buscaIndexMap.has(nomeSemNumeroLimpo)) {
+      buscaIndexMap.set(nomeSemNumeroLimpo, chave);
+    }
+  }
+
+  pesoTotalSorteio = jogadoresPreProcessados.reduce((acc, j) => acc + j.peso, 0);
+  console.log("⚡ Servidor 100% otimizado e pronto!");
+}
+
 function encontrarChaveJogador(termoBusca) {
   const buscaLimpa = removerAcentos(termoBusca);
   if (!buscaLimpa) return null;
 
-  const chaves = Object.keys(BANCO_DE_CARTAS);
-
-  let achado = chaves.find(chave => removerAcentos(chave) === buscaLimpa);
-  if (achado) return achado;
+  // Busca ultra rápida via Mapa
+  if (buscaIndexMap.has(buscaLimpa)) {
+    return buscaIndexMap.get(buscaLimpa);
+  }
 
   const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
+  if (buscaIndexMap.has(buscaSemNumero)) {
+    return buscaIndexMap.get(buscaSemNumero);
+  }
 
-  achado = chaves.find(chave => {
-    const nomeBancoLimpo = removerAcentos(chave);
-    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
-    return nomeBancoSemNumero === buscaSemNumero;
-  });
-  if (achado) return achado;
+  // Fallback para buscas parciais
+  for (const [termoIndex, chaveReal] of buscaIndexMap.entries()) {
+    if (termoIndex.includes(buscaSemNumero) || buscaSemNumero.includes(termoIndex)) {
+      return chaveReal;
+    }
+  }
 
-  achado = chaves.find(chave => {
-    const nomeBancoLimpo = removerAcentos(chave);
-    const nomeBancoSemNumero = nomeBancoLimpo.replace(/\s+\d+$/, '').trim();
-    return nomeBancoSemNumero.includes(buscaSemNumero) || buscaSemNumero.includes(nomeBancoSemNumero);
-  });
-
-  return achado || null;
+  return null;
 }
 
 // -------------------------------------------------------------
-// ROTA 1: GERAR IMAGEM DO CAMPO (ULTRA RÁPIDA)
+// ROTA 1: GERAR IMAGEM DO CAMPO
 // -------------------------------------------------------------
 app.get('/gerar-campo', async (req, res) => {
   try {
@@ -207,8 +258,10 @@ app.get('/gerar-campo', async (req, res) => {
       }
     }
 
+    const buffer = canvas.toBuffer('image/png');
     res.setHeader('Content-Type', 'image/png');
-    canvas.createPNGStream().pipe(res);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(buffer);
 
   } catch (error) {
     console.error("Erro ao gerar campo:", error);
@@ -217,32 +270,20 @@ app.get('/gerar-campo', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// ROTA 2: RENDERIZAR CARTA INDIVIDUAL DIRETO DA RAM (NOVA / OTIMIZADA)
-// Usar nos comandos: 'contratar', 'negociar', 'show'
+// ROTA 2: RENDERIZAR CARTA INDIVIDUAL DIRETO DO BUFFER (RAM)
 // -------------------------------------------------------------
-app.get('/render-carta', async (req, res) => {
+app.get('/render-carta', (req, res) => {
   try {
     const termo = req.query.q || "";
     const chaveEncontrada = encontrarChaveJogador(termo);
 
-    if (!chaveEncontrada) {
+    if (!chaveEncontrada || !cardBuffers.has(chaveEncontrada)) {
       return res.status(404).send('Carta não encontrada');
     }
 
-    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
-    const cardImg = await obterImagemOuCarregar(dadosCarta.img);
-
-    if (!cardImg) {
-      return res.status(500).send('Erro ao carregar a imagem da carta');
-    }
-
-    // Desenha e devolve como PNG instantâneo sem depender de CDN externo
-    const canvas = createCanvas(cardImg.width, cardImg.height);
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(cardImg, 0, 0);
-
     res.setHeader('Content-Type', 'image/png');
-    canvas.createPNGStream().pipe(res);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(cardBuffers.get(chaveEncontrada));
   } catch (error) {
     console.error("Erro no /render-carta:", error);
     res.status(500).send('Erro ao renderizar carta');
@@ -269,28 +310,19 @@ app.get('/buscar-jogador', (req, res) => {
       });
     }
 
-    const partes = chaveEncontrada.split(' ');
-    const overall = parseInt(partes[partes.length - 1]) || 60;
-    const dadosCarta = BANCO_DE_CARTAS[chaveEncontrada];
-
-    let preco = 1000;
-    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
-    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
-    else preco = 150 + (overall - 60) * 100;
-
-    // Retorna a URL da própria API /render-carta para ser instantâneo!
+    const jogador = jogadoresPreProcessados.find(j => j.chave === chaveEncontrada);
     const host = req.get('host');
     const protocol = req.protocol;
     const urlRenderAPI = `${protocol}://${host}/render-carta?q=${encodeURIComponent(chaveEncontrada)}`;
 
     return res.status(200).json({
       sucesso: true,
-      nome: chaveEncontrada,
-      overall: overall,
-      imagem: urlRenderAPI, // <--- Agora devolve o link da sua API nativa!
-      imagemOriginal: dadosCarta.img,
-      posicao: dadosCarta.pos,
-      preco: preco
+      nome: jogador.chave,
+      overall: jogador.overall,
+      imagem: urlRenderAPI,
+      imagemOriginal: jogador.imgOriginal,
+      posicao: jogador.posicao,
+      preco: jogador.preco
     });
   } catch (error) {
     console.error("Erro interno no /buscar-jogador:", error);
@@ -311,38 +343,20 @@ app.get('/obter-aleatorio', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   try {
-    const chaves = Object.keys(BANCO_DE_CARTAS);
-    if (chaves.length === 0) {
+    if (jogadoresPreProcessados.length === 0) {
       return res.status(200).json({ sucesso: false, erro: "banco_vazio" });
     }
 
-    const jogadoresComPeso = chaves.map(chave => {
-      const partes = chave.split(' ');
-      const overall = parseInt(partes[partes.length - 1]) || 60;
+    let numeroSorteado = Math.random() * pesoTotalSorteio;
+    let cartaSorteada = jogadoresPreProcessados[0];
 
-      let peso = 100;
-      if (overall >= 90) peso = 1;
-      else if (overall >= 88) peso = 3;
-      else if (overall >= 85) peso = 8;
-      else if (overall >= 80) peso = 25;
-      else if (overall >= 75) peso = 60;
-
-      return { chave, overall, peso };
-    });
-
-    const pesoTotal = jogadoresComPeso.reduce((soma, j) => soma + j.peso, 0);
-    let numeroSorteado = Math.random() * pesoTotal;
-    let cartaSorteada = jogadoresComPeso[0];
-
-    for (const jogador of jogadoresComPeso) {
+    for (const jogador of jogadoresPreProcessados) {
       if (numeroSorteado < jogador.peso) {
         cartaSorteada = jogador;
         break;
       }
       numeroSorteado -= jogador.peso;
     }
-
-    const dadosCarta = BANCO_DE_CARTAS[cartaSorteada.chave];
 
     const host = req.get('host');
     const protocol = req.protocol;
@@ -352,9 +366,9 @@ app.get('/obter-aleatorio', (req, res) => {
       sucesso: true,
       nome: cartaSorteada.chave,
       overall: cartaSorteada.overall,
-      imagem: urlRenderAPI, // <--- Agora devolve a imagem direto da API!
-      imagemOriginal: dadosCarta.img,
-      posicao: dadosCarta.pos
+      imagem: urlRenderAPI,
+      imagemOriginal: cartaSorteada.imgOriginal,
+      posicao: cartaSorteada.posicao
     });
   } catch (error) {
     console.error("Erro interno no /obter-aleatorio:", error);
@@ -370,8 +384,7 @@ app.get('/listar-mercado', (req, res) => {
 
   try {
     const faixa = req.query.faixa;
-    const chaves = Object.keys(BANCO_DE_CARTAS);
-    const totalGeral = chaves.length;
+    const totalGeral = jogadoresPreProcessados.length;
 
     let min = 0;
     let max = 99;
@@ -386,23 +399,9 @@ app.get('/listar-mercado', (req, res) => {
     else if (faixa === '6569') { min = 65; max = 69; }
     else if (faixa === '6064') { min = 60; max = 64; }
 
-    const filtrados = chaves.map(chave => {
-      const partes = chave.split(' ');
-      const overall = parseInt(partes[partes.length - 1]) || 60;
-
-      const nomeSemOverall = partes.slice(0, -1).join(' ');
-      const nomeFormatado = nomeSemOverall
-        .split(' ')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-
-      const dadosCarta = BANCO_DE_CARTAS[chave];
-      const posicao = (dadosCarta && dadosCarta.pos) ? dadosCarta.pos.toUpperCase() : "??";
-
-      return { nome: nomeFormatado, overall, posicao };
-    })
-    .filter(j => j.overall >= min && j.overall <= max)
-    .sort((a, b) => b.overall - a.overall);
+    const filtrados = jogadoresPreProcessados
+      .filter(j => j.overall >= min && j.overall <= max)
+      .sort((a, b) => b.overall - a.overall);
 
     if (filtrados.length === 0) {
       return res.status(200).json({
@@ -416,13 +415,13 @@ app.get('/listar-mercado', (req, res) => {
       const j1 = filtrados[i];
       const j2 = filtrados[i + 1];
 
-      const nome1 = j1.nome.length > 13 ? j1.nome.slice(0, 11) + ".." : j1.nome;
-      const item1 = `[${j1.overall} ${j1.posicao}] ${nome1}`;
+      const nome1 = j1.nomeFormatado.length > 13 ? j1.nomeFormatado.slice(0, 11) + ".." : j1.nomeFormatado;
+      const item1 = `[${j1.overall} ${j1.posicaoUpper}] ${nome1}`;
       const col1 = item1.padEnd(24, ' ');
 
       if (j2) {
-        const nome2 = j2.nome.length > 13 ? j2.nome.slice(0, 11) + ".." : j2.nome;
-        const col2 = `[${j2.overall} ${j2.posicao}] ${nome2}`;
+        const nome2 = j2.nomeFormatado.length > 13 ? j2.nomeFormatado.slice(0, 11) + ".." : j2.nomeFormatado;
+        const col2 = `[${j2.overall} ${j2.posicaoUpper}] ${nome2}`;
         linhas.push(`${col1}${col2}`);
       } else {
         linhas.push(col1);
@@ -442,7 +441,7 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// Inicialização segura
-preCarregarImagens().then(() => {
+// Inicialização otimizada
+preCarregarEIndexar().then(() => {
   app.listen(PORT, () => console.log(`🚀 Servidor e API rodando na porta ${PORT}`));
 });
