@@ -36,7 +36,6 @@ const MAPA_CAMPOS = {
   "matrix": "campomatrix.png",
   "champions": "campochampions.png",
   "inverno": "campoinverno.png",
-    
   "praia": "campopraia.png",
   "vangogh": "campovangogh.png",
   "deserto": "campodeserto.png",
