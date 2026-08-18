@@ -9,17 +9,25 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir a pasta 'cartas' estaticamente caso precises de aceder via URL (ex: http://localhost:3000/cartas/nome.png)
+// Pastas de recursos estáticos
 const PASTAS_CARTAS = path.join(__dirname, 'cartas');
+const PASTAS_CAMPOS = path.join(__dirname, 'campos');
+
 app.use('/cartas', express.static(PASTAS_CARTAS));
+app.use('/campos', express.static(PASTAS_CAMPOS));
 
-// Imagem de fundo local (coloca 'time.png' na raiz ou dentro da pasta cartas)
-// Se o fundo também estiver dentro de 'cartas', podes mudar para path.join(PASTAS_CARTAS, 'time.png')
-const CAMINHO_FUNDO = fs.existsSync(path.join(__dirname, 'time.png'))
-  ? path.join(__dirname, 'time.png')
-  : path.join(PASTAS_CARTAS, 'time.png');
+// Mapeamento das imagens de fundo na pasta 'campos'
+const MAPA_CAMPOS = {
+  "padrao": "campopadrao.png",
+  "dia": "camporealista.png",
+  "realista": "camporealista.png",
+  "noite": "camporealistanoturno.png",
+  "noturno": "camporealistanoturno.png",
+  "galaxia": "campogalaxia.png",
+  "neon": "camponeon.png"
+};
 
-// Mapeamento apontando diretamente para os ficheiros locais na pasta 'cartas'
+// BANCO DE CARTAS
 const BANCO_DE_CARTAS = {
   "karim benzema 87": { img: "benzema87.png", pos: "pl" },
   "kevin de bruyne 87": { img: "kevindebruyne87.png", pos: "mc" },
@@ -156,18 +164,15 @@ function removerAcentos(texto) {
     .trim();
 }
 
-// Função otimizada para carregar imagens diretamente do disco
-async function obterImagemOuCarregar(nomeFicheiroOuCaminho) {
-  if (imageCache.has(nomeFicheiroOuCaminho)) {
-    return imageCache.get(nomeFicheiroOuCaminho);
+async function obterImagemOuCarregar(caminhoOuFicheiro, pastaPadrao = PASTAS_CARTAS) {
+  if (imageCache.has(caminhoOuFicheiro)) {
+    return imageCache.get(caminhoOuFicheiro);
   }
 
   try {
-    let caminhoAbsoluto = nomeFicheiroOuCaminho;
-    
-    // Se não for um caminho absoluto completo, assume que está dentro de 'cartas'
-    if (!path.isAbsolute(nomeFicheiroOuCaminho)) {
-      caminhoAbsoluto = path.join(PASTAS_CARTAS, nomeFicheiroOuCaminho);
+    let caminhoAbsoluto = caminhoOuFicheiro;
+    if (!path.isAbsolute(caminhoOuFicheiro)) {
+      caminhoAbsoluto = path.join(pastaPadrao, caminhoOuFicheiro);
     }
 
     if (!fs.existsSync(caminhoAbsoluto)) {
@@ -176,10 +181,10 @@ async function obterImagemOuCarregar(nomeFicheiroOuCaminho) {
     }
 
     const img = await loadImage(caminhoAbsoluto);
-    imageCache.set(nomeFicheiroOuCaminho, img);
+    imageCache.set(caminhoOuFicheiro, img);
     return img;
   } catch (e) {
-    console.error(`❌ Erro ao carregar imagem local (${e.message}): ${nomeFicheiroOuCaminho}`);
+    console.error(`❌ Erro ao carregar imagem local (${e.message}): ${caminhoOuFicheiro}`);
     return null;
   }
 }
@@ -263,7 +268,11 @@ app.get('/gerar-campo', async (req, res) => {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    const bgImg = await obterImagemOuCarregar(CAMINHO_FUNDO);
+    // Identificar o fundo enviado por parâmetro (ex: ?bg=galaxia ou ?fundo=noite)
+    const tipoFundo = (req.query.bg || req.query.fundo || 'padrao').toLowerCase().trim();
+    const nomeFicheiroFundo = MAPA_CAMPOS[tipoFundo] || MAPA_CAMPOS["padrao"];
+    
+    const bgImg = await obterImagemOuCarregar(nomeFicheiroFundo, PASTAS_CAMPOS);
     if (bgImg) {
       ctx.drawImage(bgImg, 0, 0, width, height);
     } else {
@@ -296,7 +305,7 @@ app.get('/gerar-campo', async (req, res) => {
         if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
           const nomeFicheiroCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
           promessas.push(
-            obterImagemOuCarregar(nomeFicheiroCarta).then(cardImg => ({ cardImg, coord }))
+            obterImagemOuCarregar(nomeFicheiroCarta, PASTAS_CARTAS).then(cardImg => ({ cardImg, coord }))
           );
         }
       }
@@ -335,7 +344,7 @@ app.get('/render-carta', async (req, res) => {
     }
 
     const nomeFicheiro = BANCO_DE_CARTAS[chaveEncontrada].img;
-    const img = await obterImagemOuCarregar(nomeFicheiro);
+    const img = await obterImagemOuCarregar(nomeFicheiro, PASTAS_CARTAS);
 
     if (!img) {
       return res.status(500).send('Erro ao carregar imagem local');
@@ -346,7 +355,6 @@ app.get('/render-carta', async (req, res) => {
     ctx.drawImage(img, 0, 0);
 
     const buffer = canvas.toBuffer('image/png');
-    
     cardBufferCache.set(chaveEncontrada, buffer);
 
     res.setHeader('Content-Type', 'image/png');
@@ -483,11 +491,9 @@ app.get('/listar-mercado', (req, res) => {
   }
 });
 
-// Prepara os índices e metadados
+// Inicialização
 inicializarMetadados();
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando localmente na porta ${PORT}`);
-  // Pré-carrega a imagem de fundo na memória ao iniciar
-  obterImagemOuCarregar(CAMINHO_FUNDO);
 });
