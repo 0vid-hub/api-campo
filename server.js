@@ -111,7 +111,7 @@ const BANCO_DE_CARTAS = {
   "joão neves 77": { img: "joaoneves77.png", pos: "mc" },
   "otamendi 77": { img: "otamendi77.png", pos: "dc" },
   "pedro porro 77": { img: "pedroporro77.png", pos: "ld" },
-  "rafael leão 77": { img: "rafaelleao77.png", pos: "ee" },
+  "rafael leão 77": { img: "rafaleao77.png", pos: "ee" },
   "orkun kokçu 76": { img: "kokcu76.png", pos: "mc" },
   "alexander bah 75": { img: "bah75.png", pos: "ld" },
   "ben chilwell 75": { img: "BEN-CHILWELL75.png", pos: "le" },
