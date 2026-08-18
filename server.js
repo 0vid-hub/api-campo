@@ -25,6 +25,17 @@ const MAPA_CAMPOS = {
   "noturno": "camporealistanoturno.png",
   "galaxia": "campogalaxia.png",
   "neon": "camponeon.png"
+  "alien": "campoalienmistico.png",
+  "sistemasolar": "camposistemasolar.png",
+  "dourado": "campodourado.png",
+  "halloween": "campohalloween.png",
+  "anime": "campoanime.png",
+  "rua": "camporua.png",
+  "lava": "campolava.png",
+  "retro": "camporetro.png",
+  "matrix": "campomatrix.png",
+  "champions": "campochampions.png",
+  "inverno": "campoinverno.png"
 };
 
 // BANCO DE CARTAS
