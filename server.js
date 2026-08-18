@@ -24,7 +24,7 @@ const MAPA_CAMPOS = {
   "noite": "camporealistanoturno.png",
   "noturno": "camporealistanoturno.png",
   "galaxia": "campogalaxia.png",
-  "neon": "camponeon.png"
+  "neon": "camponeon.png",
   "alien": "campoalienmistico.png",
   "sistemasolar": "camposistemasolar.png",
   "dourado": "campodourado.png",
