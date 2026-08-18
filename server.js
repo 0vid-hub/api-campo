@@ -35,7 +35,14 @@ const MAPA_CAMPOS = {
   "retro": "camporetro.png",
   "matrix": "campomatrix.png",
   "champions": "campochampions.png",
-  "inverno": "campoinverno.png"
+  "inverno": "campoinverno.png",
+    
+  "praia": "campopraia.png",
+  "vangogh": "campovangogh.png",
+  "deserto": "campodeserto.png",
+  "portugal": "campoportugal.png",
+  "brasil": "campobrasil.png",
+  "argentina": "campargentina.png"
 };
 
 // BANCO DE CARTAS
