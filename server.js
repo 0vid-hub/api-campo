@@ -50,7 +50,7 @@ const BANCO_DE_CARTAS = {
   "kevin de bruyne 87": { img: "kevindebruyne87.png", pos: "mc" },
   "mbappé 87": { img: "mbappe87.png", pos: "pl" },
   "lionel messi 87": { img: "messi87.png", pos: "ed" },
-  "cristiano ronaldo 87": { img: "ronaldo87.png", pos: "pl" },
+  "cristiano ronaldo 87": { img: "cristianoRonaldo87", pos: "pl" },
   "trent alexander-arnold 87": { img: "TRENT ALEXANDER-ARNOLD87.png", pos: "ld" },
   "alessandro bastoni 86": { img: "ALESSANDRO BASTONI86.png", pos: "dc" },
   "bukayo saka 86": { img: "bukayosaka86.png", pos: "ed" },
