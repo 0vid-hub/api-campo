@@ -96,7 +96,7 @@ const BANCO_DE_CARTAS = {
   "morten hjulmand 82": { img: "MORTEN HJULMAND82.png", pos: "mc" },
   "guglielmo vicario 81": { img: "GUGLIELMO VICARIO81.png", pos: "gr" },
   "e. haaland 81": { img: "haaland81.png", pos: "pl" },
-  "benjamin šeško 80": { img: "BENJAMIN ŠEŠKO80.png", pos: "pl" },
+  "benjamin sesko 80": { img: "BENJAMIN ŠEŠKO80.png", pos: "pl" },
   "joshua zirkzee 80": { img: "JOSHUA ZIRKZEE80.png", pos: "pl" },
   "pepe 80": { img: "pepe80.png", pos: "dc" },
   "savinho 80": { img: "SAVINHO80.png", pos: "le" },
