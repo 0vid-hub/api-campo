@@ -220,10 +220,21 @@ function inicializarMetadados() {
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
 
-    let preco = 1000;
-    if (overall >= 90) preco = 16000 + (overall - 90) * 4000;
-    else if (overall >= 80) preco = 2500 + (overall - 80) * 1000;
-    else preco = 150 + (overall - 60) * 100;
+let preco = 1000;
+
+if (overall >= 95) {
+  // Mantém o preço base para 95+ (sem aumento)
+  preco = 16000 + (overall - 90) * 4000; 
+} else if (overall >= 90) {
+  // Aumentado ligeiramente para 90-94
+  preco = 20000 + (overall - 90) * 5000; 
+} else if (overall >= 80) {
+  // Aumentado de 2500+ para 3500+
+  preco = 3500 + (overall - 80) * 1200; 
+} else {
+  // Aumentado de 150+ para 300+
+  preco = 300 + (overall - 60) * 150; 
+}
 
     let peso = 100;
     if (overall >= 90) peso = 1;
