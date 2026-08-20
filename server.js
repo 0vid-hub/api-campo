@@ -428,7 +428,7 @@ app.get('/buscar-jogador', (req, res) => {
   }
 });
 
-// CONSULTA DE TODOS OS RESULTADOS DE UMA BUSCA (JSON)
+// CONSULTA DE TODOS OS RESULTADOS DE UMA BUSCA (JSON COM BUSCA PARCIAL)
 app.get('/buscar-todos-jogadores', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   try {
