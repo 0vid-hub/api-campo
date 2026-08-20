@@ -497,7 +497,17 @@ function obterWebhookPartes(webhookUrl) {
 // =============================================================
 
 const DISCORD_MIN_INTERVALO_MS = 300; // no máx. ~3 requests/seg
-const DISCORD_MAX_TENTATIVAS = 4;
+const DISCORD_MAX_TENTATIVAS = 4; // usado nos PATCH em segundo plano
+const DISCORD_TIMEOUT_FETCH_MS = 6000; // nunca deixa um fetch pendurado
+
+// O envio inicial (POST que cria a mensagem) é síncrono com quem
+// chama a nossa API (/liga-live e /partida-live) — se ele demorar
+// demais, quem chamou desiste com "timeout awaiting response
+// headers" antes de nós respondermos. Por isso ele usa um
+// orçamento de retry bem mais curto do que os PATCH em segundo
+// plano, que ninguém está esperando.
+const DISCORD_ENVIO_INICIAL_MAX_TENTATIVAS = 1;
+const DISCORD_ENVIO_INICIAL_ESPERA_MAXIMA_S = 1;
 
 let filaDiscord = Promise.resolve();
 let ultimoEnvioDiscord = 0;
@@ -538,68 +548,125 @@ async function discordWebhookRequestBruto(
   body
 ) {
 
-  const opcoes = {
-    method,
-    headers: {
-      "Content-Type": "application/json"
-    }
-  };
+  // AbortController garante que um fetch nunca fica pendurado
+  // indefinidamente (ex: problema de rede do Render) — isso é
+  // o que causava o "timeout awaiting response headers" do lado
+  // de quem nos chamava, sem nós nunca respondermos.
+  const controller = new AbortController();
 
-  if (body !== null) {
-    opcoes.body =
-      JSON.stringify(body);
-  }
-
-  const resposta =
-    await fetch(url, opcoes);
-
-  const texto =
-    await resposta.text();
-
-  let dados = null;
+  const timeoutID = setTimeout(
+    () => controller.abort(),
+    DISCORD_TIMEOUT_FETCH_MS
+  );
 
   try {
-    dados =
-      texto
-        ? JSON.parse(texto)
-        : null;
-  } catch {
-    dados = texto;
-  }
 
-  return { resposta, dados };
+    const opcoes = {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      signal: controller.signal
+    };
+
+    if (body !== null) {
+      opcoes.body =
+        JSON.stringify(body);
+    }
+
+    const resposta =
+      await fetch(url, opcoes);
+
+    const texto =
+      await resposta.text();
+
+    let dados = null;
+
+    try {
+      dados =
+        texto
+          ? JSON.parse(texto)
+          : null;
+    } catch {
+      dados = texto;
+    }
+
+    return { resposta, dados };
+
+  } finally {
+
+    clearTimeout(timeoutID);
+  }
 }
 
 async function discordWebhookRequest(
   method,
   url,
   body = null,
-  tentativa = 0
+  opcoesRetry = {}
 ) {
+
+  const {
+    tentativa = 0,
+    maxTentativas = DISCORD_MAX_TENTATIVAS,
+    esperaMaximaSegundos = 5
+  } = opcoesRetry;
 
   return agendarNaFilaDiscord(async () => {
 
-    const { resposta, dados } =
-      await discordWebhookRequestBruto(
-        method,
-        url,
-        body
-      );
+    let resposta;
+    let dados;
 
-    // Rate limit -> espera o tempo indicado pelo Discord e tenta de novo
+    try {
+
+      ({ resposta, dados } =
+        await discordWebhookRequestBruto(
+          method,
+          url,
+          body
+        ));
+
+    } catch (erroFetch) {
+
+      // Timeout do fetch (abort) ou falha de rede
+      if (tentativa < maxTentativas) {
+
+        console.warn(
+          `⏳ Falha de rede no Discord (${method} ${url.split("?")[0]}), ` +
+          `nova tentativa (${tentativa + 1}/${maxTentativas}): ${erroFetch.message}`
+        );
+
+        return discordWebhookRequest(
+          method,
+          url,
+          body,
+          { ...opcoesRetry, tentativa: tentativa + 1 }
+        );
+      }
+
+      throw new Error(
+        `Falha ao contactar o Discord: ${erroFetch.message}`
+      );
+    }
+
+    // Rate limit -> espera o tempo indicado pelo Discord (limitado
+    // a esperaMaximaSegundos) e tenta de novo
     if (resposta.status === 429) {
 
-      const retryAfterSegundos =
+      const retryAfterBruto =
         (dados && typeof dados === "object" && dados.retry_after) ||
         Number(resposta.headers.get("retry-after")) ||
         1;
 
-      if (tentativa < DISCORD_MAX_TENTATIVAS) {
+      const retryAfterSegundos =
+        Math.min(retryAfterBruto, esperaMaximaSegundos);
+
+      if (tentativa < maxTentativas) {
 
         console.warn(
           `⏳ 429 Discord (${method} ${url.split("?")[0]}), ` +
           `nova tentativa em ${retryAfterSegundos}s ` +
-          `(tentativa ${tentativa + 1}/${DISCORD_MAX_TENTATIVAS})`
+          `(tentativa ${tentativa + 1}/${maxTentativas})`
         );
 
         await new Promise(r =>
@@ -610,7 +677,7 @@ async function discordWebhookRequest(
           method,
           url,
           body,
-          tentativa + 1
+          { ...opcoesRetry, tentativa: tentativa + 1 }
         );
       }
     }
@@ -1287,6 +1354,12 @@ async function enviarLigaInicial(
         allowed_mentions: {
           parse: []
         }
+      },
+      {
+        maxTentativas:
+          DISCORD_ENVIO_INICIAL_MAX_TENTATIVAS,
+        esperaMaximaSegundos:
+          DISCORD_ENVIO_INICIAL_ESPERA_MAXIMA_S
       }
     );
 
@@ -1343,6 +1416,12 @@ async function enviarPartidaInicial(
           users:
             dados.mencaoIDs || []
         }
+      },
+      {
+        maxTentativas:
+          DISCORD_ENVIO_INICIAL_MAX_TENTATIVAS,
+        esperaMaximaSegundos:
+          DISCORD_ENVIO_INICIAL_ESPERA_MAXIMA_S
       }
     );
 
