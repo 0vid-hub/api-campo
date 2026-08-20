@@ -9,14 +9,29 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Pastas de recursos estáticos
+// =============================================================
+// CONFIGURAÇÃO ES LEAGUE LIVE
+// =============================================================
+
+const LIGA_WEBHOOK_URL = process.env.LIGA_WEBHOOK_URL || "";
+const LIGA_API_KEY = process.env.LIGA_API_KEY || "";
+
+const partidasLiga = new Map();
+
+// =============================================================
+// PASTAS
+// =============================================================
+
 const PASTAS_CARTAS = path.join(__dirname, 'cartas');
 const PASTAS_CAMPOS = path.join(__dirname, 'campos');
 
 app.use('/cartas', express.static(PASTAS_CARTAS));
 app.use('/campos', express.static(PASTAS_CAMPOS));
 
-// Mapeamento das imagens de fundo na pasta 'campos'
+// =============================================================
+// CAMPOS
+// =============================================================
+
 const MAPA_CAMPOS = {
   "padrao": "campopadrao.png",
   "dia": "camporealista.png",
@@ -44,7 +59,10 @@ const MAPA_CAMPOS = {
   "argentina": "campargentina.png"
 };
 
+// =============================================================
 // BANCO DE CARTAS
+// =============================================================
+
 const BANCO_DE_CARTAS = {
   "karim benzema 87": { img: "benzema87.png", pos: "pl" },
   "kevin de bruyne 87": { img: "kevindebruyne87.png", pos: "mc" },
@@ -166,15 +184,28 @@ const BANCO_DE_CARTAS = {
   "chrystian barletta 60": { img: "CHRYSTIANBARLETTA60.png", pos: "ee" }
 };
 
+// =============================================================
+// CACHE
+// =============================================================
+
 const imageCache = new Map();
 const cardBufferCache = new Map();
 const buscaIndexMap = new Map();
+
 let jogadoresPreProcessados = [];
 let pesoTotalSorteio = 0;
 
+// =============================================================
+// FUNÇÕES CARTAS
+// =============================================================
+
 function removerAcentos(texto) {
   if (!texto) return "";
-  try { texto = decodeURIComponent(texto); } catch (e) {}
+
+  try {
+    texto = decodeURIComponent(texto);
+  } catch (e) {}
+
   return texto
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -182,27 +213,41 @@ function removerAcentos(texto) {
     .trim();
 }
 
-async function obterImagemOuCarregar(caminhoOuFicheiro, pastaPadrao = PASTAS_CARTAS) {
+async function obterImagemOuCarregar(
+  caminhoOuFicheiro,
+  pastaPadrao = PASTAS_CARTAS
+) {
   if (imageCache.has(caminhoOuFicheiro)) {
     return imageCache.get(caminhoOuFicheiro);
   }
 
   try {
     let caminhoAbsoluto = caminhoOuFicheiro;
+
     if (!path.isAbsolute(caminhoOuFicheiro)) {
-      caminhoAbsoluto = path.join(pastaPadrao, caminhoOuFicheiro);
+      caminhoAbsoluto = path.join(
+        pastaPadrao,
+        caminhoOuFicheiro
+      );
     }
 
     if (!fs.existsSync(caminhoAbsoluto)) {
-      console.error(`❌ Ficheiro não existe no disco: ${caminhoAbsoluto}`);
+      console.error(
+        `❌ Ficheiro não existe no disco: ${caminhoAbsoluto}`
+      );
       return null;
     }
 
     const img = await loadImage(caminhoAbsoluto);
+
     imageCache.set(caminhoOuFicheiro, img);
+
     return img;
   } catch (e) {
-    console.error(`❌ Erro ao carregar imagem local (${e.message}): ${caminhoOuFicheiro}`);
+    console.error(
+      `❌ Erro ao carregar imagem local (${e.message}): ${caminhoOuFicheiro}`
+    );
+
     return null;
   }
 }
@@ -212,31 +257,39 @@ function inicializarMetadados() {
   buscaIndexMap.clear();
 
   for (const [chave, dados] of Object.entries(BANCO_DE_CARTAS)) {
-    const partes = chave.split(' ');
-    const overall = parseInt(partes[partes.length - 1]) || 60;
-    const nomeSemOverall = partes.slice(0, -1).join(' ');
+    const partes = chave.split(" ");
+
+    const overall =
+      parseInt(partes[partes.length - 1]) || 60;
+
+    const nomeSemOverall =
+      partes.slice(0, -1).join(" ");
+
     const nomeFormatado = nomeSemOverall
-      .split(' ')
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
+      .split(" ")
+      .map(w =>
+        w.charAt(0).toUpperCase() + w.slice(1)
+      )
+      .join(" ");
 
-let preco = 1000;
+    let preco = 1000;
 
-if (overall >= 95) {
-  // Mantém o preço base para 95+ (sem aumento)
-  preco = 16000 + (overall - 90) * 4000; 
-} else if (overall >= 90) {
-  // Aumentado ligeiramente para 90-94
-  preco = 20000 + (overall - 90) * 5000; 
-} else if (overall >= 80) {
-  // Aumentado de 2500+ para 3500+
-  preco = 3500 + (overall - 80) * 1200; 
-} else {
-  // Aumentado de 150+ para 300+
-  preco = 300 + (overall - 60) * 150; 
-}
+    if (overall >= 95) {
+      preco =
+        16000 + (overall - 90) * 4000;
+    } else if (overall >= 90) {
+      preco =
+        20000 + (overall - 90) * 5000;
+    } else if (overall >= 80) {
+      preco =
+        3500 + (overall - 80) * 1200;
+    } else {
+      preco =
+        300 + (overall - 60) * 150;
+    }
 
     let peso = 100;
+
     if (overall >= 90) peso = 1;
     else if (overall >= 88) peso = 3;
     else if (overall >= 85) peso = 8;
@@ -248,281 +301,1589 @@ if (overall >= 95) {
       nomeFormatado,
       overall,
       posicao: dados.pos,
-      posicaoUpper: dados.pos ? dados.pos.toUpperCase() : "??",
+      posicaoUpper:
+        dados.pos
+          ? dados.pos.toUpperCase()
+          : "??",
       preco,
       peso,
       imgOriginal: dados.img
     };
 
-    jogadoresPreProcessados.push(objetoJogador);
+    jogadoresPreProcessados.push(
+      objetoJogador
+    );
 
-    const chaveLimpa = removerAcentos(chave);
-    const nomeSemNumeroLimpo = removerAcentos(nomeSemOverall);
+    const chaveLimpa =
+      removerAcentos(chave);
 
-    buscaIndexMap.set(chaveLimpa, chave);
-    if (!buscaIndexMap.has(nomeSemNumeroLimpo)) {
-      buscaIndexMap.set(nomeSemNumeroLimpo, chave);
+    const nomeSemNumeroLimpo =
+      removerAcentos(nomeSemOverall);
+
+    buscaIndexMap.set(
+      chaveLimpa,
+      chave
+    );
+
+    if (
+      !buscaIndexMap.has(
+        nomeSemNumeroLimpo
+      )
+    ) {
+      buscaIndexMap.set(
+        nomeSemNumeroLimpo,
+        chave
+      );
     }
   }
 
-  pesoTotalSorteio = jogadoresPreProcessados.reduce((acc, j) => acc + j.peso, 0);
+  pesoTotalSorteio =
+    jogadoresPreProcessados.reduce(
+      (acc, j) => acc + j.peso,
+      0
+    );
 }
 
-function encontrarChaveJogador(termoBusca) {
-  const buscaLimpa = removerAcentos(termoBusca);
+function encontrarChaveJogador(
+  termoBusca
+) {
+  const buscaLimpa =
+    removerAcentos(termoBusca);
+
   if (!buscaLimpa) return null;
 
-  if (buscaIndexMap.has(buscaLimpa)) return buscaIndexMap.get(buscaLimpa);
+  if (buscaIndexMap.has(buscaLimpa)) {
+    return buscaIndexMap.get(buscaLimpa);
+  }
 
-  const buscaSemNumero = buscaLimpa.replace(/\s+\d+$/, '').trim();
-  if (buscaIndexMap.has(buscaSemNumero)) return buscaIndexMap.get(buscaSemNumero);
+  const buscaSemNumero =
+    buscaLimpa
+      .replace(/\s+\d+$/, "")
+      .trim();
 
-  for (const [termoIndex, chaveReal] of buscaIndexMap.entries()) {
-    if (termoIndex.includes(buscaSemNumero) || buscaSemNumero.includes(termoIndex)) {
+  if (
+    buscaIndexMap.has(
+      buscaSemNumero
+    )
+  ) {
+    return buscaIndexMap.get(
+      buscaSemNumero
+    );
+  }
+
+  for (
+    const [
+      termoIndex,
+      chaveReal
+    ] of buscaIndexMap.entries()
+  ) {
+    if (
+      termoIndex.includes(buscaSemNumero) ||
+      buscaSemNumero.includes(termoIndex)
+    ) {
       return chaveReal;
     }
   }
+
   return null;
 }
 
-// -------------------------------------------------------------
-// ROTAS DA API
-// -------------------------------------------------------------
+// =============================================================
+// ES LEAGUE LIVE — DISCORD WEBHOOK
+// =============================================================
 
-app.get('/gerar-campo', async (req, res) => {
+function obterWebhookPartes(
+  webhookUrl
+) {
   try {
-    const width = 800;
-    const height = 800;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
+    const url =
+      new URL(webhookUrl);
 
-    // Identificar o fundo enviado por parâmetro (ex: ?bg=galaxia ou ?fundo=noite)
-    const tipoFundo = (req.query.bg || req.query.fundo || 'padrao').toLowerCase().trim();
-    const nomeFicheiroFundo = MAPA_CAMPOS[tipoFundo] || MAPA_CAMPOS["padrao"];
-    
-    const bgImg = await obterImagemOuCarregar(nomeFicheiroFundo, PASTAS_CAMPOS);
-    if (bgImg) {
-      ctx.drawImage(bgImg, 0, 0, width, height);
-    } else {
-      ctx.fillStyle = '#12141d';
-      ctx.fillRect(0, 0, width, height);
+    const partes =
+      url.pathname
+        .split("/")
+        .filter(Boolean);
+
+    const indice =
+      partes.indexOf("webhooks");
+
+    if (indice === -1) {
+      throw new Error(
+        "URL de webhook inválida."
+      );
     }
 
-    const cardWidth = 120;
-    const cardHeight = 165;
+    const webhookID =
+      partes[indice + 1];
 
-    const POSICOES = {
-      gr:  { x: 400, y: 705 },
-      le:  { x: 100, y: 580 },
-      dc1: { x: 270, y: 565 },
-      dc2: { x: 530, y: 565 },
-      ld:  { x: 700, y: 580 },
-      mc:  { x: 400, y: 395 },
-      mo1: { x: 220, y: 280 },
-      mo2: { x: 580, y: 280 },
-      ee:  { x: 110, y: 100 },
-      pl:  { x: 400, y: 95 },
-      ed:  { x: 690, y: 100 }
+    const webhookToken =
+      partes[indice + 2];
+
+    if (
+      !webhookID ||
+      !webhookToken
+    ) {
+      throw new Error(
+        "ID/token do webhook não encontrados."
+      );
+    }
+
+    return {
+      webhookID,
+      webhookToken
     };
+  } catch (error) {
+    console.error(
+      "❌ Webhook inválido:",
+      error.message
+    );
 
-    const promessas = [];
-    for (const [pos, coord] of Object.entries(POSICOES)) {
-      const termo = req.query[pos];
-      if (termo && termo !== 'vazio') {
-        const chaveEncontrada = encontrarChaveJogador(termo);
-        if (chaveEncontrada && BANCO_DE_CARTAS[chaveEncontrada]) {
-          const nomeFicheiroCarta = BANCO_DE_CARTAS[chaveEncontrada].img;
-          promessas.push(
-            obterImagemOuCarregar(nomeFicheiroCarta, PASTAS_CARTAS).then(cardImg => ({ cardImg, coord }))
+    return null;
+  }
+}
+
+async function discordWebhookRequest(
+  method,
+  url,
+  body = null
+) {
+  const opcoes = {
+    method,
+    headers: {
+      "Content-Type":
+        "application/json"
+    }
+  };
+
+  if (body !== null) {
+    opcoes.body =
+      JSON.stringify(body);
+  }
+
+  const resposta =
+    await fetch(
+      url,
+      opcoes
+    );
+
+  const texto =
+    await resposta.text();
+
+  let dados = null;
+
+  try {
+    dados = texto
+      ? JSON.parse(texto)
+      : null;
+  } catch {
+    dados = texto;
+  }
+
+  if (!resposta.ok) {
+    throw new Error(
+      `Discord ${resposta.status}: ${
+        typeof dados === "string"
+          ? dados
+          : JSON.stringify(dados)
+      }`
+    );
+  }
+
+  return dados;
+}
+
+function extrairEventosLiga(
+  lances
+) {
+  if (
+    !lances ||
+    !String(lances).trim()
+  ) {
+    return [];
+  }
+
+  const linhas =
+    String(lances)
+      .split(/\r?\n/)
+      .map(
+        linha => linha.trim()
+      )
+      .filter(Boolean);
+
+  const eventos = [];
+
+  for (
+    const linha of linhas
+  ) {
+    const match =
+      linha.match(
+        /`(\d+)'`/
+      );
+
+    if (!match) {
+      continue;
+    }
+
+    const minuto =
+      Number(match[1]);
+
+    if (
+      !Number.isFinite(minuto)
+    ) {
+      continue;
+    }
+
+    let equipa =
+      "desconhecida";
+
+    if (
+      linha.includes(
+        "<:dentro:"
+      )
+    ) {
+      equipa = "casa";
+    } else if (
+      linha.includes(
+        "<:fora:"
+      )
+    ) {
+      equipa = "fora";
+    }
+
+    eventos.push({
+      minuto,
+      equipa,
+      texto: linha
+    });
+  }
+
+  eventos.sort(
+    (a, b) =>
+      a.minuto - b.minuto
+  );
+
+  return eventos;
+}
+
+function obterPlacarAteMinuto(
+  eventos,
+  minuto,
+  golsC,
+  golsF
+) {
+  let casa = 0;
+  let fora = 0;
+
+  for (
+    const evento of eventos
+  ) {
+    if (
+      evento.minuto > minuto
+    ) {
+      continue;
+    }
+
+    if (
+      evento.equipa === "casa"
+    ) {
+      casa++;
+    }
+
+    if (
+      evento.equipa === "fora"
+    ) {
+      fora++;
+    }
+  }
+
+  if (minuto >= 90) {
+    casa = golsC;
+    fora = golsF;
+  }
+
+  return {
+    casa,
+    fora
+  };
+}
+
+function criarEmbedLiga(
+  dados,
+  minuto
+) {
+  const {
+    nomeClube,
+    rivalNome,
+    gerTime,
+    gerBot,
+    golsC,
+    golsF,
+    divisao,
+    tempo,
+    estadio,
+    campoResultado,
+    eventos
+  } = dados;
+
+  const placar =
+    obterPlacarAteMinuto(
+      eventos,
+      minuto,
+      golsC,
+      golsF
+    );
+
+  let tituloTempo =
+    `🕐 **${minuto}'**`;
+
+  if (minuto === 0) {
+    tituloTempo =
+      "🕐 **0' — APITO INICIAL**";
+  }
+
+  if (minuto === 45) {
+    tituloTempo =
+      "⏸️ **45' — INTERVALO**";
+  }
+
+  if (minuto === 90) {
+    tituloTempo =
+      "🏁 **90' — FIM DE JOGO**";
+  }
+
+  const eventosAteAgora =
+    eventos.filter(
+      evento =>
+        evento.minuto <= minuto
+    );
+
+  let textoLances = "";
+
+  if (
+    eventosAteAgora.length === 0
+  ) {
+    if (minuto === 0) {
+      textoLances =
+        "⚽ A partida acabou de começar.\nNenhum golo ainda.";
+    } else if (
+      minuto === 45
+    ) {
+      textoLances =
+        "⏸️ Nenhum golo na primeira parte.";
+    } else if (
+      minuto >= 90
+    ) {
+      textoLances =
+        "A partida terminou sem golos.";
+    } else {
+      textoLances =
+        "Nenhum golo até agora.\nO jogo continua equilibrado.";
+    }
+  } else {
+    textoLances =
+      eventosAteAgora
+        .map(
+          evento =>
+            evento.texto
+        )
+        .join("\n");
+  }
+
+  if (
+    textoLances.length >
+    3500
+  ) {
+    textoLances =
+      textoLances.slice(
+        -3500
+      );
+  }
+
+  let resultadoTexto = "";
+
+  if (minuto === 0) {
+    resultadoTexto =
+      "### ⚽ A partida começou!\nBoa sorte!";
+  } else if (
+    minuto === 45
+  ) {
+    resultadoTexto =
+      "### ⏸️ Intervalo\nAs equipas vão para o balneário.";
+  } else if (
+    minuto >= 90
+  ) {
+    resultadoTexto =
+      campoResultado ||
+      "### 🏁 Partida finalizada.";
+  } else {
+    resultadoTexto =
+      "### 🔴 Partida em andamento\nO resultado ainda pode mudar!";
+  }
+
+  let cor =
+    "#5865F2";
+
+  if (
+    minuto >= 90
+  ) {
+    if (
+      golsC > golsF
+    ) {
+      cor =
+        "#57F287";
+    } else if (
+      golsC < golsF
+    ) {
+      cor =
+        "#ED4245";
+    } else {
+      cor =
+        "#FEE75C";
+    }
+  }
+
+  const embed = {
+    title:
+      `🏆 ES League — Divisão ${divisao}`,
+
+    color: cor,
+
+    description:
+      `${tituloTempo}\n\n` +
+      `<:placar:1528835698151522354> ` +
+      `<:dentro:1528835700890538154> ` +
+      `**${nomeClube} ${placar.casa} x ${placar.fora} ${rivalNome}** ` +
+      `<:fora:1528835701934653531>\n\n` +
+      `-# **GER:** Seu Time (\`${gerTime}\`) ⚔️ (\`${gerBot}\`) Adversário\n\n` +
+      `-# 🌤️ **Clima:** \`${tempo}\`\n` +
+      `-# 🏟️ **Estádio:** \`${estadio}\``,
+
+    fields: [
+      {
+        name:
+          "<:lances:1528835699225395272> Lances da Partida",
+
+        value:
+          textoLances,
+
+        inline: false
+      }
+    ],
+
+    footer: {
+      text:
+        minuto >= 90
+          ? "ES League • Partida finalizada"
+          : "ES League • Partida ao vivo"
+    },
+
+    image: {
+      url:
+        "https://i.ibb.co/993xTqVb/ligaa.png"
+    },
+
+    timestamp:
+      new Date().toISOString()
+  };
+
+  if (
+    minuto >= 90
+  ) {
+    embed.fields.push({
+      name:
+        "📊 Resultado",
+      value:
+        resultadoTexto,
+      inline: false
+    });
+  }
+
+  return embed;
+}
+
+async function enviarLigaInicial(
+  dados
+) {
+  if (
+    !LIGA_WEBHOOK_URL
+  ) {
+    throw new Error(
+      "LIGA_WEBHOOK_URL não configurada."
+    );
+  }
+
+  const url =
+    new URL(
+      LIGA_WEBHOOK_URL
+    );
+
+  url.searchParams.set(
+    "wait",
+    "true"
+  );
+
+  const resposta =
+    await discordWebhookRequest(
+      "POST",
+      url.toString(),
+      {
+        username:
+          "ES League",
+
+        avatar_url:
+          "https://i.ibb.co/993xTqVb/ligaa.png",
+
+        embeds: [
+          criarEmbedLiga(
+            dados,
+            0
+          )
+        ],
+
+        allowed_mentions: {
+          parse: []
+        }
+      }
+    );
+
+  if (
+    !resposta ||
+    !resposta.id
+  ) {
+    throw new Error(
+      "Discord não devolveu o ID da mensagem."
+    );
+  }
+
+  return resposta.id;
+}
+
+async function editarLiga(
+  webhook,
+  messageID,
+  dados,
+  minuto
+) {
+  const url =
+    `https://discord.com/api/v10/webhooks/` +
+    `${webhook.webhookID}/` +
+    `${webhook.webhookToken}/` +
+    `messages/${messageID}`;
+
+  await discordWebhookRequest(
+    "PATCH",
+    url,
+    {
+      embeds: [
+        criarEmbedLiga(
+          dados,
+          minuto
+        )
+      ],
+
+      allowed_mentions: {
+        parse: []
+      }
+    }
+  );
+}
+
+function iniciarTimersLiga(
+  dados,
+  messageID,
+  webhook
+) {
+  const gameID =
+    dados.gameID;
+
+  const duracao =
+    60000;
+
+  const pontosBase = [
+    10,
+    20,
+    30,
+    40,
+    45,
+    50,
+    60,
+    70,
+    80,
+    90
+  ];
+
+  const minutosGolos =
+    dados.eventos.map(
+      evento =>
+        evento.minuto
+    );
+
+  const minutos =
+    [
+      0,
+      ...pontosBase,
+      ...minutosGolos
+    ];
+
+  const unicos =
+    [
+      ...new Set(
+        minutos
+          .filter(
+            minuto =>
+              minuto >= 0 &&
+              minuto <= 90
+          )
+          .sort(
+            (a, b) =>
+              a - b
+          )
+      )
+    ];
+
+  const timers = [];
+
+  for (
+    const minuto of unicos
+  ) {
+    if (
+      minuto === 0
+    ) {
+      continue;
+    }
+
+    const atraso =
+      Math.round(
+        (minuto / 90) *
+        duracao
+      );
+
+    const timer =
+      setTimeout(
+        async () => {
+          try {
+            await editarLiga(
+              webhook,
+              messageID,
+              dados,
+              minuto
+            );
+
+            console.log(
+              `🏆 Liga ${gameID} → ${minuto}'`
+            );
+          } catch (error) {
+            console.error(
+              `❌ Liga ${gameID} ${minuto}':`,
+              error.message
+            );
+          }
+        },
+        atraso
+      );
+
+    timers.push(
+      timer
+    );
+  }
+
+  const limpeza =
+    setTimeout(
+      () => {
+        partidasLiga.delete(
+          gameID
+        );
+      },
+      duracao + 10000
+    );
+
+  timers.push(
+    limpeza
+  );
+
+  partidasLiga.set(
+    gameID,
+    {
+      messageID,
+      criadoEm:
+        Date.now(),
+      timers
+    }
+  );
+}
+
+// =============================================================
+// ROTA ES LEAGUE LIVE
+// =============================================================
+
+app.post(
+  '/liga-live',
+  async (req, res) => {
+    try {
+      const {
+        apiKey,
+        gameID,
+        nomeClube,
+        rivalNome,
+        gerTime,
+        gerBot,
+        golsC,
+        golsF,
+        divisao,
+        tempo,
+        estadio,
+        lances,
+        campoResultado
+      } = req.body;
+
+      if (
+        LIGA_API_KEY &&
+        apiKey !== LIGA_API_KEY
+      ) {
+        return res
+          .status(401)
+          .json({
+            sucesso: false,
+            erro:
+              "api_key_invalida"
+          });
+      }
+
+      if (!gameID) {
+        return res
+          .status(400)
+          .json({
+            sucesso: false,
+            erro:
+              "gameID_obrigatorio"
+          });
+      }
+
+      if (
+        partidasLiga.has(
+          gameID
+        )
+      ) {
+        return res
+          .status(409)
+          .json({
+            sucesso: false,
+            erro:
+              "partida_ja_iniciada"
+          });
+      }
+
+      const webhook =
+        obterWebhookPartes(
+          LIGA_WEBHOOK_URL
+        );
+
+      if (!webhook) {
+        return res
+          .status(500)
+          .json({
+            sucesso: false,
+            erro:
+              "webhook_invalido"
+          });
+      }
+
+      const dados = {
+        gameID,
+
+        nomeClube:
+          nomeClube ||
+          "Seu Time",
+
+        rivalNome:
+          rivalNome ||
+          "Rival",
+
+        gerTime:
+          Number(gerTime) ||
+          60,
+
+        gerBot:
+          Number(gerBot) ||
+          60,
+
+        golsC:
+          Number(golsC) ||
+          0,
+
+        golsF:
+          Number(golsF) ||
+          0,
+
+        divisao:
+          Number(divisao) ||
+          10,
+
+        tempo:
+          tempo ||
+          "☀️ Ensolarado",
+
+        estadio:
+          estadio ||
+          "Estádio Padrão",
+
+        lances:
+          lances ||
+          "",
+
+        campoResultado:
+          campoResultado ||
+          "",
+
+        eventos:
+          extrairEventosLiga(
+            lances || ""
+          )
+      };
+
+      const messageID =
+        await enviarLigaInicial(
+          dados
+        );
+
+      iniciarTimersLiga(
+        dados,
+        messageID,
+        webhook
+      );
+
+      return res
+        .status(200)
+        .json({
+          sucesso: true,
+          gameID,
+          messageID,
+          eventos:
+            dados.eventos
+              .length,
+          duracaoSegundos:
+            60
+        });
+
+    } catch (error) {
+      console.error(
+        "❌ /liga-live:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          sucesso: false,
+          erro:
+            "erro_interno",
+          mensagem:
+            error.message
+        });
+    }
+  }
+);
+
+// =============================================================
+// GERAR CAMPO
+// =============================================================
+
+app.get(
+  '/gerar-campo',
+  async (req, res) => {
+    try {
+      const width = 800;
+      const height = 800;
+
+      const canvas =
+        createCanvas(
+          width,
+          height
+        );
+
+      const ctx =
+        canvas.getContext("2d");
+
+      ctx.imageSmoothingEnabled =
+        false;
+
+      const tipoFundo =
+        (
+          req.query.bg ||
+          req.query.fundo ||
+          "padrao"
+        )
+          .toLowerCase()
+          .trim();
+
+      const nomeFicheiroFundo =
+        MAPA_CAMPOS[
+          tipoFundo
+        ] ||
+        MAPA_CAMPOS[
+          "padrao"
+        ];
+
+      const bgImg =
+        await obterImagemOuCarregar(
+          nomeFicheiroFundo,
+          PASTAS_CAMPOS
+        );
+
+      if (bgImg) {
+        ctx.drawImage(
+          bgImg,
+          0,
+          0,
+          width,
+          height
+        );
+      } else {
+        ctx.fillStyle =
+          "#12141d";
+
+        ctx.fillRect(
+          0,
+          0,
+          width,
+          height
+        );
+      }
+
+      const cardWidth = 120;
+      const cardHeight = 165;
+
+      const POSICOES = {
+        gr: {
+          x: 400,
+          y: 705
+        },
+        le: {
+          x: 100,
+          y: 580
+        },
+        dc1: {
+          x: 270,
+          y: 565
+        },
+        dc2: {
+          x: 530,
+          y: 565
+        },
+        ld: {
+          x: 700,
+          y: 580
+        },
+        mc: {
+          x: 400,
+          y: 395
+        },
+        mo1: {
+          x: 220,
+          y: 280
+        },
+        mo2: {
+          x: 580,
+          y: 280
+        },
+        ee: {
+          x: 110,
+          y: 100
+        },
+        pl: {
+          x: 400,
+          y: 95
+        },
+        ed: {
+          x: 690,
+          y: 100
+        }
+      };
+
+      const promessas = [];
+
+      for (
+        const [pos, coord]
+        of Object.entries(
+          POSICOES
+        )
+      ) {
+        const termo =
+          req.query[pos];
+
+        if (
+          termo &&
+          termo !== "vazio"
+        ) {
+          const chaveEncontrada =
+            encontrarChaveJogador(
+              termo
+            );
+
+          if (
+            chaveEncontrada &&
+            BANCO_DE_CARTAS[
+              chaveEncontrada
+            ]
+          ) {
+            const nomeFicheiroCarta =
+              BANCO_DE_CARTAS[
+                chaveEncontrada
+              ].img;
+
+            promessas.push(
+              obterImagemOuCarregar(
+                nomeFicheiroCarta,
+                PASTAS_CARTAS
+              )
+                .then(
+                  cardImg => ({
+                    cardImg,
+                    coord
+                  })
+                )
+            );
+          }
+        }
+      }
+
+      const resultados =
+        await Promise.all(
+          promessas
+        );
+
+      for (
+        const {
+          cardImg,
+          coord
+        } of resultados
+      ) {
+        if (cardImg) {
+          ctx.drawImage(
+            cardImg,
+            coord.x -
+              cardWidth / 2,
+            coord.y -
+              cardHeight / 2,
+            cardWidth,
+            cardHeight
           );
         }
       }
-    }
 
-    const resultados = await Promise.all(promessas);
-    for (const { cardImg, coord } of resultados) {
-      if (cardImg) {
-        ctx.drawImage(cardImg, coord.x - cardWidth / 2, coord.y - cardHeight / 2, cardWidth, cardHeight);
+      const buffer =
+        canvas.toBuffer(
+          "image/png"
+        );
+
+      res.setHeader(
+        "Content-Type",
+        "image/png"
+      );
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=86400"
+      );
+
+      return res.send(
+        buffer
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao gerar campo:",
+        error
+      );
+
+      return res
+        .status(500)
+        .send(
+          "Erro ao gerar imagem."
+        );
+    }
+  }
+);
+
+// =============================================================
+// RENDER CARTA
+// =============================================================
+
+app.get(
+  '/render-carta',
+  async (req, res) => {
+    try {
+      const termo =
+        req.query.q || "";
+
+      const chaveEncontrada =
+        encontrarChaveJogador(
+          termo
+        );
+
+      if (
+        !chaveEncontrada ||
+        !BANCO_DE_CARTAS[
+          chaveEncontrada
+        ]
+      ) {
+        return res
+          .status(404)
+          .send(
+            "Carta não encontrada"
+          );
       }
-    }
 
-    const buffer = canvas.toBuffer('image/png');
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    return res.send(buffer);
-  } catch (error) {
-    console.error("Erro ao gerar campo:", error);
-    res.status(500).send('Erro ao gerar imagem.');
-  }
-});
+      if (
+        cardBufferCache.has(
+          chaveEncontrada
+        )
+      ) {
+        res.setHeader(
+          "Content-Type",
+          "image/png"
+        );
 
-app.get('/render-carta', async (req, res) => {
-  try {
-    const termo = req.query.q || "";
-    const chaveEncontrada = encontrarChaveJogador(termo);
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=86400"
+        );
 
-    if (!chaveEncontrada || !BANCO_DE_CARTAS[chaveEncontrada]) {
-      return res.status(404).send('Carta não encontrada');
-    }
-
-    if (cardBufferCache.has(chaveEncontrada)) {
-      res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.send(cardBufferCache.get(chaveEncontrada));
-    }
-
-    const nomeFicheiro = BANCO_DE_CARTAS[chaveEncontrada].img;
-    const img = await obterImagemOuCarregar(nomeFicheiro, PASTAS_CARTAS);
-
-    if (!img) {
-      return res.status(500).send('Erro ao carregar imagem local');
-    }
-
-    const canvas = createCanvas(img.width, img.height);
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-
-    const buffer = canvas.toBuffer('image/png');
-    cardBufferCache.set(chaveEncontrada, buffer);
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    return res.send(buffer);
-
-  } catch (error) {
-    console.error("Erro no /render-carta:", error);
-    res.status(500).send('Erro ao renderizar carta');
-  }
-});
-
-app.get('/buscar-jogador', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  try {
-    const queryBruta = req.query.q || "";
-    const chaveEncontrada = encontrarChaveJogador(queryBruta);
-
-    const host = req.get('host');
-    const protocol = req.protocol;
-
-    if (!chaveEncontrada) {
-      return res.status(200).json({ 
-        sucesso: false, 
-        erro: "nao_encontrado",
-        imagem: `${protocol}://${host}/cartas/desconhecido.png`,
-        posicao: "desconhecida",
-        overall: 60 
-      });
-    }
-
-    const jogador = jogadoresPreProcessados.find(j => j.chave === chaveEncontrada);
-    const urlRenderAPI = `${protocol}://${host}/render-carta?q=${encodeURIComponent(chaveEncontrada)}`;
-    const urlImagemDirectaLocal = `${protocol}://${host}/cartas/${encodeURIComponent(jogador.imgOriginal)}`;
-
-    return res.status(200).json({
-      sucesso: true,
-      nome: jogador.chave,
-      overall: jogador.overall,
-      imagem: urlRenderAPI,
-      imagemOriginal: urlImagemDirectaLocal,
-      posicao: jogador.posicao,
-      preco: jogador.preco
-    });
-  } catch (error) {
-    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
-  }
-});
-
-app.get('/obter-aleatorio', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  try {
-    let numeroSorteado = Math.random() * pesoTotalSorteio;
-    let cartaSorteada = jogadoresPreProcessados[0];
-
-    for (const jogador of jogadoresPreProcessados) {
-      if (numeroSorteado < jogador.peso) {
-        cartaSorteada = jogador;
-        break;
+        return res.send(
+          cardBufferCache.get(
+            chaveEncontrada
+          )
+        );
       }
-      numeroSorteado -= jogador.peso;
-    }
 
-    const host = req.get('host');
-    const protocol = req.protocol;
-    const urlRenderAPI = `${protocol}://${host}/render-carta?q=${encodeURIComponent(cartaSorteada.chave)}`;
-    const urlImagemDirectaLocal = `${protocol}://${host}/cartas/${encodeURIComponent(cartaSorteada.imgOriginal)}`;
+      const nomeFicheiro =
+        BANCO_DE_CARTAS[
+          chaveEncontrada
+        ].img;
 
-    return res.status(200).json({
-      sucesso: true,
-      nome: cartaSorteada.chave,
-      overall: cartaSorteada.overall,
-      imagem: urlRenderAPI,
-      imagemOriginal: urlImagemDirectaLocal,
-      posicao: cartaSorteada.posicao
-    });
-  } catch (error) {
-    return res.status(200).json({ sucesso: false, erro: "erro_interno" });
-  }
-});
+      const img =
+        await obterImagemOuCarregar(
+          nomeFicheiro,
+          PASTAS_CARTAS
+        );
 
-app.get('/listar-mercado', (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  try {
-    const faixa = req.query.faixa;
-    const totalGeral = jogadoresPreProcessados.length;
-
-    let min = 0, max = 99;
-    if (faixa === '9999') { min = 99; max = 99; }
-    else if (faixa === '9598') { min = 95; max = 98; }
-    else if (faixa === '9094') { min = 90; max = 94; }
-    else if (faixa === '8589') { min = 85; max = 89; }
-    else if (faixa === '8084') { min = 80; max = 84; }
-    else if (faixa === '7579') { min = 75; max = 79; }
-    else if (faixa === '7074') { min = 70; max = 74; }
-    else if (faixa === '6569') { min = 65; max = 69; }
-    else if (faixa === '6064') { min = 60; max = 64; }
-
-    const filtrados = jogadoresPreProcessados
-      .filter(j => j.overall >= min && j.overall <= max)
-      .sort((a, b) => b.overall - a.overall);
-
-    if (filtrados.length === 0) {
-      return res.status(200).json({
-        total: totalGeral,
-        texto: "*(Ainda não há jogadores disponíveis nesta faixa.)*"
-      });
-    }
-
-    let linhas = [];
-    for (let i = 0; i < filtrados.length; i += 2) {
-      const j1 = filtrados[i];
-      const j2 = filtrados[i + 1];
-
-      const nome1 = j1.nomeFormatado.length > 13 ? j1.nomeFormatado.slice(0, 11) + ".." : j1.nomeFormatado;
-      const item1 = `[${j1.overall} ${j1.posicaoUpper}] ${nome1}`;
-      const col1 = item1.padEnd(24, ' ');
-
-      if (j2) {
-        const nome2 = j2.nomeFormatado.length > 13 ? j2.nomeFormatado.slice(0, 11) + ".." : j2.nomeFormatado;
-        const col2 = `[${j2.overall} ${j2.posicaoUpper}] ${nome2}`;
-        linhas.push(`${col1}${col2}`);
-      } else {
-        linhas.push(col1);
+      if (!img) {
+        return res
+          .status(500)
+          .send(
+            "Erro ao carregar imagem local"
+          );
       }
+
+      const canvas =
+        createCanvas(
+          img.width,
+          img.height
+        );
+
+      const ctx =
+        canvas.getContext("2d");
+
+      ctx.drawImage(
+        img,
+        0,
+        0
+      );
+
+      const buffer =
+        canvas.toBuffer(
+          "image/png"
+        );
+
+      cardBufferCache.set(
+        chaveEncontrada,
+        buffer
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "image/png"
+      );
+
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=86400"
+      );
+
+      return res.send(
+        buffer
+      );
+    } catch (error) {
+      console.error(
+        "Erro no /render-carta:",
+        error
+      );
+
+      return res
+        .status(500)
+        .send(
+          "Erro ao renderizar carta"
+        );
     }
-
-    return res.status(200).json({
-      total: totalGeral,
-      texto: "```ansi\n" + linhas.join('\n') + "\n```"
-    });
-  } catch (error) {
-    return res.status(200).json({ total: 0, texto: "Erro ao carregar a lista de jogadores." });
   }
-});
+);
 
-// Inicialização
+// =============================================================
+// BUSCAR JOGADOR
+// =============================================================
+
+app.get(
+  '/buscar-jogador',
+  (req, res) => {
+    res.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8"
+    );
+
+    try {
+      const queryBruta =
+        req.query.q || "";
+
+      const chaveEncontrada =
+        encontrarChaveJogador(
+          queryBruta
+        );
+
+      const host =
+        req.get("host");
+
+      const protocol =
+        req.protocol;
+
+      if (!chaveEncontrada) {
+        return res
+          .status(200)
+          .json({
+            sucesso: false,
+            erro:
+              "nao_encontrado",
+            imagem:
+              `${protocol}://${host}/cartas/desconhecido.png`,
+            posicao:
+              "desconhecida",
+            overall:
+              60
+          });
+      }
+
+      const jogador =
+        jogadoresPreProcessados.find(
+          j =>
+            j.chave ===
+            chaveEncontrada
+        );
+
+      const urlRenderAPI =
+        `${protocol}://${host}/render-carta?q=${encodeURIComponent(chaveEncontrada)}`;
+
+      const urlImagemDirectaLocal =
+        `${protocol}://${host}/cartas/${encodeURIComponent(jogador.imgOriginal)}`;
+
+      return res
+        .status(200)
+        .json({
+          sucesso: true,
+          nome:
+            jogador.chave,
+          overall:
+            jogador.overall,
+          imagem:
+            urlRenderAPI,
+          imagemOriginal:
+            urlImagemDirectaLocal,
+          posicao:
+            jogador.posicao,
+          preco:
+            jogador.preco
+        });
+    } catch (error) {
+      return res
+        .status(200)
+        .json({
+          sucesso: false,
+          erro:
+            "erro_interno"
+        });
+    }
+  }
+);
+
+// =============================================================
+// OBTEM ALEATÓRIO
+// =============================================================
+
+app.get(
+  '/obter-aleatorio',
+  (req, res) => {
+    res.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8"
+    );
+
+    try {
+      let numeroSorteado =
+        Math.random() *
+        pesoTotalSorteio;
+
+      let cartaSorteada =
+        jogadoresPreProcessados[0];
+
+      for (
+        const jogador
+        of jogadoresPreProcessados
+      ) {
+        if (
+          numeroSorteado <
+          jogador.peso
+        ) {
+          cartaSorteada =
+            jogador;
+          break;
+        }
+
+        numeroSorteado -=
+          jogador.peso;
+      }
+
+      const host =
+        req.get("host");
+
+      const protocol =
+        req.protocol;
+
+      const urlRenderAPI =
+        `${protocol}://${host}/render-carta?q=${encodeURIComponent(cartaSorteada.chave)}`;
+
+      const urlImagemDirectaLocal =
+        `${protocol}://${host}/cartas/${encodeURIComponent(cartaSorteada.imgOriginal)}`;
+
+      return res
+        .status(200)
+        .json({
+          sucesso: true,
+          nome:
+            cartaSorteada.chave,
+          overall:
+            cartaSorteada.overall,
+          imagem:
+            urlRenderAPI,
+          imagemOriginal:
+            urlImagemDirectaLocal,
+          posicao:
+            cartaSorteada.posicao
+        });
+    } catch (error) {
+      return res
+        .status(200)
+        .json({
+          sucesso: false,
+          erro:
+            "erro_interno"
+        });
+    }
+  }
+);
+
+// =============================================================
+// LISTAR MERCADO
+// =============================================================
+
+app.get(
+  '/listar-mercado',
+  (req, res) => {
+    res.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8"
+    );
+
+    try {
+      const faixa =
+        req.query.faixa;
+
+      const totalGeral =
+        jogadoresPreProcessados.length;
+
+      let min = 0;
+      let max = 99;
+
+      if (
+        faixa === "9999"
+      ) {
+        min = 99;
+        max = 99;
+      } else if (
+        faixa === "9598"
+      ) {
+        min = 95;
+        max = 98;
+      } else if (
+        faixa === "9094"
+      ) {
+        min = 90;
+        max = 94;
+      } else if (
+        faixa === "8589"
+      ) {
+        min = 85;
+        max = 89;
+      } else if (
+        faixa === "8084"
+      ) {
+        min = 80;
+        max = 84;
+      } else if (
+        faixa === "7579"
+      ) {
+        min = 75;
+        max = 79;
+      } else if (
+        faixa === "7074"
+      ) {
+        min = 70;
+        max = 74;
+      } else if (
+        faixa === "6569"
+      ) {
+        min = 65;
+        max = 69;
+      } else if (
+        faixa === "6064"
+      ) {
+        min = 60;
+        max = 64;
+      }
+
+      const filtrados =
+        jogadoresPreProcessados
+          .filter(
+            j =>
+              j.overall >= min &&
+              j.overall <= max
+          )
+          .sort(
+            (a, b) =>
+              b.overall -
+              a.overall
+          );
+
+      if (
+        filtrados.length === 0
+      ) {
+        return res
+          .status(200)
+          .json({
+            total:
+              totalGeral,
+            texto:
+              "*(Ainda não há jogadores disponíveis nesta faixa.)*"
+          });
+      }
+
+      const linhas = [];
+
+      for (
+        let i = 0;
+        i < filtrados.length;
+        i += 2
+      ) {
+        const j1 =
+          filtrados[i];
+
+        const j2 =
+          filtrados[i + 1];
+
+        const nome1 =
+          j1.nomeFormatado.length >
+          13
+            ? j1.nomeFormatado.slice(
+                0,
+                11
+              ) + ".."
+            : j1.nomeFormatado;
+
+        const item1 =
+          `[${j1.overall} ${j1.posicaoUpper}] ${nome1}`;
+
+        const col1 =
+          item1.padEnd(
+            24,
+            " "
+          );
+
+        if (j2) {
+          const nome2 =
+            j2.nomeFormatado.length >
+            13
+              ? j2.nomeFormatado.slice(
+                  0,
+                  11
+                ) + ".."
+              : j2.nomeFormatado;
+
+          const col2 =
+            `[${j2.overall} ${j2.posicaoUpper}] ${nome2}`;
+
+          linhas.push(
+            `${col1}${col2}`
+          );
+        } else {
+          linhas.push(
+            col1
+          );
+        }
+      }
+
+      return res
+        .status(200)
+        .json({
+          total:
+            totalGeral,
+          texto:
+            "```ansi\n" +
+            linhas.join(
+              "\n"
+            ) +
+            "\n```"
+        });
+    } catch (error) {
+      return res
+        .status(200)
+        .json({
+          total: 0,
+          texto:
+            "Erro ao carregar a lista de jogadores."
+        });
+    }
+  }
+);
+
+// =============================================================
+// INICIALIZAÇÃO
+// =============================================================
+
 inicializarMetadados();
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando localmente na porta ${PORT}`);
-});
+app.listen(
+  PORT,
+  () => {
+    console.log(
+      `🚀 Servidor rodando localmente na porta ${PORT}`
+    );
+
+    if (
+      LIGA_WEBHOOK_URL
+    ) {
+      console.log(
+        "🏆 ES League Live: ATIVO"
+      );
+    } else {
+      console.log(
+        "⚠️ ES League Live: WEBHOOK NÃO CONFIGURADO"
+      );
+    }
+  }
+);
