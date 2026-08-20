@@ -220,21 +220,17 @@ function inicializarMetadados() {
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
 
-let preco = 1000;
+    let preco = 1000;
 
-if (overall >= 95) {
-  // Mantém o preço base para 95+ (sem aumento)
-  preco = 16000 + (overall - 90) * 4000; 
-} else if (overall >= 90) {
-  // Aumentado ligeiramente para 90-94
-  preco = 20000 + (overall - 90) * 5000; 
-} else if (overall >= 80) {
-  // Aumentado de 2500+ para 3500+
-  preco = 3500 + (overall - 80) * 1200; 
-} else {
-  // Aumentado de 150+ para 300+
-  preco = 300 + (overall - 60) * 150; 
-}
+    if (overall >= 95) {
+      preco = 16000 + (overall - 90) * 4000; 
+    } else if (overall >= 90) {
+      preco = 20000 + (overall - 90) * 5000; 
+    } else if (overall >= 80) {
+      preco = 3500 + (overall - 80) * 1200; 
+    } else {
+      preco = 300 + (overall - 60) * 150; 
+    }
 
     let peso = 100;
     if (overall >= 90) peso = 1;
@@ -297,7 +293,6 @@ app.get('/gerar-campo', async (req, res) => {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    // Identificar o fundo enviado por parâmetro (ex: ?bg=galaxia ou ?fundo=noite)
     const tipoFundo = (req.query.bg || req.query.fundo || 'padrao').toLowerCase().trim();
     const nomeFicheiroFundo = MAPA_CAMPOS[tipoFundo] || MAPA_CAMPOS["padrao"];
     
@@ -430,6 +425,115 @@ app.get('/buscar-jogador', (req, res) => {
     });
   } catch (error) {
     return res.status(200).json({ sucesso: false, erro: "erro_interno" });
+  }
+});
+
+// CONSULTA DE TODOS OS RESULTADOS DE UMA BUSCA (JSON)
+app.get('/buscar-todos-jogadores', (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  try {
+    const termo = req.query.q || "";
+    const termoLimpo = removerAcentos(termo);
+
+    if (!termoLimpo) {
+      return res.status(200).json({ sucesso: false, total: 0 });
+    }
+
+    const encontrados = jogadoresPreProcessados.filter(j => {
+      const chaveLimpa = removerAcentos(j.chave);
+      const nomeLimpo = removerAcentos(j.nomeFormatado);
+      return chaveLimpa.includes(termoLimpo) || nomeLimpo.includes(termoLimpo);
+    });
+
+    return res.status(200).json({
+      sucesso: encontrados.length > 0,
+      total: encontrados.length
+    });
+  } catch (error) {
+    return res.status(200).json({ sucesso: false, total: 0 });
+  }
+});
+
+// GERADOR DE PAINEL COM RESULTADOS DA PESQUISA (IMAGEM)
+app.get('/pesquisar-jogador', async (req, res) => {
+  try {
+    const termo = req.query.q || "";
+    const termoLimpo = removerAcentos(termo);
+
+    if (!termoLimpo) {
+      return res.status(400).send('Termo de busca vazio');
+    }
+
+    const encontrados = jogadoresPreProcessados.filter(j => {
+      const chaveLimpa = removerAcentos(j.chave);
+      const nomeLimpo = removerAcentos(j.nomeFormatado);
+      return chaveLimpa.includes(termoLimpo) || nomeLimpo.includes(termoLimpo);
+    }).sort((a, b) => b.overall - a.overall);
+
+    if (encontrados.length === 0) {
+      return res.status(404).send('Nenhum jogador encontrado');
+    }
+
+    const colunas = Math.min(encontrados.length, 4);
+    const cardWidth = 140;
+    const cardHeight = 195;
+    const paddingX = 20;
+    const paddingY = 35;
+    const headerHeight = 70;
+
+    const totalLinhas = Math.ceil(encontrados.length / colunas);
+    const canvasWidth = (cardWidth * colunas) + (paddingX * (colunas + 1));
+    const canvasHeight = headerHeight + (cardHeight * totalLinhas) + (paddingY * (totalLinhas + 1));
+
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext('2d');
+
+    const gradiente = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    gradiente.addColorStop(0, '#0f1118');
+    gradiente.addColorStop(1, '#161925');
+    ctx.fillStyle = gradiente;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px Sans-Serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`RESULTADOS PARA "${termo.toUpperCase()}" (${encontrados.length})`, canvasWidth / 2, 45);
+
+    for (let i = 0; i < encontrados.length; i++) {
+      const j = encontrados[i];
+      const col = i % colunas;
+      const row = Math.floor(i / colunas);
+
+      const x = paddingX + col * (cardWidth + paddingX);
+      const y = headerHeight + paddingY + row * (cardHeight + paddingY);
+
+      const cardImg = await obterImagemOuCarregar(j.imgOriginal, PASTAS_CARTAS);
+
+      if (cardImg) {
+        ctx.drawImage(cardImg, x, y, cardWidth, cardHeight);
+      } else {
+        ctx.fillStyle = '#222736';
+        ctx.fillRect(x, y, cardWidth, cardHeight);
+      }
+
+      const priceBoxY = y + cardHeight + 5;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillRect(x, priceBoxY, cardWidth, 22);
+
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = 'bold 12px Sans-Serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`💰 $${j.preco.toLocaleString('pt-PT')}`, x + (cardWidth / 2), priceBoxY + 15);
+    }
+
+    const buffer = canvas.toBuffer('image/png');
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    return res.send(buffer);
+
+  } catch (error) {
+    console.error("Erro na pesquisa de jogadores:", error);
+    res.status(500).send('Erro interno ao pesquisar.');
   }
 });
 
