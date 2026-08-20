@@ -478,13 +478,64 @@ function obterWebhookPartes(webhookUrl) {
 }
 
 // =============================================================
+// FILA GLOBAL + RETRY PARA REQUESTS AO DISCORD
+// =============================================================
+//
+// Problema original: cada partida cria os seus próprios timers
+// e todos disparam PATCH/POST diretamente e ao mesmo tempo.
+// Com várias partidas ativas em simultâneo, os timers caem todos
+// nos mesmos instantes (15/90, 30/90, 45/90...) e disparam uma
+// rajada de requests ao mesmo tempo -> 429 "global rate limit".
+//
+// Solução:
+// 1) Todas as chamadas ao Discord passam por uma fila única e
+//    são enviadas uma de cada vez, com um intervalo mínimo entre
+//    elas (nunca em rajada).
+// 2) Se o Discord responder 429, respeita-se o "retry_after" e
+//    tenta-se novamente automaticamente (em vez de falhar e
+//    perder a atualização).
+// =============================================================
+
+const DISCORD_MIN_INTERVALO_MS = 300; // no máx. ~3 requests/seg
+const DISCORD_MAX_TENTATIVAS = 4;
+
+let filaDiscord = Promise.resolve();
+let ultimoEnvioDiscord = 0;
+
+function agendarNaFilaDiscord(tarefa) {
+
+  const execucao = filaDiscord.then(async () => {
+
+    const agora = Date.now();
+
+    const espera = Math.max(
+      0,
+      ultimoEnvioDiscord + DISCORD_MIN_INTERVALO_MS - agora
+    );
+
+    if (espera > 0) {
+      await new Promise(r => setTimeout(r, espera));
+    }
+
+    ultimoEnvioDiscord = Date.now();
+
+    return tarefa();
+  });
+
+  // Garante que a fila nunca "trava" por causa de um erro
+  filaDiscord = execucao.catch(() => {});
+
+  return execucao;
+}
+
+// =============================================================
 // DISCORD REQUEST
 // =============================================================
 
-async function discordWebhookRequest(
+async function discordWebhookRequestBruto(
   method,
   url,
-  body = null
+  body
 ) {
 
   const opcoes = {
@@ -516,18 +567,67 @@ async function discordWebhookRequest(
     dados = texto;
   }
 
-  if (!resposta.ok) {
+  return { resposta, dados };
+}
 
-    throw new Error(
-      `Discord ${resposta.status}: ${
-        typeof dados === "string"
-          ? dados
-          : JSON.stringify(dados)
-      }`
-    );
-  }
+async function discordWebhookRequest(
+  method,
+  url,
+  body = null,
+  tentativa = 0
+) {
 
-  return dados;
+  return agendarNaFilaDiscord(async () => {
+
+    const { resposta, dados } =
+      await discordWebhookRequestBruto(
+        method,
+        url,
+        body
+      );
+
+    // Rate limit -> espera o tempo indicado pelo Discord e tenta de novo
+    if (resposta.status === 429) {
+
+      const retryAfterSegundos =
+        (dados && typeof dados === "object" && dados.retry_after) ||
+        Number(resposta.headers.get("retry-after")) ||
+        1;
+
+      if (tentativa < DISCORD_MAX_TENTATIVAS) {
+
+        console.warn(
+          `⏳ 429 Discord (${method} ${url.split("?")[0]}), ` +
+          `nova tentativa em ${retryAfterSegundos}s ` +
+          `(tentativa ${tentativa + 1}/${DISCORD_MAX_TENTATIVAS})`
+        );
+
+        await new Promise(r =>
+          setTimeout(r, (retryAfterSegundos * 1000) + 150)
+        );
+
+        return discordWebhookRequest(
+          method,
+          url,
+          body,
+          tentativa + 1
+        );
+      }
+    }
+
+    if (!resposta.ok) {
+
+      throw new Error(
+        `Discord ${resposta.status}: ${
+          typeof dados === "string"
+            ? dados
+            : JSON.stringify(dados)
+        }`
+      );
+    }
+
+    return dados;
+  });
 }
 
 // =============================================================
@@ -541,44 +641,45 @@ function limparEmojisBot(texto) {
   let resultado =
     String(texto);
 
-  const substituicoes = {
+  // Nota: chaves de objeto não podem ser regex literais em JS —
+  // isso nunca teria corrido (erro de sintaxe). Trocado por Map,
+  // que é o que a iteração abaixo (regex.source/regex.flags)
+  // já pressupunha.
+  const substituicoes = new Map([
 
-    /<:dentro:1528835700890538154>/g: "⚽",
-    /<:fora:1528835701934653531>/g: "⚽",
-    /<:placar:1528835698151522354>/g: "🏟️",
-    /<:lances:1528835699225395272>/g: "📋",
+    [/<:dentro:1528835700890538154>/g, "⚽"],
+    [/<:fora:1528835701934653531>/g, "⚽"],
+    [/<:placar:1528835698151522354>/g, "🏟️"],
+    [/<:lances:1528835699225395272>/g, "📋"],
 
-    /<:moedas:1533225569414676490>/g: "🪙",
-    /<:gemas:1533225568353386578>/g: "💎",
+    [/<:moedas:1533225569414676490>/g, "🪙"],
+    [/<:gemas:1533225568353386578>/g, "💎"],
 
-    /<:bronze:1533266991601815757>/g: "📦",
-    /<:silver:1533266998643920926>/g: "📦",
-    /<:gold:1533266993711550544>/g: "📦",
-    /<:diamond:1533266992604119140>/g: "📦",
-    /<:legend:1533266994952933447>/g: "📦",
-    /<:secret:1533266997507264542>/g: "📦",
+    [/<:bronze:1533266991601815757>/g, "📦"],
+    [/<:silver:1533266998643920926>/g, "📦"],
+    [/<:gold:1533266993711550544>/g, "📦"],
+    [/<:diamond:1533266992604119140>/g, "📦"],
+    [/<:legend:1533266994952933447>/g, "📦"],
+    [/<:secret:1533266997507264542>/g, "📦"],
 
-    /<:dentro:\d+>/g: "⚽",
-    /<:fora:\d+>/g: "⚽",
-    /<:placar:\d+>/g: "🏟️",
-    /<:lances:\d+>/g: "📋",
-    /<:moedas:\d+>/g: "🪙",
-    /<:gemas:\d+>/g: "💎",
+    [/<:dentro:\d+>/g, "⚽"],
+    [/<:fora:\d+>/g, "⚽"],
+    [/<:placar:\d+>/g, "🏟️"],
+    [/<:lances:\d+>/g, "📋"],
+    [/<:moedas:\d+>/g, "🪙"],
+    [/<:gemas:\d+>/g, "💎"],
 
-    /<:(bronze|silver|gold|diamond|legend|secret):\d+>/g: "📦",
+    [/<:(bronze|silver|gold|diamond|legend|secret):\d+>/g, "📦"],
 
-    /<:es:\d+>/gi: "⚽",
-    /<:trophy:\d+>/gi: "🏆",
-    /<:taca:\d+>/gi: "🏆"
-  };
+    [/<:es:\d+>/gi, "⚽"],
+    [/<:trophy:\d+>/gi, "🏆"],
+    [/<:taca:\d+>/gi, "🏆"]
+  ]);
 
-  for (const [regex, substituicao] of Object.entries(substituicoes)) {
+  for (const [regex, substituicao] of substituicoes) {
     resultado =
       resultado.replace(
-        new RegExp(
-          regex.source,
-          regex.flags
-        ),
+        regex,
         substituicao
       );
   }
@@ -1328,24 +1429,29 @@ async function editarPartida(
 // 0 + 10 + 20 + 30 + 40 + 45 + 50 + 60...
 // + TODOS OS MINUTOS DOS LANCES
 //
-// AGORA:
-// 15 + 30 + 45 + 60 + 75 + 90
+// DEPOIS (1ª otimização):
+// 15 + 30 + 45 + 60 + 75 + 90 (6 PATCHs)
+//
+// AGORA (2ª otimização — menos rate limit):
+// 30 + 60 + 90 (3 PATCHs), com pequeno jitter aleatório
+// para as partidas em simultâneo não disparem no mesmo
+// milissegundo exato, e todas as chamadas ao Discord passam
+// pela fila global com retry automático em caso de 429.
 //
 // Resultado:
-// máximo de 6 PATCHs por partida.
+// máximo de 4 requests por partida (1 POST + 3 PATCH),
+// em vez de 7 antes — quase metade do tráfego para o Discord.
 //
 // =============================================================
 
 const MINUTOS_LIVE = [
-  15,
   30,
-  45,
   60,
-  75,
   90
 ];
 
 const DURACAO_PARTIDA = 60000;
+const JITTER_MAX_MS = 1200; // até 1.2s de variação por partida
 
 function iniciarTimers(
   tipo,
@@ -1356,6 +1462,14 @@ function iniciarTimers(
 
   const gameID =
     dados.gameID;
+
+  // Jitter fixo por partida: todos os PATCHs desta partida usam
+  // o mesmo deslocamento, mas partidas diferentes ficam
+  // espalhadas no tempo em vez de colidirem.
+  const jitterPartida =
+    Math.floor(
+      Math.random() * JITTER_MAX_MS
+    );
 
   const estado = {
     messageID,
@@ -1377,7 +1491,7 @@ function iniciarTimers(
       Math.round(
         (minuto / 90) *
         DURACAO_PARTIDA
-      );
+      ) + jitterPartida;
 
     const timer =
       setTimeout(
@@ -1478,7 +1592,7 @@ function iniciarTimers(
         `🧹 ${gameID} → removida da memória`
       );
 
-    }, DURACAO_PARTIDA + 15000);
+    }, DURACAO_PARTIDA + JITTER_MAX_MS + 15000);
 
   estado.timers.push(
     limpeza
@@ -2658,7 +2772,7 @@ app.listen(
     );
 
     console.log(
-      `⚡ Live: ${MINUTOS_LIVE.length} atualizações por partida`
+      `⚡ Live: ${MINUTOS_LIVE.length} atualizações por partida (fila global + retry ativos)`
     );
 
     if (LIGA_WEBHOOK_URL) {
