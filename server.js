@@ -484,7 +484,7 @@ async function discordWebhookRequest(
 }
 
 // =============================================================
-// CONVERSÃO DOS EMOJIS DO BDFD PARA UNICODE
+// CONVERSÃO DOS EMOJIS DO BOT
 // =============================================================
 
 function limparEmojisBot(texto) {
@@ -492,7 +492,10 @@ function limparEmojisBot(texto) {
 
   let resultado = String(texto);
 
-  // Emojis específicos do Eleven Squad
+  // -----------------------------------------------------------
+  // FUTEBOL / PARTIDA
+  // -----------------------------------------------------------
+
   resultado = resultado.replace(
     /<:dentro:1528835700890538154>/g,
     "⚽"
@@ -513,8 +516,59 @@ function limparEmojisBot(texto) {
     "📋"
   );
 
-  // Outros emojis customizados que eventualmente
-  // possam chegar através do BDFD
+  // -----------------------------------------------------------
+  // MOEDAS / GEMAS
+  // -----------------------------------------------------------
+
+  resultado = resultado.replace(
+    /<:moedas:1533225569414676490>/g,
+    "🪙"
+  );
+
+  resultado = resultado.replace(
+    /<:gemas:1533225568353386578>/g,
+    "💎"
+  );
+
+  // -----------------------------------------------------------
+  // CAIXAS
+  // Todas viram uma caixa Unicode padrão
+  // -----------------------------------------------------------
+
+  resultado = resultado.replace(
+    /<:bronze:1533266991601815757>/g,
+    "📦"
+  );
+
+  resultado = resultado.replace(
+    /<:silver:1533266998643920926>/g,
+    "📦"
+  );
+
+  resultado = resultado.replace(
+    /<:gold:1533266993711550544>/g,
+    "📦"
+  );
+
+  resultado = resultado.replace(
+    /<:diamond:1533266992604119140>/g,
+    "📦"
+  );
+
+  resultado = resultado.replace(
+    /<:legend:1533266994952933447>/g,
+    "📦"
+  );
+
+  resultado = resultado.replace(
+    /<:secret:1533266997507264542>/g,
+    "📦"
+  );
+
+  // -----------------------------------------------------------
+  // FALLBACKS GENÉRICOS
+  // -----------------------------------------------------------
+
   resultado = resultado.replace(
     /<:dentro:\d+>/g,
     "⚽"
@@ -535,7 +589,44 @@ function limparEmojisBot(texto) {
     "📋"
   );
 
-  // Remove restos de markdown específico do BDFD
+  resultado = resultado.replace(
+    /<:moedas:\d+>/g,
+    "🪙"
+  );
+
+  resultado = resultado.replace(
+    /<:gemas:\d+>/g,
+    "💎"
+  );
+
+  resultado = resultado.replace(
+    /<:(bronze|silver|gold|diamond|legend|secret):\d+>/g,
+    "📦"
+  );
+
+  // -----------------------------------------------------------
+  // OUTROS EMOJIS CUSTOMIZADOS CONHECIDOS
+  // -----------------------------------------------------------
+
+  resultado = resultado.replace(
+    /<:es:\d+>/g,
+    "⚽"
+  );
+
+  resultado = resultado.replace(
+    /<:trophy:\d+>/gi,
+    "🏆"
+  );
+
+  resultado = resultado.replace(
+    /<:taca:\d+>/gi,
+    "🏆"
+  );
+
+  // -----------------------------------------------------------
+  // REMOVE POSSÍVEIS EXPRESSÕES BDFD QUE ESCAPARAM
+  // -----------------------------------------------------------
+
   resultado = resultado.replace(
     /\$if\[.*?\]/g,
     ""
@@ -701,7 +792,7 @@ function limitarTexto(
   return (
     valor.slice(
       0,
-      limite - 3
+      Math.max(0, limite - 3)
     ) +
     "..."
   );
@@ -775,17 +866,13 @@ function limparResultado(campoResultado) {
       campoResultado
     );
 
-  // Mantemos negrito, listas, etc.
-  // Removemos apenas o "###" porque o visual
-  // do embed fica melhor sem depender de heading.
+  // Converte headings BDFD para negrito visual
   resultado =
     resultado.replace(
       /^###\s*/gm,
       "**"
     );
 
-  // Fecha o negrito quando transformamos
-  // uma linha do tipo "### texto"
   const linhas =
     resultado.split("\n");
 
@@ -1141,7 +1228,7 @@ function iniciarTimersLiga(
   const gameID =
     dados.gameID;
 
-  // 60 segundos reais para representar 90 minutos
+  // 60 segundos reais = 90 minutos de partida
   const duracao =
     60000;
 
