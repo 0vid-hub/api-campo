@@ -1313,6 +1313,205 @@ function criarEmbedPartida(
 }
 
 // =============================================================
+// CRONOGRAMA "AO VIVO" COM TIMESTAMPS NATIVOS DO DISCORD
+// =============================================================
+//
+// Truque: o Discord atualiza sozinho, no cliente de cada pessoa,
+// qualquer <t:UNIX:R> — sem nós precisarmos editar a mensagem.
+// Em vez de fazer vários PATCH ao longo da partida só para mudar
+// o texto "faltam X minutos", mandamos logo o horário exato de
+// cada lance (convertido do minuto de jogo para o instante real,
+// usando a mesma proporção de DURACAO_PARTIDA) e deixamos o
+// Discord fazer a contagem regressiva sozinho.
+//
+// Resultado: 1 POST (mostra o cronograma completo, já "ticando"
+// ao vivo) + 1 PATCH no final (revela o placar/resultado) =
+// apenas 2 requisições por partida, mantendo a expectativa do
+// resultado até o apito final.
+// =============================================================
+
+function construirCronogramaComTimestamps(
+  eventos,
+  agoraMs,
+  duracaoPartidaMs
+) {
+
+  if (!eventos || !eventos.length) {
+    return null;
+  }
+
+  const linhas = eventos.map(evento => {
+
+    const atrasoMs =
+      Math.round(
+        (evento.minuto / 90) *
+        duracaoPartidaMs
+      );
+
+    const timestampSegundos =
+      Math.floor(
+        (agoraMs + atrasoMs) / 1000
+      );
+
+    return `<t:${timestampSegundos}:R> — ${evento.texto}`;
+  });
+
+  return limitarTexto(
+    linhas.join("\n"),
+    1024
+  );
+}
+
+function criarEmbedLigaAoVivo(dados) {
+
+  const {
+    nomeClube,
+    rivalNome,
+    gerTime,
+    gerBot,
+    divisao,
+    tempo,
+    estadio,
+    eventos
+  } = dados;
+
+  const agoraMs = Date.now();
+
+  const tsIntervalo =
+    Math.floor(
+      (agoraMs + DURACAO_PARTIDA / 2) / 1000
+    );
+
+  const tsFinal =
+    Math.floor(
+      (agoraMs + DURACAO_PARTIDA) / 1000
+    );
+
+  const cronograma =
+    construirCronogramaComTimestamps(
+      eventos,
+      agoraMs,
+      DURACAO_PARTIDA
+    );
+
+  const embed = {
+
+    title:
+      `🏆 ES League — Divisão ${divisao}`,
+
+    color: 5793266,
+
+    description:
+      `🟢 **APITO INICIAL**\n\n` +
+      `🏟️ ⚽ **${nomeClube} x ${rivalNome}**\n\n` +
+      `⚔️ **GER:** Seu Time (\`${gerTime}\`) vs Adversário (\`${gerBot}\`)\n\n` +
+      `🌤️ **Clima:** \`${tempo}\`\n` +
+      `🏟️ **Estádio:** \`${estadio}\`\n\n` +
+      `⏸️ Intervalo <t:${tsIntervalo}:R>\n` +
+      `🏁 Fim de jogo <t:${tsFinal}:R> — resultado revelado aqui`,
+
+    fields: [
+      {
+        name: "📋 Cronograma da Partida",
+        value:
+          cronograma ||
+          "Nenhum lance registado — acompanhe o relógio acima até o apito final!",
+        inline: false
+      }
+    ],
+
+    footer: {
+      text:
+        "ES League • Partida ao vivo — o resultado aparece nesta mesma mensagem no fim"
+    },
+
+    image: {
+      url:
+        "https://i.ibb.co/993xTqVb/ligaa.png"
+    },
+
+    timestamp:
+      new Date().toISOString()
+  };
+
+  return validarEmbed(embed);
+}
+
+function criarEmbedPartidaAoVivo(dados) {
+
+  const {
+    nomeClubeC,
+    nomeClubeF,
+    gerC,
+    gerF,
+    tempo,
+    estadio,
+    eventos
+  } = dados;
+
+  const agoraMs = Date.now();
+
+  const tsIntervalo =
+    Math.floor(
+      (agoraMs + DURACAO_PARTIDA / 2) / 1000
+    );
+
+  const tsFinal =
+    Math.floor(
+      (agoraMs + DURACAO_PARTIDA) / 1000
+    );
+
+  const cronograma =
+    construirCronogramaComTimestamps(
+      eventos,
+      agoraMs,
+      DURACAO_PARTIDA
+    );
+
+  const embed = {
+
+    title:
+      `⚔️ Partida — ${nomeClubeC} x ${nomeClubeF}`,
+
+    color: 5793266,
+
+    description:
+      `🟢 **APITO INICIAL**\n\n` +
+      `🏟️ ⚽ **${nomeClubeC} x ${nomeClubeF}**\n\n` +
+      `⚔️ **GER:** ${nomeClubeC} (\`${gerC}\`) vs ${nomeClubeF} (\`${gerF}\`)\n\n` +
+      `🌤️ **Clima:** \`${tempo}\`\n` +
+      `🏟️ **Estádio:** \`${estadio}\`\n\n` +
+      `⏸️ Intervalo <t:${tsIntervalo}:R>\n` +
+      `🏁 Fim de jogo <t:${tsFinal}:R> — resultado revelado aqui`,
+
+    fields: [
+      {
+        name: "📋 Cronograma da Partida",
+        value:
+          cronograma ||
+          "Nenhum lance registado — acompanhe o relógio acima até o apito final!",
+        inline: false
+      }
+    ],
+
+    footer: {
+      text:
+        "Partida • Ao vivo — o resultado aparece nesta mesma mensagem no fim"
+    },
+
+    image: {
+      url:
+        "https://i.ibb.co/zWhWZVy4/partida2.png"
+    },
+
+    timestamp:
+      new Date().toISOString()
+  };
+
+  return validarEmbed(embed);
+}
+
+// =============================================================
 // CRIAR MENSAGEM
 // =============================================================
 
@@ -1345,9 +1544,8 @@ async function enviarLigaInicial(
           "https://i.ibb.co/jv90cK31/ESLeague.png",
 
         embeds: [
-          criarEmbedLiga(
-            dados,
-            0
+          criarEmbedLigaAoVivo(
+            dados
           )
         ],
 
@@ -1405,9 +1603,8 @@ async function enviarPartidaInicial(
           dados.mencoes || "",
 
         embeds: [
-          criarEmbedPartida(
-            dados,
-            0
+          criarEmbedPartidaAoVivo(
+            dados
           )
         ],
 
@@ -1511,21 +1708,23 @@ async function editarPartida(
 // DEPOIS (1ª otimização):
 // 15 + 30 + 45 + 60 + 75 + 90 (6 PATCHs)
 //
-// AGORA (2ª otimização — menos rate limit):
-// 30 + 60 + 90 (3 PATCHs), com pequeno jitter aleatório
-// para as partidas em simultâneo não disparem no mesmo
-// milissegundo exato, e todas as chamadas ao Discord passam
-// pela fila global com retry automático em caso de 429.
+// DEPOIS (2ª otimização — menos rate limit):
+// 30 + 60 + 90 (3 PATCHs), com jitter para não colidir
+// entre partidas simultâneas.
 //
-// Resultado:
-// máximo de 4 requests por partida (1 POST + 3 PATCH),
-// em vez de 7 antes — quase metade do tráfego para o Discord.
+// AGORA (3ª otimização — quase 1 request por jogo):
+// a mensagem inicial já mostra o cronograma completo dos
+// lances com timestamps nativos do Discord (<t:...:R>), que o
+// PRÓPRIO CLIENTE DO DISCORD atualiza sozinho, ao vivo, sem
+// nenhum request nosso. Só falta 1 PATCH no fim da partida
+// para revelar o placar/estatísticas/recompensas.
+//
+// Resultado: 2 requests por partida (1 POST + 1 PATCH),
+// mantendo a sensação de "ao vivo" o tempo todo.
 //
 // =============================================================
 
 const MINUTOS_LIVE = [
-  30,
-  60,
   90
 ];
 
