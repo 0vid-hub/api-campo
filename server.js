@@ -6,8 +6,24 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ============================================================
+// CONFIG
+// ============================================================
+
+const API_KEY = process.env.API_KEY || "ESLIGA_2026_MOTOR_8xK29pQ7";
+
+const MAX_PARTIDAS = 1000;
+const TEMPO_EXPIRACAO_PARTIDA = 6 * 60 * 60 * 1000;
+
+// ============================================================
+// MIDDLEWARE
+// ============================================================
+
 app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(express.urlencoded({
+  extended: true,
+  limit: "1mb"
+}));
 
 // ============================================================
 // PASTAS
@@ -18,6 +34,12 @@ const CAMPOS = path.join(__dirname, "campos");
 
 app.use("/cartas", express.static(CARTAS));
 app.use("/campos", express.static(CAMPOS));
+
+// ============================================================
+// PARTIDAS AO VIVO
+// ============================================================
+
+const partidas = new Map();
 
 // ============================================================
 // CAMPOS
@@ -286,7 +308,9 @@ function encontrarJogador(termo = "") {
     return busca.get(q);
   }
 
-  const semOverall = q.replace(/\s+\d+$/, "").trim();
+  const semOverall = q
+    .replace(/\s+\d+$/, "")
+    .trim();
 
   if (busca.has(semOverall)) {
     return busca.get(semOverall);
@@ -322,10 +346,13 @@ async function imagem(file, pasta) {
 
   try {
     const img = await loadImage(full);
+
     imageCache.set(key, img);
+
     return img;
   } catch (e) {
     console.error("Erro imagem:", e.message);
+
     return null;
   }
 }
@@ -334,7 +361,9 @@ function urls(req, jogador) {
   const base = `${req.protocol}://${req.get("host")}`;
 
   return {
-    imagem: `${base}/render-carta?q=${encodeURIComponent(jogador.chave)}`,
+    imagem:
+      `${base}/render-carta?q=${encodeURIComponent(jogador.chave)}`,
+
     imagemOriginal:
       `${base}/cartas/${encodeURIComponent(jogador.imgOriginal)}`
   };
@@ -348,11 +377,52 @@ function jogadorJSON(req, jogador, original = true) {
     nome: jogador.chave,
     overall: jogador.overall,
     imagem: u.imagem,
-    ...(original ? { imagemOriginal: u.imagemOriginal } : {}),
+    ...(original
+      ? { imagemOriginal: u.imagemOriginal }
+      : {}),
     posicao: jogador.posicao,
     preco: jogador.preco
   };
 }
+
+// ============================================================
+// AUTENTICAÇÃO DA API
+// ============================================================
+
+function verificarAPI(req, res, next) {
+  const key =
+    req.body?.apiKey ||
+    req.query?.apiKey ||
+    req.headers["x-api-key"];
+
+  if (key !== API_KEY) {
+    return res.status(401).json({
+      sucesso: false,
+      erro: "api_key_invalida"
+    });
+  }
+
+  next();
+}
+
+// ============================================================
+// LIMPEZA DE PARTIDAS
+// ============================================================
+
+function limparPartidas() {
+  const agora = Date.now();
+
+  for (const [gameID, partida] of partidas) {
+    if (
+      agora - partida.atualizadoEm >
+      TEMPO_EXPIRACAO_PARTIDA
+    ) {
+      partidas.delete(gameID);
+    }
+  }
+}
+
+setInterval(limparPartidas, 60 * 1000);
 
 // ============================================================
 // GERADOR DO CAMPO
@@ -369,19 +439,35 @@ async function gerarCampo(req, res) {
       req.query.bg ||
       req.query.fundo ||
       "padrao"
-    ).toLowerCase().trim();
+    )
+      .toLowerCase()
+      .trim();
 
     const nomeFundo =
       CAMPOS_MAP[fundo] ||
       CAMPOS_MAP.padrao;
 
-    const bg = await imagem(nomeFundo, CAMPOS);
+    const bg = await imagem(
+      nomeFundo,
+      CAMPOS
+    );
 
     if (bg) {
-      ctx.drawImage(bg, 0, 0, 800, 800);
+      ctx.drawImage(
+        bg,
+        0,
+        0,
+        800,
+        800
+      );
     } else {
       ctx.fillStyle = "#12141d";
-      ctx.fillRect(0, 0, 800, 800);
+      ctx.fillRect(
+        0,
+        0,
+        800,
+        800
+      );
     }
 
     const W = 120;
@@ -406,13 +492,19 @@ async function gerarCampo(req, res) {
     for (const [pos, [x, y]] of Object.entries(POS)) {
       const termo = req.query[pos];
 
-      if (!termo || termo === "vazio") continue;
+      if (!termo || termo === "vazio") {
+        continue;
+      }
 
-      const chave = encontrarJogador(termo);
+      const chave =
+        encontrarJogador(termo);
 
-      if (!chave || !BANCO[chave]) continue;
+      if (!chave || !BANCO[chave]) {
+        continue;
+      }
 
-      const img = BANCO[chave][0];
+      const img =
+        BANCO[chave][0];
 
       tarefas.push(
         imagem(img, CARTAS).then(card => ({
@@ -423,9 +515,14 @@ async function gerarCampo(req, res) {
       );
     }
 
-    const cartas = await Promise.all(tarefas);
+    const cartas =
+      await Promise.all(tarefas);
 
-    for (const { card, x, y } of cartas) {
+    for (const {
+      card,
+      x,
+      y
+    } of cartas) {
       if (!card) continue;
 
       ctx.drawImage(
@@ -437,20 +534,31 @@ async function gerarCampo(req, res) {
       );
     }
 
-    res.setHeader("Content-Type", "image/png");
+    res.setHeader(
+      "Content-Type",
+      "image/png"
+    );
+
     res.setHeader(
       "Cache-Control",
       "public, max-age=86400"
     );
 
-    return res.send(canvas.toBuffer("image/png"));
+    return res.send(
+      canvas.toBuffer("image/png")
+    );
 
   } catch (e) {
-    console.error("Erro campo:", e);
+    console.error(
+      "Erro campo:",
+      e
+    );
 
     return res
       .status(500)
-      .send("Erro ao gerar campo.");
+      .send(
+        "Erro ao gerar campo."
+      );
   }
 }
 
@@ -458,268 +566,966 @@ async function gerarCampo(req, res) {
 // /GERAR-CAMPO
 // ============================================================
 
-app.get("/gerar-campo", gerarCampo);
+app.get(
+  "/gerar-campo",
+  gerarCampo
+);
 
 // ============================================================
 // /PARTIDA
-// Mesmo gerador, para o sistema de partidas
 // ============================================================
 
-app.get("/partida", gerarCampo);
+app.get(
+  "/partida",
+  gerarCampo
+);
 
 // ============================================================
 // /RENDER-CARTA
 // ============================================================
 
-app.get("/render-carta", async (req, res) => {
-  try {
-    const chave = encontrarJogador(req.query.q);
+app.get(
+  "/render-carta",
+  async (req, res) => {
+    try {
+      const chave =
+        encontrarJogador(
+          req.query.q
+        );
 
-    if (!chave || !BANCO[chave]) {
-      return res
-        .status(404)
-        .send("Carta não encontrada");
-    }
+      if (
+        !chave ||
+        !BANCO[chave]
+      ) {
+        return res
+          .status(404)
+          .send(
+            "Carta não encontrada"
+          );
+      }
 
-    if (cardCache.has(chave)) {
-      res.setHeader("Content-Type", "image/png");
+      if (
+        cardCache.has(chave)
+      ) {
+        res.setHeader(
+          "Content-Type",
+          "image/png"
+        );
+
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=86400"
+        );
+
+        return res.send(
+          cardCache.get(chave)
+        );
+      }
+
+      const img =
+        await imagem(
+          BANCO[chave][0],
+          CARTAS
+        );
+
+      if (!img) {
+        return res
+          .status(500)
+          .send(
+            "Erro ao carregar carta."
+          );
+      }
+
+      const canvas =
+        createCanvas(
+          img.width,
+          img.height
+        );
+
+      canvas
+        .getContext("2d")
+        .drawImage(
+          img,
+          0,
+          0
+        );
+
+      const buffer =
+        canvas.toBuffer(
+          "image/png"
+        );
+
+      cardCache.set(
+        chave,
+        buffer
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "image/png"
+      );
+
       res.setHeader(
         "Cache-Control",
         "public, max-age=86400"
       );
 
-      return res.send(cardCache.get(chave));
-    }
+      return res.send(
+        buffer
+      );
 
-    const img = await imagem(
-      BANCO[chave][0],
-      CARTAS
-    );
+    } catch (e) {
+      console.error(
+        "Erro render-carta:",
+        e
+      );
 
-    if (!img) {
       return res
         .status(500)
-        .send("Erro ao carregar carta.");
+        .send(
+          "Erro ao renderizar carta."
+        );
     }
-
-    const canvas = createCanvas(
-      img.width,
-      img.height
-    );
-
-    canvas
-      .getContext("2d")
-      .drawImage(img, 0, 0);
-
-    const buffer = canvas.toBuffer("image/png");
-
-    cardCache.set(chave, buffer);
-
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader(
-      "Cache-Control",
-      "public, max-age=86400"
-    );
-
-    return res.send(buffer);
-
-  } catch (e) {
-    console.error("Erro render-carta:", e);
-
-    return res
-      .status(500)
-      .send("Erro ao renderizar carta.");
   }
-});
+);
 
 // ============================================================
 // /BUSCAR-JOGADOR
 // ============================================================
 
-app.get("/buscar-jogador", (req, res) => {
-  try {
-    const chave = encontrarJogador(req.query.q);
+app.get(
+  "/buscar-jogador",
+  (req, res) => {
+    try {
+      const chave =
+        encontrarJogador(
+          req.query.q
+        );
 
-    const base =
-      `${req.protocol}://${req.get("host")}`;
+      const base =
+        `${req.protocol}://${req.get("host")}`;
 
-    if (!chave) {
+      if (!chave) {
+        return res.json({
+          sucesso: false,
+          erro: "nao_encontrado",
+          imagem:
+            `${base}/cartas/desconhecido.png`,
+          posicao: "desconhecida",
+          overall: 60
+        });
+      }
+
+      const jogador =
+        jogadores.find(
+          j => j.chave === chave
+        );
+
+      if (!jogador) {
+        return res.json({
+          sucesso: false,
+          erro: "nao_encontrado"
+        });
+      }
+
+      return res.json(
+        jogadorJSON(
+          req,
+          jogador
+        )
+      );
+
+    } catch (e) {
+      console.error(
+        "buscar-jogador:",
+        e
+      );
+
       return res.json({
         sucesso: false,
-        erro: "nao_encontrado",
-        imagem: `${base}/cartas/desconhecido.png`,
-        posicao: "desconhecida",
-        overall: 60
+        erro: "erro_interno"
       });
     }
-
-    const jogador =
-      jogadores.find(j => j.chave === chave);
-
-    if (!jogador) {
-      return res.json({
-        sucesso: false,
-        erro: "nao_encontrado"
-      });
-    }
-
-    return res.json(
-      jogadorJSON(req, jogador)
-    );
-
-  } catch (e) {
-    console.error("buscar-jogador:", e);
-
-    return res.json({
-      sucesso: false,
-      erro: "erro_interno"
-    });
   }
-});
+);
 
 // ============================================================
 // /OBTER-ALEATORIO
 // ============================================================
 
-app.get("/obter-aleatorio", (req, res) => {
-  try {
-    let n = Math.random() * pesoTotal;
-    let escolhido = jogadores[0];
+app.get(
+  "/obter-aleatorio",
+  (req, res) => {
+    try {
+      let n =
+        Math.random() *
+        pesoTotal;
 
-    for (const jogador of jogadores) {
-      if (n < jogador.peso) {
-        escolhido = jogador;
-        break;
+      let escolhido =
+        jogadores[0];
+
+      for (
+        const jogador
+        of jogadores
+      ) {
+        if (
+          n <
+          jogador.peso
+        ) {
+          escolhido =
+            jogador;
+
+          break;
+        }
+
+        n -= jogador.peso;
       }
 
-      n -= jogador.peso;
+      return res.json(
+        jogadorJSON(
+          req,
+          escolhido,
+          false
+        )
+      );
+
+    } catch (e) {
+      console.error(
+        "aleatorio:",
+        e
+      );
+
+      return res.json({
+        sucesso: false,
+        erro: "erro_interno"
+      });
     }
-
-    return res.json(
-      jogadorJSON(req, escolhido, false)
-    );
-
-  } catch (e) {
-    console.error("aleatorio:", e);
-
-    return res.json({
-      sucesso: false,
-      erro: "erro_interno"
-    });
   }
-});
+);
 
 // ============================================================
 // /LISTAR-MERCADO
 // ============================================================
 
-app.get("/listar-mercado", (req, res) => {
-  try {
-    const faixas = {
-      "9999": [99, 99],
-      "9598": [95, 98],
-      "9094": [90, 94],
-      "8589": [85, 89],
-      "8084": [80, 84],
-      "7579": [75, 79],
-      "7074": [70, 74],
-      "6569": [65, 69],
-      "6064": [60, 64]
-    };
+app.get(
+  "/listar-mercado",
+  (req, res) => {
+    try {
+      const faixas = {
+        "9999": [99, 99],
+        "9598": [95, 98],
+        "9094": [90, 94],
+        "8589": [85, 89],
+        "8084": [80, 84],
+        "7579": [75, 79],
+        "7074": [70, 74],
+        "6569": [65, 69],
+        "6064": [60, 64]
+      };
 
-    const [min, max] =
-      faixas[req.query.faixa] || [0, 99];
+      const [
+        min,
+        max
+      ] =
+        faixas[
+          req.query.faixa
+        ] || [0, 99];
 
-    const lista = jogadores
-      .filter(j =>
-        j.overall >= min &&
-        j.overall <= max
-      )
-      .sort((a, b) =>
-        b.overall - a.overall
+      const lista =
+        jogadores
+          .filter(j =>
+            j.overall >= min &&
+            j.overall <= max
+          )
+          .sort(
+            (a, b) =>
+              b.overall -
+              a.overall
+          );
+
+      if (!lista.length) {
+        return res.json({
+          total:
+            jogadores.length,
+
+          texto:
+            "*(Ainda não há jogadores disponíveis nesta faixa.)*"
+        });
+      }
+
+      const linhas = [];
+
+      for (
+        let i = 0;
+        i < lista.length;
+        i += 2
+      ) {
+        const a =
+          lista[i];
+
+        const b =
+          lista[i + 1];
+
+        const formatar =
+          j => {
+            let nome =
+              j.nomeFormatado;
+
+            if (
+              nome.length >
+              13
+            ) {
+              nome =
+                nome.slice(
+                  0,
+                  11
+                ) + "..";
+            }
+
+            return `[${j.overall} ${j.posicaoUpper}] ${nome}`;
+          };
+
+        const c1 =
+          formatar(a)
+            .padEnd(
+              24,
+              " "
+            );
+
+        linhas.push(
+          b
+            ? c1 +
+              formatar(b)
+            : c1
+        );
+      }
+
+      return res.json({
+        total:
+          jogadores.length,
+
+        texto:
+          "```ansi\n" +
+          linhas.join("\n") +
+          "\n```"
+      });
+
+    } catch (e) {
+      console.error(
+        "listar-mercado:",
+        e
       );
 
-    if (!lista.length) {
       return res.json({
-        total: jogadores.length,
+        total: 0,
         texto:
-          "*(Ainda não há jogadores disponíveis nesta faixa.)*"
+          "Erro ao carregar a lista de jogadores."
+      });
+    }
+  }
+);
+
+// ============================================================
+// ============================================================
+// PARTIDA LIVE
+// ============================================================
+// ============================================================
+
+// ============================================================
+// POST /PARTIDA-LIVE
+// CRIA UMA PARTIDA
+// ============================================================
+
+app.post(
+  "/partida-live",
+  verificarAPI,
+  (req, res) => {
+    try {
+      limparPartidas();
+
+      const {
+        gameID,
+        nomeClubeC,
+        nomeClubeF,
+        idC,
+        idF,
+        gerC,
+        gerF,
+        golsC,
+        golsF,
+        tempo,
+        estadio,
+        lances,
+        campoResultado
+      } = req.body;
+
+      if (!gameID) {
+        return res.status(400).json({
+          sucesso: false,
+          erro: "gameID_obrigatorio"
+        });
+      }
+
+      if (
+        partidas.has(
+          String(gameID)
+        )
+      ) {
+        return res.status(409).json({
+          sucesso: false,
+          erro: "partida_ja_existe"
+        });
+      }
+
+      if (
+        partidas.size >=
+        MAX_PARTIDAS
+      ) {
+        limparPartidas();
+
+        if (
+          partidas.size >=
+          MAX_PARTIDAS
+        ) {
+          return res.status(503).json({
+            sucesso: false,
+            erro: "limite_de_partidas"
+          });
+        }
+      }
+
+      const agora =
+        Date.now();
+
+      const partida = {
+        gameID: String(gameID),
+
+        status: "ao_vivo",
+
+        criadoEm: agora,
+        atualizadoEm: agora,
+
+        casa: {
+          id: idC || "",
+          nome: nomeClubeC || "Casa",
+          ger: Number(gerC) || 0,
+          gols: Number(golsC) || 0
+        },
+
+        fora: {
+          id: idF || "",
+          nome: nomeClubeF || "Fora",
+          ger: Number(gerF) || 0,
+          gols: Number(golsF) || 0
+        },
+
+        tempo: tempo || "",
+        estadio: estadio || "Estádio Padrão",
+        lances: lances || "",
+        campoResultado:
+          campoResultado || ""
+      };
+
+      partidas.set(
+        String(gameID),
+        partida
+      );
+
+      console.log(
+        `🏟️ PARTIDA LIVE CRIADA: ${gameID}`
+      );
+
+      console.log(
+        `⚽ ${partida.casa.nome} ${partida.casa.gols} - ${partida.fora.gols} ${partida.fora.nome}`
+      );
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem:
+          "Partida iniciada com sucesso.",
+        gameID:
+          partida.gameID,
+        partida
+      });
+
+    } catch (e) {
+      console.error(
+        "partida-live:",
+        e
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        erro: "erro_interno"
+      });
+    }
+  }
+);
+
+// ============================================================
+// GET /PARTIDA-LIVE/:GAMEID
+// CONSULTA UMA PARTIDA
+// ============================================================
+
+app.get(
+  "/partida-live/:gameID",
+  (req, res) => {
+    limparPartidas();
+
+    const gameID =
+      String(
+        req.params.gameID
+      );
+
+    const partida =
+      partidas.get(
+        gameID
+      );
+
+    if (!partida) {
+      return res.status(404).json({
+        sucesso: false,
+        erro:
+          "partida_nao_encontrada"
       });
     }
 
-    const linhas = [];
-
-    for (let i = 0; i < lista.length; i += 2) {
-      const a = lista[i];
-      const b = lista[i + 1];
-
-      const formatar = j => {
-        let nome = j.nomeFormatado;
-
-        if (nome.length > 13) {
-          nome = nome.slice(0, 11) + "..";
-        }
-
-        return `[${j.overall} ${j.posicaoUpper}] ${nome}`;
-      };
-
-      const c1 =
-        formatar(a).padEnd(24, " ");
-
-      linhas.push(
-        b
-          ? c1 + formatar(b)
-          : c1
-      );
-    }
-
     return res.json({
-      total: jogadores.length,
-      texto:
-        "```ansi\n" +
-        linhas.join("\n") +
-        "\n```"
-    });
-
-  } catch (e) {
-    console.error("listar-mercado:", e);
-
-    return res.json({
-      total: 0,
-      texto:
-        "Erro ao carregar a lista de jogadores."
+      sucesso: true,
+      partida
     });
   }
-});
+);
+
+// ============================================================
+// PATCH /PARTIDA-LIVE/:GAMEID
+// ATUALIZA UMA PARTIDA
+// ============================================================
+
+app.patch(
+  "/partida-live/:gameID",
+  verificarAPI,
+  (req, res) => {
+    try {
+      const gameID =
+        String(
+          req.params.gameID
+        );
+
+      const partida =
+        partidas.get(
+          gameID
+        );
+
+      if (!partida) {
+        return res.status(404).json({
+          sucesso: false,
+          erro:
+            "partida_nao_encontrada"
+        });
+      }
+
+      const body =
+        req.body;
+
+      // --------------------------------------------------------
+      // CASA
+      // --------------------------------------------------------
+
+      if (
+        body.nomeClubeC !== undefined
+      ) {
+        partida.casa.nome =
+          String(
+            body.nomeClubeC
+          );
+      }
+
+      if (
+        body.idC !== undefined
+      ) {
+        partida.casa.id =
+          String(
+            body.idC
+          );
+      }
+
+      if (
+        body.gerC !== undefined
+      ) {
+        partida.casa.ger =
+          Number(
+            body.gerC
+          ) || 0;
+      }
+
+      if (
+        body.golsC !== undefined
+      ) {
+        partida.casa.gols =
+          Number(
+            body.golsC
+          ) || 0;
+      }
+
+      // --------------------------------------------------------
+      // FORA
+      // --------------------------------------------------------
+
+      if (
+        body.nomeClubeF !== undefined
+      ) {
+        partida.fora.nome =
+          String(
+            body.nomeClubeF
+          );
+      }
+
+      if (
+        body.idF !== undefined
+      ) {
+        partida.fora.id =
+          String(
+            body.idF
+          );
+      }
+
+      if (
+        body.gerF !== undefined
+      ) {
+        partida.fora.ger =
+          Number(
+            body.gerF
+          ) || 0;
+      }
+
+      if (
+        body.golsF !== undefined
+      ) {
+        partida.fora.gols =
+          Number(
+            body.golsF
+          ) || 0;
+      }
+
+      // --------------------------------------------------------
+      // GERAL
+      // --------------------------------------------------------
+
+      if (
+        body.tempo !== undefined
+      ) {
+        partida.tempo =
+          String(
+            body.tempo
+          );
+      }
+
+      if (
+        body.estadio !== undefined
+      ) {
+        partida.estadio =
+          String(
+            body.estadio
+          );
+      }
+
+      if (
+        body.lances !== undefined
+      ) {
+        partida.lances =
+          String(
+            body.lances
+          );
+      }
+
+      if (
+        body.campoResultado !== undefined
+      ) {
+        partida.campoResultado =
+          String(
+            body.campoResultado
+          );
+      }
+
+      if (
+        body.status !== undefined
+      ) {
+        const status =
+          String(
+            body.status
+          );
+
+        const permitidos = [
+          "ao_vivo",
+          "finalizada",
+          "cancelada"
+        ];
+
+        if (
+          permitidos.includes(
+            status
+          )
+        ) {
+          partida.status =
+            status;
+        }
+      }
+
+      partida.atualizadoEm =
+        Date.now();
+
+      partidas.set(
+        gameID,
+        partida
+      );
+
+      console.log(
+        `🔄 PARTIDA ATUALIZADA: ${gameID}`
+      );
+
+      return res.json({
+        sucesso: true,
+        mensagem:
+          "Partida atualizada.",
+        partida
+      });
+
+    } catch (e) {
+      console.error(
+        "atualizar partida:",
+        e
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        erro: "erro_interno"
+      });
+    }
+  }
+);
+
+// ============================================================
+// DELETE /PARTIDA-LIVE/:GAMEID
+// REMOVE UMA PARTIDA
+// ============================================================
+
+app.delete(
+  "/partida-live/:gameID",
+  verificarAPI,
+  (req, res) => {
+    const gameID =
+      String(
+        req.params.gameID
+      );
+
+    if (
+      !partidas.has(
+        gameID
+      )
+    ) {
+      return res.status(404).json({
+        sucesso: false,
+        erro:
+          "partida_nao_encontrada"
+      });
+    }
+
+    partidas.delete(
+      gameID
+    );
+
+    console.log(
+      `🗑️ PARTIDA REMOVIDA: ${gameID}`
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem:
+        "Partida removida.",
+      gameID
+    });
+  }
+);
+
+// ============================================================
+// GET /PARTIDAS-LIVE
+// LISTA TODAS AS PARTIDAS
+// ============================================================
+
+app.get(
+  "/partidas-live",
+  (req, res) => {
+    limparPartidas();
+
+    const lista =
+      Array.from(
+        partidas.values()
+      );
+
+    return res.json({
+      sucesso: true,
+      total: lista.length,
+      partidas: lista
+    });
+  }
+);
+
+// ============================================================
+// FINALIZAR PARTIDA
+// ============================================================
+
+app.post(
+  "/partida-live/:gameID/finalizar",
+  verificarAPI,
+  (req, res) => {
+    const gameID =
+      String(
+        req.params.gameID
+      );
+
+    const partida =
+      partidas.get(
+        gameID
+      );
+
+    if (!partida) {
+      return res.status(404).json({
+        sucesso: false,
+        erro:
+          "partida_nao_encontrada"
+      });
+    }
+
+    partida.status =
+      "finalizada";
+
+    partida.atualizadoEm =
+      Date.now();
+
+    partidas.set(
+      gameID,
+      partida
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem:
+        "Partida finalizada.",
+      partida
+    });
+  }
+);
+
+// ============================================================
+// CANCELAR PARTIDA
+// ============================================================
+
+app.post(
+  "/partida-live/:gameID/cancelar",
+  verificarAPI,
+  (req, res) => {
+    const gameID =
+      String(
+        req.params.gameID
+      );
+
+    const partida =
+      partidas.get(
+        gameID
+      );
+
+    if (!partida) {
+      return res.status(404).json({
+        sucesso: false,
+        erro:
+          "partida_nao_encontrada"
+      });
+    }
+
+    partida.status =
+      "cancelada";
+
+    partida.atualizadoEm =
+      Date.now();
+
+    partidas.set(
+      gameID,
+      partida
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem:
+        "Partida cancelada.",
+      partida
+    });
+  }
+);
 
 // ============================================================
 // API INFO
 // ============================================================
 
-app.get("/", (req, res) => {
-  res.json({
-    sucesso: true,
-    nome: "Eleven Squad API",
-    status: "online",
-    jogadores: jogadores.length,
-    endpoints: [
-      "/gerar-campo",
-      "/partida",
-      "/render-carta",
-      "/buscar-jogador",
-      "/obter-aleatorio",
-      "/listar-mercado"
-    ]
-  });
-});
+app.get(
+  "/",
+  (req, res) => {
+    limparPartidas();
 
-app.get("/api", (req, res) => {
-  res.json({
-    sucesso: true,
-    status: "online",
-    jogadores: jogadores.length
-  });
-});
+    res.json({
+      sucesso: true,
+
+      nome:
+        "Eleven Squad API",
+
+      status:
+        "online",
+
+      jogadores:
+        jogadores.length,
+
+      partidasLive:
+        partidas.size,
+
+      endpoints: [
+        "/gerar-campo",
+        "/partida",
+        "/render-carta",
+        "/buscar-jogador",
+        "/obter-aleatorio",
+        "/listar-mercado",
+
+        "POST /partida-live",
+        "GET /partida-live/:gameID",
+        "PATCH /partida-live/:gameID",
+        "DELETE /partida-live/:gameID",
+        "GET /partidas-live",
+        "POST /partida-live/:gameID/finalizar",
+        "POST /partida-live/:gameID/cancelar"
+      ]
+    });
+  }
+);
+
+// ============================================================
+// /API
+// ============================================================
+
+app.get(
+  "/api",
+  (req, res) => {
+    limparPartidas();
+
+    res.json({
+      sucesso: true,
+      status: "online",
+      jogadores:
+        jogadores.length,
+      partidasLive:
+        partidas.size
+    });
+  }
+);
 
 // ============================================================
 // INICIALIZAÇÃO
@@ -727,16 +1533,23 @@ app.get("/api", (req, res) => {
 
 iniciarBanco();
 
-app.listen(PORT, () => {
-  console.log(
-    `🚀 Eleven Squad API online na porta ${PORT}`
-  );
+app.listen(
+  PORT,
+  () => {
+    console.log(
+      `🚀 Eleven Squad API online na porta ${PORT}`
+    );
 
-  console.log(
-    `⚽ ${jogadores.length} jogadores carregados`
-  );
+    console.log(
+      `⚽ ${jogadores.length} jogadores carregados`
+    );
 
-  console.log(
-    `🎲 Peso total: ${pesoTotal}`
-  );
-});
+    console.log(
+      `🎲 Peso total: ${pesoTotal}`
+    );
+
+    console.log(
+      `🏟️ Sistema de partidas LIVE ativo`
+    );
+  }
+);
