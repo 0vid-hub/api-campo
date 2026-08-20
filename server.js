@@ -10,13 +10,14 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // =============================================================
-// CONFIGURAÇÃO ES LEAGUE LIVE
+// CONFIGURAÇÃO ES LEAGUE
 // =============================================================
 
 const LIGA_WEBHOOK_URL = process.env.LIGA_WEBHOOK_URL || "";
 const LIGA_API_KEY = process.env.LIGA_API_KEY || "";
 
 const partidasLiga = new Map();
+const partidasNormal = new Map();
 
 // =============================================================
 // PASTAS
@@ -33,30 +34,30 @@ app.use('/campos', express.static(PASTAS_CAMPOS));
 // =============================================================
 
 const MAPA_CAMPOS = {
-  "padrao": "campopadrao.png",
-  "dia": "camporealista.png",
-  "realista": "camporealista.png",
-  "noite": "camporealistanoturno.png",
-  "noturno": "camporealistanoturno.png",
-  "galaxia": "campogalaxia.png",
-  "neon": "camponeon.png",
-  "alien": "campoalienmistico.png",
-  "sistemasolar": "camposistemasolar.png",
-  "dourado": "campodourado.png",
-  "halloween": "campohalloween.png",
-  "anime": "campoanime.png",
-  "rua": "camporua.png",
-  "lava": "campolava.png",
-  "retro": "camporetro.png",
-  "matrix": "campomatrix.png",
-  "champions": "campochampions.png",
-  "inverno": "campoinverno.png",
-  "praia": "campopraia.png",
-  "vangogh": "campovangogh.png",
-  "deserto": "campodeserto.png",
-  "portugal": "campoportugal.png",
-  "brasil": "campobrasil.png",
-  "argentina": "campargentina.png"
+  padrao: "campopadrao.png",
+  dia: "camporealista.png",
+  realista: "camporealista.png",
+  noite: "camporealistanoturno.png",
+  noturno: "camporealistanoturno.png",
+  galaxia: "campogalaxia.png",
+  neon: "camponeon.png",
+  alien: "campoalienmistico.png",
+  sistemasolar: "camposistemasolar.png",
+  dourado: "campodourado.png",
+  halloween: "campohalloween.png",
+  anime: "campoanime.png",
+  rua: "camporua.png",
+  lava: "campolava.png",
+  retro: "camporetro.png",
+  matrix: "campomatrix.png",
+  champions: "campochampions.png",
+  inverno: "campoinverno.png",
+  praia: "campopraia.png",
+  vangogh: "campovangogh.png",
+  deserto: "campodeserto.png",
+  portugal: "campoportugal.png",
+  brasil: "campobrasil.png",
+  argentina: "campargentina.png"
 };
 
 // =============================================================
@@ -151,7 +152,7 @@ const BANCO_DE_CARTAS = {
   "wilfried singo 75": { img: "WILFRIED-SINGO75.png", pos: "ld" },
   "endrick 74": { img: "endrick74.png", pos: "pl" },
   "ricardo mangas 74": { img: "ricardomangas74.png", pos: "ed" },
-  "estevão 74": { img: "estevao74.png", pos: "ed" },
+  "estevão 74": { img: "estevao74.png", pos: "le" },
   "joão mário 74": { img: "joaomario74.png", pos: "ld" },
   "nuno tavares 74": { img: "nunotavares74.png", pos: "le" },
   "josé sá 73": { img: "joseja73.png", pos: "gr" },
@@ -196,7 +197,7 @@ let jogadoresPreProcessados = [];
 let pesoTotalSorteio = 0;
 
 // =============================================================
-// FUNÇÕES CARTAS
+// FUNÇÕES
 // =============================================================
 
 function removerAcentos(texto) {
@@ -204,9 +205,9 @@ function removerAcentos(texto) {
 
   try {
     texto = decodeURIComponent(texto);
-  } catch (e) {}
+  } catch {}
 
-  return texto
+  return String(texto)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -233,21 +234,20 @@ async function obterImagemOuCarregar(
 
     if (!fs.existsSync(caminhoAbsoluto)) {
       console.error(
-        `❌ Ficheiro não existe no disco: ${caminhoAbsoluto}`
+        `❌ Ficheiro não existe: ${caminhoAbsoluto}`
       );
       return null;
     }
 
     const img = await loadImage(caminhoAbsoluto);
-
     imageCache.set(caminhoOuFicheiro, img);
 
     return img;
-  } catch (e) {
+  } catch (error) {
     console.error(
-      `❌ Erro ao carregar imagem local (${e.message}): ${caminhoOuFicheiro}`
+      `❌ Erro ao carregar imagem: ${caminhoOuFicheiro}`,
+      error.message
     );
-
     return null;
   }
 }
@@ -265,23 +265,34 @@ function inicializarMetadados() {
     const nomeSemOverall =
       partes.slice(0, -1).join(" ");
 
-    const nomeFormatado = nomeSemOverall
-      .split(" ")
-      .map(w =>
-        w.charAt(0).toUpperCase() + w.slice(1)
-      )
-      .join(" ");
+    const nomeFormatado =
+      nomeSemOverall
+        .split(" ")
+        .map(
+          w =>
+            w.charAt(0).toUpperCase() +
+            w.slice(1)
+        )
+        .join(" ");
 
     let preco = 1000;
 
     if (overall >= 95) {
-      preco = 16000 + (overall - 90) * 4000;
+      preco =
+        16000 +
+        (overall - 90) * 4000;
     } else if (overall >= 90) {
-      preco = 20000 + (overall - 90) * 5000;
+      preco =
+        20000 +
+        (overall - 90) * 5000;
     } else if (overall >= 80) {
-      preco = 3500 + (overall - 80) * 1200;
+      preco =
+        3500 +
+        (overall - 80) * 1200;
     } else {
-      preco = 300 + (overall - 60) * 150;
+      preco =
+        300 +
+        (overall - 60) * 150;
     }
 
     let peso = 100;
@@ -292,7 +303,7 @@ function inicializarMetadados() {
     else if (overall >= 80) peso = 25;
     else if (overall >= 75) peso = 60;
 
-    const objetoJogador = {
+    const jogador = {
       chave,
       nomeFormatado,
       overall,
@@ -306,12 +317,12 @@ function inicializarMetadados() {
       imgOriginal: dados.img
     };
 
-    jogadoresPreProcessados.push(objetoJogador);
+    jogadoresPreProcessados.push(jogador);
 
     const chaveLimpa =
       removerAcentos(chave);
 
-    const nomeSemNumeroLimpo =
+    const nomeLimpo =
       removerAcentos(nomeSemOverall);
 
     buscaIndexMap.set(
@@ -319,13 +330,9 @@ function inicializarMetadados() {
       chave
     );
 
-    if (
-      !buscaIndexMap.has(
-        nomeSemNumeroLimpo
-      )
-    ) {
+    if (!buscaIndexMap.has(nomeLimpo)) {
       buscaIndexMap.set(
-        nomeSemNumeroLimpo,
+        nomeLimpo,
         chave
       );
     }
@@ -333,7 +340,8 @@ function inicializarMetadados() {
 
   pesoTotalSorteio =
     jogadoresPreProcessados.reduce(
-      (acc, j) => acc + j.peso,
+      (acc, jogador) =>
+        acc + jogador.peso,
       0
     );
 }
@@ -345,7 +353,9 @@ function encontrarChaveJogador(termoBusca) {
   if (!buscaLimpa) return null;
 
   if (buscaIndexMap.has(buscaLimpa)) {
-    return buscaIndexMap.get(buscaLimpa);
+    return buscaIndexMap.get(
+      buscaLimpa
+    );
   }
 
   const buscaSemNumero =
@@ -364,12 +374,18 @@ function encontrarChaveJogador(termoBusca) {
   }
 
   for (
-    const [termoIndex, chaveReal]
-    of buscaIndexMap.entries()
+    const [
+      termoIndex,
+      chaveReal
+    ] of buscaIndexMap.entries()
   ) {
     if (
-      termoIndex.includes(buscaSemNumero) ||
-      buscaSemNumero.includes(termoIndex)
+      termoIndex.includes(
+        buscaSemNumero
+      ) ||
+      buscaSemNumero.includes(
+        termoIndex
+      )
     ) {
       return chaveReal;
     }
@@ -379,7 +395,7 @@ function encontrarChaveJogador(termoBusca) {
 }
 
 // =============================================================
-// ES LEAGUE LIVE — WEBHOOK
+// WEBHOOK
 // =============================================================
 
 function obterWebhookPartes(webhookUrl) {
@@ -390,7 +406,8 @@ function obterWebhookPartes(webhookUrl) {
       );
     }
 
-    const url = new URL(webhookUrl);
+    const url =
+      new URL(webhookUrl);
 
     const partes =
       url.pathname
@@ -414,7 +431,7 @@ function obterWebhookPartes(webhookUrl) {
 
     if (!webhookID || !webhookToken) {
       throw new Error(
-        "ID/token do webhook não encontrados."
+        "ID/token do webhook ausente."
       );
     }
 
@@ -437,7 +454,7 @@ async function discordWebhookRequest(
   url,
   body = null
 ) {
-  const opcoes = {
+  const options = {
     method,
     headers: {
       "Content-Type":
@@ -446,14 +463,14 @@ async function discordWebhookRequest(
   };
 
   if (body !== null) {
-    opcoes.body =
+    options.body =
       JSON.stringify(body);
   }
 
   const resposta =
     await fetch(
       url,
-      opcoes
+      options
     );
 
   const texto =
@@ -484,289 +501,103 @@ async function discordWebhookRequest(
 }
 
 // =============================================================
-// CONVERSÃO DOS EMOJIS DO BOT
+// EMOJIS
 // =============================================================
 
 function limparEmojisBot(texto) {
   if (!texto) return "";
 
-  let resultado = String(texto);
+  let resultado =
+    String(texto);
 
-  // -----------------------------------------------------------
-  // FUTEBOL / PARTIDA
-  // -----------------------------------------------------------
+  // Futebol
+  resultado =
+    resultado.replace(
+      /<:dentro:\d+>/g,
+      "⚽"
+    );
 
-  resultado = resultado.replace(
-    /<:dentro:1528835700890538154>/g,
-    "⚽"
-  );
+  resultado =
+    resultado.replace(
+      /<:fora:\d+>/g,
+      "⚽"
+    );
 
-  resultado = resultado.replace(
-    /<:fora:1528835701934653531>/g,
-    "⚽"
-  );
+  resultado =
+    resultado.replace(
+      /<:placar:\d+>/g,
+      "🏟️"
+    );
 
-  resultado = resultado.replace(
-    /<:placar:1528835698151522354>/g,
-    "🏟️"
-  );
+  resultado =
+    resultado.replace(
+      /<:lances:\d+>/g,
+      "📋"
+    );
 
-  resultado = resultado.replace(
-    /<:lances:1528835699225395272>/g,
-    "📋"
-  );
+  // Moedas
+  resultado =
+    resultado.replace(
+      /<:moedas:\d+>/g,
+      "🪙"
+    );
 
-  // -----------------------------------------------------------
-  // MOEDAS / GEMAS
-  // -----------------------------------------------------------
+  // Gemas
+  resultado =
+    resultado.replace(
+      /<:gemas:\d+>/g,
+      "💎"
+    );
 
-  resultado = resultado.replace(
-    /<:moedas:1533225569414676490>/g,
-    "🪙"
-  );
+  // Caixas
+  resultado =
+    resultado.replace(
+      /<:bronze:\d+>/g,
+      "📦"
+    );
 
-  resultado = resultado.replace(
-    /<:gemas:1533225568353386578>/g,
-    "💎"
-  );
+  resultado =
+    resultado.replace(
+      /<:silver:\d+>/g,
+      "📦"
+    );
 
-  // -----------------------------------------------------------
-  // CAIXAS
-  // Todas viram uma caixa Unicode padrão
-  // -----------------------------------------------------------
+  resultado =
+    resultado.replace(
+      /<:gold:\d+>/g,
+      "📦"
+    );
 
-  resultado = resultado.replace(
-    /<:bronze:1533266991601815757>/g,
-    "📦"
-  );
+  resultado =
+    resultado.replace(
+      /<:diamond:\d+>/g,
+      "📦"
+    );
 
-  resultado = resultado.replace(
-    /<:silver:1533266998643920926>/g,
-    "📦"
-  );
+  resultado =
+    resultado.replace(
+      /<:legend:\d+>/g,
+      "📦"
+    );
 
-  resultado = resultado.replace(
-    /<:gold:1533266993711550544>/g,
-    "📦"
-  );
+  resultado =
+    resultado.replace(
+      /<:secret:\d+>/g,
+      "📦"
+    );
 
-  resultado = resultado.replace(
-    /<:diamond:1533266992604119140>/g,
-    "📦"
-  );
-
-  resultado = resultado.replace(
-    /<:legend:1533266994952933447>/g,
-    "📦"
-  );
-
-  resultado = resultado.replace(
-    /<:secret:1533266997507264542>/g,
-    "📦"
-  );
-
-  // -----------------------------------------------------------
-  // FALLBACKS GENÉRICOS
-  // -----------------------------------------------------------
-
-  resultado = resultado.replace(
-    /<:dentro:\d+>/g,
-    "⚽"
-  );
-
-  resultado = resultado.replace(
-    /<:fora:\d+>/g,
-    "⚽"
-  );
-
-  resultado = resultado.replace(
-    /<:placar:\d+>/g,
-    "🏟️"
-  );
-
-  resultado = resultado.replace(
-    /<:lances:\d+>/g,
-    "📋"
-  );
-
-  resultado = resultado.replace(
-    /<:moedas:\d+>/g,
-    "🪙"
-  );
-
-  resultado = resultado.replace(
-    /<:gemas:\d+>/g,
-    "💎"
-  );
-
-  resultado = resultado.replace(
-    /<:(bronze|silver|gold|diamond|legend|secret):\d+>/g,
-    "📦"
-  );
-
-  // -----------------------------------------------------------
-  // OUTROS EMOJIS CUSTOMIZADOS CONHECIDOS
-  // -----------------------------------------------------------
-
-  resultado = resultado.replace(
-    /<:es:\d+>/g,
-    "⚽"
-  );
-
-  resultado = resultado.replace(
-    /<:trophy:\d+>/gi,
-    "🏆"
-  );
-
-  resultado = resultado.replace(
-    /<:taca:\d+>/gi,
-    "🏆"
-  );
-
-  // -----------------------------------------------------------
-  // REMOVE POSSÍVEIS EXPRESSÕES BDFD QUE ESCAPARAM
-  // -----------------------------------------------------------
-
-  resultado = resultado.replace(
-    /\$if\[.*?\]/g,
-    ""
-  );
+  // Qualquer custom emoji restante
+  resultado =
+    resultado.replace(
+      /<a?:[a-zA-Z0-9_~]+:\d+>/g,
+      "🔹"
+    );
 
   return resultado.trim();
 }
 
 // =============================================================
-// EXTRAIR EVENTOS
-// =============================================================
-
-function extrairEventosLiga(lances) {
-  if (
-    !lances ||
-    !String(lances).trim()
-  ) {
-    return [];
-  }
-
-  const linhas =
-    String(lances)
-      .split(/\r?\n/)
-      .map(
-        linha => linha.trim()
-      )
-      .filter(Boolean);
-
-  const eventos = [];
-
-  for (
-    const linha of linhas
-  ) {
-    const match =
-      linha.match(
-        /`(\d+)'`/
-      );
-
-    if (!match) {
-      continue;
-    }
-
-    const minuto =
-      Number(match[1]);
-
-    if (!Number.isFinite(minuto)) {
-      continue;
-    }
-
-    let equipa =
-      "desconhecida";
-
-    if (
-      linha.includes(
-        "<:dentro:"
-      ) ||
-      linha.includes(
-        ":dentro:"
-      )
-    ) {
-      equipa =
-        "casa";
-    } else if (
-      linha.includes(
-        "<:fora:"
-      ) ||
-      linha.includes(
-        ":fora:"
-      )
-    ) {
-      equipa =
-        "fora";
-    }
-
-    eventos.push({
-      minuto,
-      equipa,
-      texto:
-        limparEmojisBot(
-          linha
-        )
-    });
-  }
-
-  eventos.sort(
-    (a, b) =>
-      a.minuto - b.minuto
-  );
-
-  return eventos;
-}
-
-// =============================================================
-// PLACAR ATÉ AO MINUTO
-// =============================================================
-
-function obterPlacarAteMinuto(
-  eventos,
-  minuto,
-  golsC,
-  golsF
-) {
-  let casa = 0;
-  let fora = 0;
-
-  for (
-    const evento of eventos
-  ) {
-    if (
-      evento.minuto > minuto
-    ) {
-      continue;
-    }
-
-    if (
-      evento.equipa === "casa"
-    ) {
-      casa++;
-    }
-
-    if (
-      evento.equipa === "fora"
-    ) {
-      fora++;
-    }
-  }
-
-  if (minuto >= 90) {
-    casa = golsC;
-    fora = golsF;
-  }
-
-  return {
-    casa,
-    fora
-  };
-}
-
-// =============================================================
-// LIMITADORES
+// TEXTO
 // =============================================================
 
 function limitarTexto(
@@ -774,8 +605,8 @@ function limitarTexto(
   limite
 ) {
   if (
-    texto === null ||
-    texto === undefined
+    texto === undefined ||
+    texto === null
   ) {
     return "";
   }
@@ -783,18 +614,15 @@ function limitarTexto(
   const valor =
     String(texto);
 
-  if (
-    valor.length <= limite
-  ) {
+  if (valor.length <= limite) {
     return valor;
   }
 
   return (
     valor.slice(
       0,
-      Math.max(0, limite - 3)
-    ) +
-    "..."
+      limite - 3
+    ) + "..."
   );
 }
 
@@ -819,6 +647,20 @@ function validarEmbed(embed) {
       );
   }
 
+  if (embed.thumbnail?.url) {
+    embed.thumbnail.url =
+      String(
+        embed.thumbnail.url
+      );
+  }
+
+  if (embed.image?.url) {
+    embed.image.url =
+      String(
+        embed.image.url
+      );
+  }
+
   if (
     Array.isArray(
       embed.fields
@@ -827,46 +669,168 @@ function validarEmbed(embed) {
     embed.fields =
       embed.fields
         .slice(0, 25)
-        .map(
-          field => ({
-            name:
-              limitarTexto(
-                field.name,
-                256
-              ),
-
-            value:
-              limitarTexto(
-                field.value,
-                1024
-              ),
-
-            inline:
-              Boolean(
-                field.inline
-              )
-          })
-        );
+        .map(field => ({
+          name:
+            limitarTexto(
+              field.name,
+              256
+            ),
+          value:
+            limitarTexto(
+              field.value,
+              1024
+            ),
+          inline:
+            Boolean(field.inline)
+        }));
   }
 
   return embed;
 }
 
 // =============================================================
+// LANCES
+// =============================================================
+
+function extrairEventosLiga(lances) {
+  if (
+    !lances ||
+    !String(lances).trim()
+  ) {
+    return [];
+  }
+
+  const linhas =
+    String(lances)
+      .split(/\r?\n/)
+      .map(
+        linha =>
+          linha.trim()
+      )
+      .filter(Boolean);
+
+  const eventos = [];
+
+  for (const linha of linhas) {
+    const match =
+      linha.match(
+        /`(\d+)'`/
+      );
+
+    if (!match) {
+      continue;
+    }
+
+    const minuto =
+      Number(match[1]);
+
+    if (
+      !Number.isFinite(
+        minuto
+      )
+    ) {
+      continue;
+    }
+
+    let equipa =
+      "desconhecida";
+
+    if (
+      linha.includes(
+        "<:dentro:"
+      ) ||
+      linha.includes(
+        ":dentro:"
+      )
+    ) {
+      equipa = "casa";
+    } else if (
+      linha.includes(
+        "<:fora:"
+      ) ||
+      linha.includes(
+        ":fora:"
+      )
+    ) {
+      equipa = "fora";
+    }
+
+    eventos.push({
+      minuto,
+      equipa,
+      texto:
+        limparEmojisBot(
+          linha
+        )
+    });
+  }
+
+  eventos.sort(
+    (a, b) =>
+      a.minuto -
+      b.minuto
+  );
+
+  return eventos;
+}
+
+function obterPlacarAteMinuto(
+  eventos,
+  minuto,
+  golsC,
+  golsF
+) {
+  let casa = 0;
+  let fora = 0;
+
+  for (const evento of eventos) {
+    if (
+      evento.minuto >
+      minuto
+    ) {
+      continue;
+    }
+
+    if (
+      evento.equipa ===
+      "casa"
+    ) {
+      casa++;
+    }
+
+    if (
+      evento.equipa ===
+      "fora"
+    ) {
+      fora++;
+    }
+  }
+
+  if (minuto >= 90) {
+    casa = golsC;
+    fora = golsF;
+  }
+
+  return {
+    casa,
+    fora
+  };
+}
+
+// =============================================================
 // RESULTADO LIMPO
 // =============================================================
 
-function limparResultado(campoResultado) {
-  if (!campoResultado) {
+function limparResultado(texto) {
+  if (!texto) {
     return "";
   }
 
   let resultado =
     limparEmojisBot(
-      campoResultado
+      texto
     );
 
-  // Converte headings BDFD para negrito visual
   resultado =
     resultado.replace(
       /^###\s*/gm,
@@ -881,8 +845,12 @@ function limparResultado(campoResultado) {
       .map(
         linha => {
           if (
-            linha.startsWith("**") &&
-            !linha.endsWith("**")
+            linha.startsWith(
+              "**"
+            ) &&
+            !linha.endsWith(
+              "**"
+            )
           ) {
             return (
               linha +
@@ -899,88 +867,63 @@ function limparResultado(campoResultado) {
 }
 
 // =============================================================
-// CRIAR EMBED
+// EMBED ES LEAGUE
 // =============================================================
 
 function criarEmbedLiga(
   dados,
   minuto
 ) {
-  const {
-    nomeClube,
-    rivalNome,
-    gerTime,
-    gerBot,
-    golsC,
-    golsF,
-    divisao,
-    tempo,
-    estadio,
-    campoResultado,
-    eventos
-  } = dados;
-
   const placar =
     obterPlacarAteMinuto(
-      eventos,
+      dados.eventos,
       minuto,
-      golsC,
-      golsF
+      dados.golsC,
+      dados.golsF
     );
 
-  // -----------------------------------------------------------
-  // TEMPO
-  // -----------------------------------------------------------
-
-  let tituloTempo =
+  let tempoTitulo =
     `🕐 **${minuto}'**`;
 
   if (minuto === 0) {
-    tituloTempo =
+    tempoTitulo =
       "🟢 **0' — APITO INICIAL**";
-  }
-
-  if (minuto === 45) {
-    tituloTempo =
+  } else if (minuto === 45) {
+    tempoTitulo =
       "⏸️ **45' — INTERVALO**";
-  }
-
-  if (minuto >= 90) {
-    tituloTempo =
+  } else if (minuto >= 90) {
+    tempoTitulo =
       "🏁 **90' — FIM DE JOGO**";
   }
 
-  // -----------------------------------------------------------
-  // LANCES
-  // -----------------------------------------------------------
-
-  const eventosAteAgora =
-    eventos.filter(
+  const eventos =
+    dados.eventos.filter(
       evento =>
-        evento.minuto <= minuto
+        evento.minuto <=
+        minuto
     );
 
-  let textoLances = "";
+  let lances = "";
 
   if (
-    eventosAteAgora.length === 0
+    eventos.length === 0
   ) {
     if (minuto === 0) {
-      textoLances =
+      lances =
         "⚽ A partida acabou de começar.\nNenhum golo ainda.";
     } else if (minuto === 45) {
-      textoLances =
+      lances =
         "⏸️ Nenhum golo na primeira parte.";
     } else if (minuto >= 90) {
-      textoLances =
+      lances =
         "🏁 A partida terminou sem golos.";
     } else {
-      textoLances =
+      lances =
         "Nenhum golo até agora.\nO jogo continua equilibrado.";
     }
   } else {
-    textoLances =
-      eventosAteAgora
+    lances =
+      eventos
         .map(
           evento =>
             evento.texto
@@ -988,94 +931,72 @@ function criarEmbedLiga(
         .join("\n");
   }
 
-  textoLances =
+  lances =
     limitarTexto(
-      textoLances,
+      lances,
       1024
     );
 
-  // -----------------------------------------------------------
-  // RESULTADO
-  // -----------------------------------------------------------
-
-  let resultadoTexto = "";
+  let resultado =
+    "";
 
   if (minuto === 0) {
-    resultadoTexto =
+    resultado =
       "**⚽ A partida começou!**\nBoa sorte!";
   } else if (minuto === 45) {
-    resultadoTexto =
+    resultado =
       "**⏸️ Intervalo**\nAs equipas vão para o balneário.";
   } else if (minuto >= 90) {
-    resultadoTexto =
+    resultado =
       limparResultado(
-        campoResultado
+        dados.campoResultado
       ) ||
       "**🏁 Partida finalizada.**";
   } else {
-    resultadoTexto =
+    resultado =
       "**🔴 Partida em andamento**\nO resultado ainda pode mudar!";
   }
-
-  resultadoTexto =
-    limitarTexto(
-      resultadoTexto,
-      1024
-    );
-
-  // -----------------------------------------------------------
-  // COR
-  // -----------------------------------------------------------
 
   let cor =
     5793266;
 
   if (minuto >= 90) {
-    if (golsC > golsF) {
-      cor =
-        5763719;
-    } else if (golsC < golsF) {
-      cor =
-        15548997;
+    if (
+      dados.golsC >
+      dados.golsF
+    ) {
+      cor = 5763719;
+    } else if (
+      dados.golsC <
+      dados.golsF
+    ) {
+      cor = 15548997;
     } else {
-      cor =
-        16705372;
+      cor = 16705372;
     }
   }
 
-  // -----------------------------------------------------------
-  // EMBED
-  // -----------------------------------------------------------
-
   const embed = {
     title:
-      `🏆 ES League — Divisão ${divisao}`,
+      `🏆 ES League — Divisão ${dados.divisao}`,
 
-    color:
-      cor,
+    color: cor,
 
     description:
-      `${tituloTempo}\n\n` +
-
-      `🏟️ ⚽ **${nomeClube} ${placar.casa} x ${placar.fora} ${rivalNome}**\n\n` +
-
-      `⚔️ **GER:** Seu Time (\`${gerTime}\`) vs Adversário (\`${gerBot}\`)\n\n` +
-
-      `🌤️ **Clima:** \`${tempo}\`\n` +
-
-      `🏟️ **Estádio:** \`${estadio}\``,
+      `${tempoTitulo}\n\n` +
+      `🏟️ ⚽ **${dados.nomeClube} ${placar.casa} x ${placar.fora} ${dados.rivalNome}**\n\n` +
+      `⚔️ **GER:** Seu Time (\`${dados.gerTime}\`) vs Adversário (\`${dados.gerBot}\`)\n\n` +
+      `🌤️ **Clima:** \`${dados.tempo}\`\n` +
+      `🏟️ **Estádio:** \`${dados.estadio}\``,
 
     fields: [
       {
         name:
           "📋 Lances da Partida",
-
         value:
-          textoLances ||
+          lances ||
           "Nenhum lance.",
-
-        inline:
-          false
+        inline: false
       }
     ],
 
@@ -1095,20 +1016,16 @@ function criarEmbedLiga(
       new Date().toISOString()
   };
 
-  // -----------------------------------------------------------
-  // RESULTADO FINAL
-  // -----------------------------------------------------------
-
   if (minuto >= 90) {
     embed.fields.push({
       name:
         "📊 Resultado",
-
       value:
-        resultadoTexto,
-
-      inline:
-        false
+        limitarTexto(
+          resultado,
+          1024
+        ),
+      inline: false
     });
   }
 
@@ -1118,20 +1035,12 @@ function criarEmbedLiga(
 }
 
 // =============================================================
-// ENVIAR PARTIDA INICIAL
+// ENVIAR ES LEAGUE
 // =============================================================
 
 async function enviarLigaInicial(
   dados
 ) {
-  if (
-    !LIGA_WEBHOOK_URL
-  ) {
-    throw new Error(
-      "LIGA_WEBHOOK_URL não configurada."
-    );
-  }
-
   const url =
     new URL(
       LIGA_WEBHOOK_URL
@@ -1171,20 +1080,12 @@ async function enviarLigaInicial(
     !resposta.id
   ) {
     throw new Error(
-      "Discord não devolveu o ID da mensagem."
+      "Discord não devolveu o ID."
     );
   }
 
-  console.log(
-    `🏆 ES League → mensagem inicial criada: ${resposta.id}`
-  );
-
   return resposta.id;
 }
-
-// =============================================================
-// EDITAR PARTIDA
-// =============================================================
 
 async function editarLiga(
   webhook,
@@ -1208,7 +1109,6 @@ async function editarLiga(
           minuto
         )
       ],
-
       allowed_mentions: {
         parse: []
       }
@@ -1216,23 +1116,15 @@ async function editarLiga(
   );
 }
 
-// =============================================================
-// TIMERS
-// =============================================================
-
 function iniciarTimersLiga(
   dados,
   messageID,
   webhook
 ) {
-  const gameID =
-    dados.gameID;
-
-  // 60 segundos reais = 90 minutos de partida
   const duracao =
     60000;
 
-  const pontosBase = [
+  const minutos = [
     10,
     20,
     30,
@@ -1242,19 +1134,11 @@ function iniciarTimersLiga(
     60,
     70,
     80,
-    90
-  ];
-
-  const minutosGolos =
-    dados.eventos.map(
+    90,
+    ...dados.eventos.map(
       evento =>
         evento.minuto
-    );
-
-  const minutos = [
-    0,
-    ...pontosBase,
-    ...minutosGolos
+    )
   ];
 
   const unicos =
@@ -1262,9 +1146,9 @@ function iniciarTimersLiga(
       ...new Set(
         minutos
           .filter(
-            minuto =>
-              minuto >= 0 &&
-              minuto <= 90
+            m =>
+              m >= 0 &&
+              m <= 90
           )
           .sort(
             (a, b) =>
@@ -1275,22 +1159,14 @@ function iniciarTimersLiga(
 
   const timers = [];
 
-  for (
-    const minuto of unicos
-  ) {
-    if (
-      minuto === 0
-    ) {
-      continue;
-    }
-
+  for (const minuto of unicos) {
     const atraso =
       Math.round(
         (minuto / 90) *
         duracao
       );
 
-    const timer =
+    timers.push(
       setTimeout(
         async () => {
           try {
@@ -1300,50 +1176,276 @@ function iniciarTimersLiga(
               dados,
               minuto
             );
-
-            console.log(
-              `🏆 Liga ${gameID} → ${minuto}'`
-            );
           } catch (error) {
             console.error(
-              `❌ Liga ${gameID} ${minuto}':`,
+              `❌ Liga ${dados.gameID} ${minuto}':`,
               error.message
             );
           }
         },
         atraso
-      );
-
-    timers.push(
-      timer
+      )
     );
   }
 
-  const limpeza =
-    setTimeout(
-      () => {
-        partidasLiga.delete(
-          gameID
-        );
-
-        console.log(
-          `🧹 Liga ${gameID} → removida da memória`
-        );
-      },
-      duracao + 15000
-    );
-
   timers.push(
-    limpeza
+    setTimeout(
+      () =>
+        partidasLiga.delete(
+          dados.gameID
+        ),
+      duracao + 15000
+    )
   );
 
   partidasLiga.set(
-    gameID,
+    dados.gameID,
     {
       messageID,
-      criadoEm:
-        Date.now(),
       timers
+    }
+  );
+}
+
+// =============================================================
+// EMBED PARTIDA NORMAL
+// =============================================================
+
+function criarEmbedPartida(
+  dados,
+  finalizada
+) {
+  const placar =
+    `⚽ **${dados.nomeClubeC} \`${dados.golsC} x ${dados.golsF}\` ${dados.nomeClubeF}**`;
+
+  if (!finalizada) {
+    return validarEmbed({
+      title:
+        "PARTIDA DE FUTEBOL ⚽",
+
+      color:
+        1924845,
+
+      description:
+        `🕐 **90'**\n\n` +
+        `${placar}\n\n` +
+        `📊 **GER:** ${dados.nomeClubeC} (${dados.gerTimeCasa}) vs ${dados.nomeClubeF} (${dados.gerTimeFora})\n\n` +
+        `🌤️ **Clima:** \`${dados.tempo}\`\n` +
+        `🏟️ **Estádio:** \`${dados.estadio}\``,
+
+      fields: [
+        {
+          name:
+            "📋 Lances da Partida",
+          value:
+            dados.lancesLimpos ||
+            "Nenhum lance registrado nesta partida.",
+          inline: false
+        }
+      ],
+
+      thumbnail: {
+        url:
+          dados.imgEstadio
+      },
+
+      image: {
+        url:
+          "https://i.ibb.co/zWhWZVy4/partida2.png"
+      },
+
+      footer: {
+        text:
+          "ES League • Partida de Futebol"
+      },
+
+      timestamp:
+        new Date().toISOString()
+    });
+  }
+
+  let cor =
+    16705372;
+
+  if (
+    dados.golsC >
+    dados.golsF
+  ) {
+    cor = 5763719;
+  } else if (
+    dados.golsC <
+    dados.golsF
+  ) {
+    cor = 15548997;
+  }
+
+  let resultado = "";
+
+  if (
+    dados.golsC >
+    dados.golsF
+  ) {
+    resultado =
+      `**🏆 Vitória do ${dados.nomeClubeC}!**\n+${dados.recompensaVitoria} 🪙`;
+  } else if (
+    dados.golsC <
+    dados.golsF
+  ) {
+    resultado =
+      `**🏆 Vitória do ${dados.nomeClubeF}!**\n+${dados.recompensaVitoria} 🪙`;
+  } else {
+    resultado =
+      `**🤝 Empate!**\n+${dados.recompensaEmpate} 🪙 para ambos`;
+  }
+
+  const estatisticas =
+    `**👤 ${dados.nomeClubeC} (GER: ${dados.gerTimeCasa})**\n` +
+    `- 📊 Posse de bola: \`${dados.posse1}%\`\n` +
+    `- ⚽ Finalizações: \`${dados.finC}\`\n` +
+    `- 🧤 Defesas: \`${dados.defC}\`\n` +
+    `- 🟨 Amarelos: \`${dados.amarelosC}\`\n` +
+    `- 🟥 Vermelhos: \`${dados.vermelhosC}\`\n\n` +
+    `**👤 ${dados.nomeClubeF} (GER: ${dados.gerTimeFora})**\n` +
+    `- 📊 Posse de bola: \`${dados.posse2}%\`\n` +
+    `- ⚽ Finalizações: \`${dados.finF}\`\n` +
+    `- 🧤 Defesas: \`${dados.defF}\`\n` +
+    `- 🟨 Amarelos: \`${dados.amarelosF}\`\n` +
+    `- 🟥 Vermelhos: \`${dados.vermelhosF}\``;
+
+  return validarEmbed({
+    title:
+      "🏁 ESTATÍSTICAS FINAIS",
+
+    color: cor,
+
+    description:
+      `${placar}\n\n` +
+      `👑 **Man of the Match:** ${dados.motm}\n` +
+      `⭐ **Nota:** ${dados.notaMotm}`,
+
+    fields: [
+      {
+        name:
+          "📊 Desempenho das Equipas",
+        value:
+          estatisticas,
+        inline: false
+      },
+      {
+        name:
+          "🎙️ Lances da Partida",
+        value:
+          dados.lancesLimpos ||
+          "Nenhum lance registrado nesta partida.",
+        inline: false
+      },
+      {
+        name:
+          "🏆 Resultado",
+        value:
+          resultado,
+        inline: false
+      }
+    ],
+
+    thumbnail: {
+      url:
+        dados.imgEstadio
+    },
+
+    image: {
+      url:
+        "https://i.ibb.co/zWhWZVy4/partida2.png"
+    },
+
+    footer: {
+      text:
+        `Partida encerrada • ${dados.nomeClubeC} X ${dados.nomeClubeF}`
+    },
+
+    timestamp:
+      new Date().toISOString()
+  });
+}
+
+// =============================================================
+// ENVIAR PARTIDA
+// =============================================================
+
+async function enviarPartidaNormal(
+  dados
+) {
+  const url =
+    new URL(
+      LIGA_WEBHOOK_URL
+    );
+
+  url.searchParams.set(
+    "wait",
+    "true"
+  );
+
+  const resposta =
+    await discordWebhookRequest(
+      "POST",
+      url.toString(),
+      {
+        username:
+          "ES League",
+
+        avatar_url:
+          "https://i.ibb.co/zWhWZVy4/partida2.png",
+
+        embeds: [
+          criarEmbedPartida(
+            dados,
+            false
+          )
+        ],
+
+        allowed_mentions: {
+          parse: []
+        }
+      }
+    );
+
+  if (
+    !resposta ||
+    !resposta.id
+  ) {
+    throw new Error(
+      "Discord não devolveu o ID."
+    );
+  }
+
+  return resposta.id;
+}
+
+async function editarPartidaNormal(
+  webhook,
+  messageID,
+  dados
+) {
+  const url =
+    `https://discord.com/api/v10/webhooks/` +
+    `${webhook.webhookID}/` +
+    `${webhook.webhookToken}/` +
+    `messages/${messageID}`;
+
+  await discordWebhookRequest(
+    "PATCH",
+    url,
+    {
+      embeds: [
+        criarEmbedPartida(
+          dados,
+          true
+        )
+      ],
+
+      allowed_mentions: {
+        parse: []
+      }
     }
   );
 }
@@ -1353,77 +1455,43 @@ function iniciarTimersLiga(
 // =============================================================
 
 app.post(
-  '/liga-live',
+  "/liga-live",
   async (req, res) => {
     try {
-      const {
-        apiKey,
-        gameID,
-        nomeClube,
-        rivalNome,
-        gerTime,
-        gerBot,
-        golsC,
-        golsF,
-        divisao,
-        tempo,
-        estadio,
-        lances,
-        campoResultado
-      } = req.body;
-
-      // -------------------------------------------------------
-      // API KEY
-      // -------------------------------------------------------
+      const body =
+        req.body;
 
       if (
         LIGA_API_KEY &&
-        apiKey !== LIGA_API_KEY
+        body.apiKey !==
+          LIGA_API_KEY
       ) {
-        return res
-          .status(401)
-          .json({
-            sucesso: false,
-            erro:
-              "api_key_invalida"
-          });
+        return res.status(401).json({
+          sucesso: false,
+          erro:
+            "api_key_invalida"
+        });
       }
 
-      // -------------------------------------------------------
-      // GAME ID
-      // -------------------------------------------------------
-
-      if (!gameID) {
-        return res
-          .status(400)
-          .json({
-            sucesso: false,
-            erro:
-              "gameID_obrigatorio"
-          });
+      if (!body.gameID) {
+        return res.status(400).json({
+          sucesso: false,
+          erro:
+            "gameID_obrigatorio"
+        });
       }
-
-      // -------------------------------------------------------
-      // DUPLICADO
-      // -------------------------------------------------------
 
       if (
         partidasLiga.has(
-          gameID
+          body.gameID
         )
       ) {
-        return res
-          .status(409)
-          .json({
-            sucesso: false,
-            erro:
-              "partida_ja_iniciada"
-          });
+        return res.status(409).json({
+          sucesso: false,
+          erro:
+            "partida_ja_iniciada"
+        });
       }
-
-      // -------------------------------------------------------
-      // WEBHOOK
-      // -------------------------------------------------------
 
       const webhook =
         obterWebhookPartes(
@@ -1431,25 +1499,22 @@ app.post(
         );
 
       if (!webhook) {
-        return res
-          .status(500)
-          .json({
-            sucesso: false,
-            erro:
-              "webhook_invalido"
-          });
+        return res.status(500).json({
+          sucesso: false,
+          erro:
+            "webhook_invalido"
+        });
       }
 
-      // -------------------------------------------------------
-      // NORMALIZA DADOS
-      // -------------------------------------------------------
-
       const dados = {
-        gameID,
+        gameID:
+          String(
+            body.gameID
+          ),
 
         nomeClube:
-          String(
-            nomeClube ||
+          limparEmojisBot(
+            body.nomeClube ||
             "Seu Time"
           ).slice(
             0,
@@ -1457,8 +1522,8 @@ app.post(
           ),
 
         rivalNome:
-          String(
-            rivalNome ||
+          limparEmojisBot(
+            body.rivalNome ||
             "Rival"
           ).slice(
             0,
@@ -1466,99 +1531,64 @@ app.post(
           ),
 
         gerTime:
-          Number.isFinite(
-            Number(gerTime)
-          )
-            ? Number(gerTime)
-            : 60,
+          Number(body.gerTime) ||
+          60,
 
         gerBot:
-          Number.isFinite(
-            Number(gerBot)
-          )
-            ? Number(gerBot)
-            : 60,
+          Number(body.gerBot) ||
+          60,
 
         golsC:
-          Number.isFinite(
-            Number(golsC)
-          )
-            ? Math.max(
-                0,
-                Number(golsC)
-              )
-            : 0,
+          Math.max(
+            0,
+            Number(body.golsC) || 0
+          ),
 
         golsF:
-          Number.isFinite(
-            Number(golsF)
-          )
-            ? Math.max(
-                0,
-                Number(golsF)
-              )
-            : 0,
+          Math.max(
+            0,
+            Number(body.golsF) || 0
+          ),
 
         divisao:
-          Number.isFinite(
-            Number(divisao)
-          )
-            ? Number(divisao)
-            : 10,
+          Number(body.divisao) ||
+          10,
 
         tempo:
           limparEmojisBot(
-            String(
-              tempo ||
-              "☀️ Ensolarado"
-            )
-          ).slice(
-            0,
-            100
+            body.tempo ||
+            "☀️ Ensolarado"
           ),
 
         estadio:
           limparEmojisBot(
-            String(
-              estadio ||
-              "Estádio Padrão"
-            )
-          ).slice(
-            0,
-            150
+            body.estadio ||
+            "Estádio Padrão"
           ),
 
         lances:
           String(
-            lances ||
+            body.lances ||
             ""
           ),
 
         campoResultado:
           String(
-            campoResultado ||
+            body.campoResultado ||
             ""
           ),
 
         eventos:
           extrairEventosLiga(
-            lances ||
+            body.lances ||
             ""
           )
       };
-
-      // -------------------------------------------------------
-      // ENVIA MENSAGEM
-      // -------------------------------------------------------
 
       const messageID =
         await enviarLigaInicial(
           dados
         );
-
-      // -------------------------------------------------------
-      // INICIA TIMERS
-      // -------------------------------------------------------
 
       iniciarTimersLiga(
         dados,
@@ -1566,37 +1596,293 @@ app.post(
         webhook
       );
 
-      console.log(
-        `🏆 ES League → partida ${gameID} iniciada`
-      );
-
-      return res
-        .status(200)
-        .json({
-          sucesso: true,
-          gameID,
-          messageID,
-          eventos:
-            dados.eventos.length,
-          duracaoSegundos:
-            60
-        });
-
+      return res.json({
+        sucesso: true,
+        gameID:
+          dados.gameID,
+        messageID,
+        eventos:
+          dados.eventos.length,
+        duracaoSegundos:
+          60
+      });
     } catch (error) {
       console.error(
         "❌ /liga-live:",
         error
       );
 
-      return res
-        .status(500)
-        .json({
+      return res.status(500).json({
+        sucesso: false,
+        erro:
+          "erro_interno",
+        mensagem:
+          error.message
+      });
+    }
+  }
+);
+
+// =============================================================
+// ROTA PARTIDA LIVE
+// =============================================================
+
+app.post(
+  "/partida-live",
+  async (req, res) => {
+    try {
+      const body =
+        req.body;
+
+      if (
+        LIGA_API_KEY &&
+        body.apiKey !==
+          LIGA_API_KEY
+      ) {
+        return res.status(401).json({
           sucesso: false,
           erro:
-            "erro_interno",
-          mensagem:
-            error.message
+            "api_key_invalida"
         });
+      }
+
+      if (!body.gameID) {
+        return res.status(400).json({
+          sucesso: false,
+          erro:
+            "gameID_obrigatorio"
+        });
+      }
+
+      if (
+        partidasNormal.has(
+          body.gameID
+        )
+      ) {
+        return res.status(409).json({
+          sucesso: false,
+          erro:
+            "partida_ja_iniciada"
+        });
+      }
+
+      const webhook =
+        obterWebhookPartes(
+          LIGA_WEBHOOK_URL
+        );
+
+      if (!webhook) {
+        return res.status(500).json({
+          sucesso: false,
+          erro:
+            "webhook_invalido"
+        });
+      }
+
+      const dados = {
+        gameID:
+          String(
+            body.gameID
+          ),
+
+        nomeClubeC:
+          limparEmojisBot(
+            body.nomeClubeC ||
+            "Time da Casa"
+          ).slice(
+            0,
+            200
+          ),
+
+        nomeClubeF:
+          limparEmojisBot(
+            body.nomeClubeF ||
+            "Time Visitante"
+          ).slice(
+            0,
+            200
+          ),
+
+        gerTimeCasa:
+          Number(
+            body.gerTimeCasa
+          ) || 60,
+
+        gerTimeFora:
+          Number(
+            body.gerTimeFora
+          ) || 60,
+
+        golsC:
+          Math.max(
+            0,
+            Number(body.golsC) || 0
+          ),
+
+        golsF:
+          Math.max(
+            0,
+            Number(body.golsF) || 0
+          ),
+
+        tempo:
+          limparEmojisBot(
+            body.tempo ||
+            "☀️ Ensolarado"
+          ),
+
+        estadio:
+          limparEmojisBot(
+            body.estadio ||
+            "Estádio Padrão"
+          ),
+
+        imgEstadio:
+          String(
+            body.imgEstadio ||
+            "https://i.ibb.co/PzF15kjd/estadiopadrao.png"
+          ),
+
+        lancesLimpos:
+          limparEmojisBot(
+            body.lances ||
+            ""
+          ),
+
+        motm:
+          limparEmojisBot(
+            body.motm ||
+            "Ninguém"
+          ),
+
+        notaMotm:
+          String(
+            body.notaMotm ||
+            "8.0"
+          ),
+
+        posse1:
+          Number(
+            body.posse1
+          ) || 50,
+
+        posse2:
+          Number(
+            body.posse2
+          ) || 50,
+
+        finC:
+          Number(
+            body.finC
+          ) || 0,
+
+        finF:
+          Number(
+            body.finF
+          ) || 0,
+
+        defC:
+          Number(
+            body.defC
+          ) || 0,
+
+        defF:
+          Number(
+            body.defF
+          ) || 0,
+
+        amarelosC:
+          Number(
+            body.amarelosC
+          ) || 0,
+
+        amarelosF:
+          Number(
+            body.amarelosF
+          ) || 0,
+
+        vermelhosC:
+          Number(
+            body.vermelhosC
+          ) || 0,
+
+        vermelhosF:
+          Number(
+            body.vermelhosF
+          ) || 0,
+
+        recompensaVitoria:
+          Number(
+            body.recompensaVitoria
+          ) || 300,
+
+        recompensaEmpate:
+          Number(
+            body.recompensaEmpate
+          ) || 100
+      };
+
+      const messageID =
+        await enviarPartidaNormal(
+          dados
+        );
+
+      partidasNormal.set(
+        dados.gameID,
+        {
+          messageID,
+          criadoEm:
+            Date.now()
+        }
+      );
+
+      setTimeout(
+        async () => {
+          try {
+            await editarPartidaNormal(
+              webhook,
+              messageID,
+              dados
+            );
+
+            console.log(
+              `⚽ Partida ${dados.gameID} finalizada`
+            );
+          } catch (error) {
+            console.error(
+              `❌ Partida ${dados.gameID}:`,
+              error.message
+            );
+          }
+
+          partidasNormal.delete(
+            dados.gameID
+          );
+        },
+        8000
+      );
+
+      return res.json({
+        sucesso: true,
+        gameID:
+          dados.gameID,
+        messageID,
+        atualizacaoSegundos:
+          8
+      });
+    } catch (error) {
+      console.error(
+        "❌ /partida-live:",
+        error
+      );
+
+      return res.status(500).json({
+        sucesso: false,
+        erro:
+          "erro_interno",
+        mensagem:
+          error.message
+      });
     }
   }
 );
@@ -1606,7 +1892,7 @@ app.post(
 // =============================================================
 
 app.get(
-  '/gerar-campo',
+  "/gerar-campo",
   async (req, res) => {
     try {
       const width = 800;
@@ -1635,23 +1921,21 @@ app.get(
           .toLowerCase()
           .trim();
 
-      const nomeFicheiroFundo =
+      const ficheiro =
         MAPA_CAMPOS[
           tipoFundo
         ] ||
-        MAPA_CAMPOS[
-          "padrao"
-        ];
+        MAPA_CAMPOS.padrao;
 
-      const bgImg =
+      const bg =
         await obterImagemOuCarregar(
-          nomeFicheiroFundo,
+          ficheiro,
           PASTAS_CAMPOS
         );
 
-      if (bgImg) {
+      if (bg) {
         ctx.drawImage(
-          bgImg,
+          bg,
           0,
           0,
           width,
@@ -1669,21 +1953,35 @@ app.get(
         );
       }
 
-      const cardWidth = 120;
-      const cardHeight = 165;
+      const cardWidth =
+        120;
+
+      const cardHeight =
+        165;
 
       const POSICOES = {
-        gr:  { x: 400, y: 705 },
-        le:  { x: 100, y: 580 },
-        dc1: { x: 270, y: 565 },
-        dc2: { x: 530, y: 565 },
-        ld:  { x: 700, y: 580 },
-        mc:  { x: 400, y: 395 },
-        mo1: { x: 220, y: 280 },
-        mo2: { x: 580, y: 280 },
-        ee:  { x: 110, y: 100 },
-        pl:  { x: 400, y: 95 },
-        ed:  { x: 690, y: 100 }
+        gr:
+          { x: 400, y: 705 },
+        le:
+          { x: 100, y: 580 },
+        dc1:
+          { x: 270, y: 565 },
+        dc2:
+          { x: 530, y: 565 },
+        ld:
+          { x: 700, y: 580 },
+        mc:
+          { x: 400, y: 395 },
+        mo1:
+          { x: 220, y: 280 },
+        mo2:
+          { x: 580, y: 280 },
+        ee:
+          { x: 110, y: 100 },
+        pl:
+          { x: 400, y: 95 },
+        ed:
+          { x: 690, y: 100 }
       };
 
       const promessas = [];
@@ -1701,25 +1999,18 @@ app.get(
           termo &&
           termo !== "vazio"
         ) {
-          const chaveEncontrada =
+          const chave =
             encontrarChaveJogador(
               termo
             );
 
           if (
-            chaveEncontrada &&
-            BANCO_DE_CARTAS[
-              chaveEncontrada
-            ]
+            chave &&
+            BANCO_DE_CARTAS[chave]
           ) {
-            const nomeFicheiroCarta =
-              BANCO_DE_CARTAS[
-                chaveEncontrada
-              ].img;
-
             promessas.push(
               obterImagemOuCarregar(
-                nomeFicheiroCarta,
+                BANCO_DE_CARTAS[chave].img,
                 PASTAS_CARTAS
               ).then(
                 cardImg => ({
@@ -1774,10 +2065,9 @@ app.get(
       return res.send(
         buffer
       );
-
     } catch (error) {
       console.error(
-        "Erro ao gerar campo:",
+        "❌ /gerar-campo:",
         error
       );
 
@@ -1795,22 +2085,20 @@ app.get(
 // =============================================================
 
 app.get(
-  '/render-carta',
+  "/render-carta",
   async (req, res) => {
     try {
       const termo =
         req.query.q || "";
 
-      const chaveEncontrada =
+      const chave =
         encontrarChaveJogador(
           termo
         );
 
       if (
-        !chaveEncontrada ||
-        !BANCO_DE_CARTAS[
-          chaveEncontrada
-        ]
+        !chave ||
+        !BANCO_DE_CARTAS[chave]
       ) {
         return res
           .status(404)
@@ -1821,7 +2109,7 @@ app.get(
 
       if (
         cardBufferCache.has(
-          chaveEncontrada
+          chave
         )
       ) {
         res.setHeader(
@@ -1829,26 +2117,16 @@ app.get(
           "image/png"
         );
 
-        res.setHeader(
-          "Cache-Control",
-          "public, max-age=86400"
-        );
-
         return res.send(
           cardBufferCache.get(
-            chaveEncontrada
+            chave
           )
         );
       }
 
-      const nomeFicheiro =
-        BANCO_DE_CARTAS[
-          chaveEncontrada
-        ].img;
-
       const img =
         await obterImagemOuCarregar(
-          nomeFicheiro,
+          BANCO_DE_CARTAS[chave].img,
           PASTAS_CARTAS
         );
 
@@ -1856,7 +2134,7 @@ app.get(
         return res
           .status(500)
           .send(
-            "Erro ao carregar imagem local"
+            "Erro ao carregar imagem"
           );
       }
 
@@ -1883,7 +2161,7 @@ app.get(
         );
 
       cardBufferCache.set(
-        chaveEncontrada,
+        chave,
         buffer
       );
 
@@ -1892,21 +2170,10 @@ app.get(
         "image/png"
       );
 
-      res.setHeader(
-        "Cache-Control",
-        "public, max-age=86400"
-      );
-
       return res.send(
         buffer
       );
-
     } catch (error) {
-      console.error(
-        "Erro no /render-carta:",
-        error
-      );
-
       return res
         .status(500)
         .send(
@@ -1921,20 +2188,12 @@ app.get(
 // =============================================================
 
 app.get(
-  '/buscar-jogador',
+  "/buscar-jogador",
   (req, res) => {
-    res.setHeader(
-      "Content-Type",
-      "application/json; charset=utf-8"
-    );
-
     try {
-      const queryBruta =
-        req.query.q || "";
-
-      const chaveEncontrada =
+      const chave =
         encontrarChaveJogador(
-          queryBruta
+          req.query.q || ""
         );
 
       const host =
@@ -1945,93 +2204,77 @@ app.get(
       const protocol =
         req.protocol;
 
-      if (!chaveEncontrada) {
-        return res
-          .status(200)
-          .json({
-            sucesso: false,
-            erro:
-              "nao_encontrado",
-            imagem:
-              `${protocol}://${host}/cartas/desconhecido.png`,
-            posicao:
-              "desconhecida",
-            overall:
-              60
-          });
+      if (!chave) {
+        return res.json({
+          sucesso:
+            false,
+          erro:
+            "nao_encontrado",
+          imagem:
+            `${protocol}://${host}/cartas/desconhecido.png`,
+          posicao:
+            "desconhecida",
+          overall:
+            60
+        });
       }
 
       const jogador =
         jogadoresPreProcessados.find(
           j =>
             j.chave ===
-            chaveEncontrada
+            chave
         );
 
       if (!jogador) {
-        return res
-          .status(200)
-          .json({
-            sucesso: false,
-            erro:
-              "erro_interno"
-          });
-      }
-
-      const urlRenderAPI =
-        `${protocol}://${host}/render-carta?q=${encodeURIComponent(chaveEncontrada)}`;
-
-      const urlImagemDirectaLocal =
-        `${protocol}://${host}/cartas/${encodeURIComponent(jogador.imgOriginal)}`;
-
-      return res
-        .status(200)
-        .json({
-          sucesso: true,
-          nome:
-            jogador.chave,
-          overall:
-            jogador.overall,
-          imagem:
-            urlRenderAPI,
-          imagemOriginal:
-            urlImagemDirectaLocal,
-          posicao:
-            jogador.posicao,
-          preco:
-            jogador.preco
-        });
-
-    } catch (error) {
-      return res
-        .status(200)
-        .json({
-          sucesso: false,
+        return res.json({
+          sucesso:
+            false,
           erro:
             "erro_interno"
         });
+      }
+
+      return res.json({
+        sucesso:
+          true,
+        nome:
+          jogador.chave,
+        overall:
+          jogador.overall,
+        imagem:
+          `${protocol}://${host}/render-carta?q=${encodeURIComponent(chave)}`,
+        imagemOriginal:
+          `${protocol}://${host}/cartas/${encodeURIComponent(jogador.imgOriginal)}`,
+        posicao:
+          jogador.posicao,
+        preco:
+          jogador.preco
+      });
+    } catch {
+      return res.json({
+        sucesso:
+          false,
+        erro:
+          "erro_interno"
+      });
     }
   }
 );
 
 // =============================================================
-// OBTEM ALEATÓRIO
+// ALEATÓRIO
 // =============================================================
 
 app.get(
-  '/obter-aleatorio',
+  "/obter-aleatorio",
   (req, res) => {
-    res.setHeader(
-      "Content-Type",
-      "application/json; charset=utf-8"
-    );
-
     try {
-      let numeroSorteado =
+      let numero =
         Math.random() *
         pesoTotalSorteio;
 
-      let cartaSorteada =
+      let carta =
         jogadoresPreProcessados[0];
 
       for (
@@ -2039,15 +2282,15 @@ app.get(
         of jogadoresPreProcessados
       ) {
         if (
-          numeroSorteado <
+          numero <
           jogador.peso
         ) {
-          cartaSorteada =
+          carta =
             jogador;
           break;
         }
 
-        numeroSorteado -=
+        numero -=
           jogador.peso;
       }
 
@@ -2059,58 +2302,41 @@ app.get(
       const protocol =
         req.protocol;
 
-      const urlRenderAPI =
-        `${protocol}://${host}/render-carta?q=${encodeURIComponent(cartaSorteada.chave)}`;
-
-      const urlImagemDirectaLocal =
-        `${protocol}://${host}/cartas/${encodeURIComponent(cartaSorteada.imgOriginal)}`;
-
-      return res
-        .status(200)
-        .json({
-          sucesso: true,
-          nome:
-            cartaSorteada.chave,
-          overall:
-            cartaSorteada.overall,
-          imagem:
-            urlRenderAPI,
-          imagemOriginal:
-            urlImagemDirectaLocal,
-          posicao:
-            cartaSorteada.posicao
-        });
-
-    } catch (error) {
-      return res
-        .status(200)
-        .json({
-          sucesso: false,
-          erro:
-            "erro_interno"
-        });
+      return res.json({
+        sucesso:
+          true,
+        nome:
+          carta.chave,
+        overall:
+          carta.overall,
+        imagem:
+          `${protocol}://${host}/render-carta?q=${encodeURIComponent(carta.chave)}`,
+        imagemOriginal:
+          `${protocol}://${host}/cartas/${encodeURIComponent(carta.imgOriginal)}`,
+        posicao:
+          carta.posicao
+      });
+    } catch {
+      return res.json({
+        sucesso:
+          false,
+        erro:
+          "erro_interno"
+      });
     }
   }
 );
 
 // =============================================================
-// LISTAR MERCADO
+// MERCADO
 // =============================================================
 
 app.get(
-  '/listar-mercado',
+  "/listar-mercado",
   (req, res) => {
-    res.setHeader(
-      "Content-Type",
-      "application/json; charset=utf-8"
-    );
-
     try {
       const faixa =
         req.query.faixa;
-
-      const totalGeral =
-        jogadoresPreProcessados.length;
 
       let min = 0;
       let max = 99;
@@ -2147,9 +2373,9 @@ app.get(
       const filtrados =
         jogadoresPreProcessados
           .filter(
-            j =>
-              j.overall >= min &&
-              j.overall <= max
+            jogador =>
+              jogador.overall >= min &&
+              jogador.overall <= max
           )
           .sort(
             (a, b) =>
@@ -2160,14 +2386,12 @@ app.get(
       if (
         filtrados.length === 0
       ) {
-        return res
-          .status(200)
-          .json({
-            total:
-              totalGeral,
-            texto:
-              "*(Ainda não há jogadores disponíveis nesta faixa.)*"
-          });
+        return res.json({
+          total:
+            jogadoresPreProcessados.length,
+          texto:
+            "*(Ainda não há jogadores disponíveis nesta faixa.)*"
+        });
       }
 
       const linhas = [];
@@ -2184,38 +2408,31 @@ app.get(
           filtrados[i + 1];
 
         const nome1 =
-          j1.nomeFormatado.length >
-          13
+          j1.nomeFormatado.length > 13
             ? j1.nomeFormatado.slice(
                 0,
                 11
               ) + ".."
             : j1.nomeFormatado;
 
-        const item1 =
-          `[${j1.overall} ${j1.posicaoUpper}] ${nome1}`;
-
         const col1 =
-          item1.padEnd(
-            24,
-            " "
-          );
+          `[${j1.overall} ${j1.posicaoUpper}] ${nome1}`
+            .padEnd(
+              24,
+              " "
+            );
 
         if (j2) {
           const nome2 =
-            j2.nomeFormatado.length >
-            13
+            j2.nomeFormatado.length > 13
               ? j2.nomeFormatado.slice(
                   0,
                   11
                 ) + ".."
               : j2.nomeFormatado;
 
-          const col2 =
-            `[${j2.overall} ${j2.posicaoUpper}] ${nome2}`;
-
           linhas.push(
-            `${col1}${col2}`
+            `${col1}[${j2.overall} ${j2.posicaoUpper}] ${nome2}`
           );
         } else {
           linhas.push(
@@ -2224,33 +2441,26 @@ app.get(
         }
       }
 
-      return res
-        .status(200)
-        .json({
-          total:
-            totalGeral,
-          texto:
-            "```ansi\n" +
-            linhas.join(
-              "\n"
-            ) +
-            "\n```"
-        });
-
-    } catch (error) {
-      return res
-        .status(200)
-        .json({
-          total: 0,
-          texto:
-            "Erro ao carregar a lista de jogadores."
-        });
+      return res.json({
+        total:
+          jogadoresPreProcessados.length,
+        texto:
+          "```ansi\n" +
+          linhas.join("\n") +
+          "\n```"
+      });
+    } catch {
+      return res.json({
+        total: 0,
+        texto:
+          "Erro ao carregar a lista de jogadores."
+      });
     }
   }
 );
 
 // =============================================================
-// INICIALIZAÇÃO
+// START
 // =============================================================
 
 inicializarMetadados();
@@ -2262,24 +2472,20 @@ app.listen(
       `🚀 Servidor rodando na porta ${PORT}`
     );
 
-    if (LIGA_WEBHOOK_URL) {
-      console.log(
-        "🏆 ES League Live: ATIVO"
-      );
-    } else {
-      console.log(
-        "⚠️ ES League Live: WEBHOOK NÃO CONFIGURADO"
-      );
-    }
+    console.log(
+      LIGA_WEBHOOK_URL
+        ? "🏆 ES League Live: ATIVO"
+        : "⚠️ ES League Live: WEBHOOK NÃO CONFIGURADO"
+    );
 
-    if (LIGA_API_KEY) {
-      console.log(
-        "🔐 ES League Live: API KEY CONFIGURADA"
-      );
-    } else {
-      console.log(
-        "⚠️ ES League Live: API KEY NÃO CONFIGURADA"
-      );
-    }
+    console.log(
+      LIGA_API_KEY
+        ? "🔐 ES League Live: API KEY CONFIGURADA"
+        : "⚠️ ES League Live: API KEY NÃO CONFIGURADA"
+    );
+
+    console.log(
+      "⚽ /partida-live: ATIVO"
+    );
   }
 );
