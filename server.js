@@ -62,9 +62,6 @@ const MAPA_CAMPOS = {
 // =============================================================
 // BANCO DE CARTAS
 // =============================================================
-// MANTÉM AQUI O TEU BANCO_DE_CARTAS ATUAL COMPLETO.
-// Não precisas alterar nada nele.
-// =============================================================
 
 const BANCO_DE_CARTAS = {
   "karim benzema 87": { img: "benzema87.png", pos: "pl" },
@@ -382,7 +379,7 @@ function encontrarChaveJogador(termoBusca) {
 }
 
 // =============================================================
-// ES LEAGUE LIVE
+// ES LEAGUE LIVE — WEBHOOK
 // =============================================================
 
 function obterWebhookPartes(webhookUrl) {
@@ -443,7 +440,8 @@ async function discordWebhookRequest(
   const opcoes = {
     method,
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type":
+        "application/json"
     }
   };
 
@@ -453,7 +451,10 @@ async function discordWebhookRequest(
   }
 
   const resposta =
-    await fetch(url, opcoes);
+    await fetch(
+      url,
+      opcoes
+    );
 
   const texto =
     await resposta.text();
@@ -482,6 +483,71 @@ async function discordWebhookRequest(
   return dados;
 }
 
+// =============================================================
+// CONVERSÃO DOS EMOJIS DO BDFD PARA UNICODE
+// =============================================================
+
+function limparEmojisBot(texto) {
+  if (!texto) return "";
+
+  let resultado = String(texto);
+
+  // Emojis específicos do Eleven Squad
+  resultado = resultado.replace(
+    /<:dentro:1528835700890538154>/g,
+    "⚽"
+  );
+
+  resultado = resultado.replace(
+    /<:fora:1528835701934653531>/g,
+    "⚽"
+  );
+
+  resultado = resultado.replace(
+    /<:placar:1528835698151522354>/g,
+    "🏟️"
+  );
+
+  resultado = resultado.replace(
+    /<:lances:1528835699225395272>/g,
+    "📋"
+  );
+
+  // Outros emojis customizados que eventualmente
+  // possam chegar através do BDFD
+  resultado = resultado.replace(
+    /<:dentro:\d+>/g,
+    "⚽"
+  );
+
+  resultado = resultado.replace(
+    /<:fora:\d+>/g,
+    "⚽"
+  );
+
+  resultado = resultado.replace(
+    /<:placar:\d+>/g,
+    "🏟️"
+  );
+
+  resultado = resultado.replace(
+    /<:lances:\d+>/g,
+    "📋"
+  );
+
+  // Remove restos de markdown específico do BDFD
+  resultado = resultado.replace(
+    /\$if\[.*?\]/g,
+    ""
+  );
+
+  return resultado.trim();
+}
+
+// =============================================================
+// EXTRAIR EVENTOS
+// =============================================================
+
 function extrairEventosLiga(lances) {
   if (
     !lances ||
@@ -493,14 +559,20 @@ function extrairEventosLiga(lances) {
   const linhas =
     String(lances)
       .split(/\r?\n/)
-      .map(linha => linha.trim())
+      .map(
+        linha => linha.trim()
+      )
       .filter(Boolean);
 
   const eventos = [];
 
-  for (const linha of linhas) {
+  for (
+    const linha of linhas
+  ) {
     const match =
-      linha.match(/`(\d+)'`/);
+      linha.match(
+        /`(\d+)'`/
+      );
 
     if (!match) {
       continue;
@@ -513,22 +585,38 @@ function extrairEventosLiga(lances) {
       continue;
     }
 
-    let equipa = "desconhecida";
+    let equipa =
+      "desconhecida";
 
     if (
-      linha.includes("<:dentro:")
+      linha.includes(
+        "<:dentro:"
+      ) ||
+      linha.includes(
+        ":dentro:"
+      )
     ) {
-      equipa = "casa";
+      equipa =
+        "casa";
     } else if (
-      linha.includes("<:fora:")
+      linha.includes(
+        "<:fora:"
+      ) ||
+      linha.includes(
+        ":fora:"
+      )
     ) {
-      equipa = "fora";
+      equipa =
+        "fora";
     }
 
     eventos.push({
       minuto,
       equipa,
-      texto: linha
+      texto:
+        limparEmojisBot(
+          linha
+        )
     });
   }
 
@@ -540,6 +628,10 @@ function extrairEventosLiga(lances) {
   return eventos;
 }
 
+// =============================================================
+// PLACAR ATÉ AO MINUTO
+// =============================================================
+
 function obterPlacarAteMinuto(
   eventos,
   minuto,
@@ -549,16 +641,24 @@ function obterPlacarAteMinuto(
   let casa = 0;
   let fora = 0;
 
-  for (const evento of eventos) {
-    if (evento.minuto > minuto) {
+  for (
+    const evento of eventos
+  ) {
+    if (
+      evento.minuto > minuto
+    ) {
       continue;
     }
 
-    if (evento.equipa === "casa") {
+    if (
+      evento.equipa === "casa"
+    ) {
       casa++;
     }
 
-    if (evento.equipa === "fora") {
+    if (
+      evento.equipa === "fora"
+    ) {
       fora++;
     }
   }
@@ -575,24 +675,36 @@ function obterPlacarAteMinuto(
 }
 
 // =============================================================
-// LIMITADORES DOS EMBEDS
+// LIMITADORES
 // =============================================================
 
-function limitarTexto(texto, limite) {
-  if (texto === null || texto === undefined) {
+function limitarTexto(
+  texto,
+  limite
+) {
+  if (
+    texto === null ||
+    texto === undefined
+  ) {
     return "";
   }
 
-  const valor = String(texto);
+  const valor =
+    String(texto);
 
-  if (valor.length <= limite) {
+  if (
+    valor.length <= limite
+  ) {
     return valor;
   }
 
-  return valor.slice(
-    0,
-    Math.max(0, limite - 3)
-  ) + "...";
+  return (
+    valor.slice(
+      0,
+      limite - 3
+    ) +
+    "..."
+  );
 }
 
 function validarEmbed(embed) {
@@ -616,37 +728,87 @@ function validarEmbed(embed) {
       );
   }
 
-  if (embed.author) {
-    embed.author.name =
-      limitarTexto(
-        embed.author.name,
-        256
-      );
-  }
-
-  if (Array.isArray(embed.fields)) {
+  if (
+    Array.isArray(
+      embed.fields
+    )
+  ) {
     embed.fields =
       embed.fields
         .slice(0, 25)
-        .map(field => ({
-          name:
-            limitarTexto(
-              field.name,
-              256
-            ),
+        .map(
+          field => ({
+            name:
+              limitarTexto(
+                field.name,
+                256
+              ),
 
-          value:
-            limitarTexto(
-              field.value,
-              1024
-            ),
+            value:
+              limitarTexto(
+                field.value,
+                1024
+              ),
 
-          inline:
-            Boolean(field.inline)
-        }));
+            inline:
+              Boolean(
+                field.inline
+              )
+          })
+        );
   }
 
   return embed;
+}
+
+// =============================================================
+// RESULTADO LIMPO
+// =============================================================
+
+function limparResultado(campoResultado) {
+  if (!campoResultado) {
+    return "";
+  }
+
+  let resultado =
+    limparEmojisBot(
+      campoResultado
+    );
+
+  // Mantemos negrito, listas, etc.
+  // Removemos apenas o "###" porque o visual
+  // do embed fica melhor sem depender de heading.
+  resultado =
+    resultado.replace(
+      /^###\s*/gm,
+      "**"
+    );
+
+  // Fecha o negrito quando transformamos
+  // uma linha do tipo "### texto"
+  const linhas =
+    resultado.split("\n");
+
+  resultado =
+    linhas
+      .map(
+        linha => {
+          if (
+            linha.startsWith("**") &&
+            !linha.endsWith("**")
+          ) {
+            return (
+              linha +
+              "**"
+            );
+          }
+
+          return linha;
+        }
+      )
+      .join("\n");
+
+  return resultado.trim();
 }
 
 // =============================================================
@@ -679,12 +841,16 @@ function criarEmbedLiga(
       golsF
     );
 
+  // -----------------------------------------------------------
+  // TEMPO
+  // -----------------------------------------------------------
+
   let tituloTempo =
     `🕐 **${minuto}'**`;
 
   if (minuto === 0) {
     tituloTempo =
-      "🕐 **0' — APITO INICIAL**";
+      "🟢 **0' — APITO INICIAL**";
   }
 
   if (minuto === 45) {
@@ -696,6 +862,10 @@ function criarEmbedLiga(
     tituloTempo =
       "🏁 **90' — FIM DE JOGO**";
   }
+
+  // -----------------------------------------------------------
+  // LANCES
+  // -----------------------------------------------------------
 
   const eventosAteAgora =
     eventos.filter(
@@ -716,7 +886,7 @@ function criarEmbedLiga(
         "⏸️ Nenhum golo na primeira parte.";
     } else if (minuto >= 90) {
       textoLances =
-        "A partida terminou sem golos.";
+        "🏁 A partida terminou sem golos.";
     } else {
       textoLances =
         "Nenhum golo até agora.\nO jogo continua equilibrado.";
@@ -724,32 +894,40 @@ function criarEmbedLiga(
   } else {
     textoLances =
       eventosAteAgora
-        .map(evento => evento.texto)
+        .map(
+          evento =>
+            evento.texto
+        )
         .join("\n");
   }
 
-  // Discord permite no máximo 1024 caracteres no value de um field.
   textoLances =
     limitarTexto(
       textoLances,
       1024
     );
 
+  // -----------------------------------------------------------
+  // RESULTADO
+  // -----------------------------------------------------------
+
   let resultadoTexto = "";
 
   if (minuto === 0) {
     resultadoTexto =
-      "### ⚽ A partida começou!\nBoa sorte!";
+      "**⚽ A partida começou!**\nBoa sorte!";
   } else if (minuto === 45) {
     resultadoTexto =
-      "### ⏸️ Intervalo\nAs equipas vão para o balneário.";
+      "**⏸️ Intervalo**\nAs equipas vão para o balneário.";
   } else if (minuto >= 90) {
     resultadoTexto =
-      campoResultado ||
-      "### 🏁 Partida finalizada.";
+      limparResultado(
+        campoResultado
+      ) ||
+      "**🏁 Partida finalizada.**";
   } else {
     resultadoTexto =
-      "### 🔴 Partida em andamento\nO resultado ainda pode mudar!";
+      "**🔴 Partida em andamento**\nO resultado ainda pode mudar!";
   }
 
   resultadoTexto =
@@ -758,48 +936,56 @@ function criarEmbedLiga(
       1024
     );
 
-  // IMPORTANTE:
-  // A API do Discord exige INTEGER no color.
-  // #5865F2 = 5793266
-  // #57F287 = 5763719
-  // #ED4245 = 15548997
-  // #FEE75C = 16705372
+  // -----------------------------------------------------------
+  // COR
+  // -----------------------------------------------------------
 
-  let cor = 5793266;
+  let cor =
+    5793266;
 
   if (minuto >= 90) {
     if (golsC > golsF) {
-      cor = 5763719;
+      cor =
+        5763719;
     } else if (golsC < golsF) {
-      cor = 15548997;
+      cor =
+        15548997;
     } else {
-      cor = 16705372;
+      cor =
+        16705372;
     }
   }
+
+  // -----------------------------------------------------------
+  // EMBED
+  // -----------------------------------------------------------
 
   const embed = {
     title:
       `🏆 ES League — Divisão ${divisao}`,
 
-    color: cor,
+    color:
+      cor,
 
     description:
       `${tituloTempo}\n\n` +
-      `<:placar:1528835698151522354> ` +
-      `<:dentro:1528835700890538154> ` +
-      `**${nomeClube} ${placar.casa} x ${placar.fora} ${rivalNome}** ` +
-      `<:fora:1528835701934653531>\n\n` +
-      `-# **GER:** Seu Time (\`${gerTime}\`) ⚔️ (\`${gerBot}\`) Adversário\n\n` +
-      `-# 🌤️ **Clima:** \`${tempo}\`\n` +
-      `-# 🏟️ **Estádio:** \`${estadio}\``,
+
+      `🏟️ ⚽ **${nomeClube} ${placar.casa} x ${placar.fora} ${rivalNome}**\n\n` +
+
+      `⚔️ **GER:** Seu Time (\`${gerTime}\`) vs Adversário (\`${gerBot}\`)\n\n` +
+
+      `🌤️ **Clima:** \`${tempo}\`\n` +
+
+      `🏟️ **Estádio:** \`${estadio}\``,
 
     fields: [
       {
         name:
-          "<:lances:1528835699225395272> Lances da Partida",
+          "📋 Lances da Partida",
 
         value:
-          textoLances || "Nenhum lance.",
+          textoLances ||
+          "Nenhum lance.",
 
         inline:
           false
@@ -822,29 +1008,38 @@ function criarEmbedLiga(
       new Date().toISOString()
   };
 
+  // -----------------------------------------------------------
+  // RESULTADO FINAL
+  // -----------------------------------------------------------
+
   if (minuto >= 90) {
     embed.fields.push({
       name:
         "📊 Resultado",
 
       value:
-        resultadoTexto ||
-        "### 🏁 Partida finalizada.",
+        resultadoTexto,
 
       inline:
         false
     });
   }
 
-  return validarEmbed(embed);
+  return validarEmbed(
+    embed
+  );
 }
 
 // =============================================================
 // ENVIAR PARTIDA INICIAL
 // =============================================================
 
-async function enviarLigaInicial(dados) {
-  if (!LIGA_WEBHOOK_URL) {
+async function enviarLigaInicial(
+  dados
+) {
+  if (
+    !LIGA_WEBHOOK_URL
+  ) {
     throw new Error(
       "LIGA_WEBHOOK_URL não configurada."
     );
@@ -860,12 +1055,6 @@ async function enviarLigaInicial(dados) {
     "true"
   );
 
-  const embed =
-    criarEmbedLiga(
-      dados,
-      0
-    );
-
   const resposta =
     await discordWebhookRequest(
       "POST",
@@ -878,7 +1067,10 @@ async function enviarLigaInicial(dados) {
           "https://i.ibb.co/993xTqVb/ligaa.png",
 
         embeds: [
-          embed
+          criarEmbedLiga(
+            dados,
+            0
+          )
         ],
 
         allowed_mentions: {
@@ -919,18 +1111,15 @@ async function editarLiga(
     `${webhook.webhookToken}/` +
     `messages/${messageID}`;
 
-  const embed =
-    criarEmbedLiga(
-      dados,
-      minuto
-    );
-
   await discordWebhookRequest(
     "PATCH",
     url,
     {
       embeds: [
-        embed
+        criarEmbedLiga(
+          dados,
+          minuto
+        )
       ],
 
       allowed_mentions: {
@@ -952,6 +1141,7 @@ function iniciarTimersLiga(
   const gameID =
     dados.gameID;
 
+  // 60 segundos reais para representar 90 minutos
   const duracao =
     60000;
 
@@ -969,8 +1159,10 @@ function iniciarTimersLiga(
   ];
 
   const minutosGolos =
-    dados.eventos
-      .map(evento => evento.minuto);
+    dados.eventos.map(
+      evento =>
+        evento.minuto
+    );
 
   const minutos = [
     0,
@@ -996,8 +1188,12 @@ function iniciarTimersLiga(
 
   const timers = [];
 
-  for (const minuto of unicos) {
-    if (minuto === 0) {
+  for (
+    const minuto of unicos
+  ) {
+    if (
+      minuto === 0
+    ) {
       continue;
     }
 
@@ -1044,7 +1240,7 @@ function iniciarTimersLiga(
         );
 
         console.log(
-          `🧹 Liga ${gameID} → partida removida da memória`
+          `🧹 Liga ${gameID} → removida da memória`
         );
       },
       duracao + 15000
@@ -1158,7 +1354,7 @@ app.post(
       }
 
       // -------------------------------------------------------
-      // DADOS
+      // NORMALIZA DADOS
       // -------------------------------------------------------
 
       const dados = {
@@ -1224,18 +1420,22 @@ app.post(
             : 10,
 
         tempo:
-          String(
-            tempo ||
-            "☀️ Ensolarado"
+          limparEmojisBot(
+            String(
+              tempo ||
+              "☀️ Ensolarado"
+            )
           ).slice(
             0,
             100
           ),
 
         estadio:
-          String(
-            estadio ||
-            "Estádio Padrão"
+          limparEmojisBot(
+            String(
+              estadio ||
+              "Estádio Padrão"
+            )
           ).slice(
             0,
             150
@@ -1255,12 +1455,13 @@ app.post(
 
         eventos:
           extrairEventosLiga(
-            lances || ""
+            lances ||
+            ""
           )
       };
 
       // -------------------------------------------------------
-      // ENVIA MENSAGEM INICIAL
+      // ENVIA MENSAGEM
       // -------------------------------------------------------
 
       const messageID =
@@ -1269,7 +1470,7 @@ app.post(
         );
 
       // -------------------------------------------------------
-      // INICIA ATUALIZAÇÕES
+      // INICIA TIMERS
       // -------------------------------------------------------
 
       iniciarTimersLiga(
@@ -1385,50 +1586,17 @@ app.get(
       const cardHeight = 165;
 
       const POSICOES = {
-        gr: {
-          x: 400,
-          y: 705
-        },
-        le: {
-          x: 100,
-          y: 580
-        },
-        dc1: {
-          x: 270,
-          y: 565
-        },
-        dc2: {
-          x: 530,
-          y: 565
-        },
-        ld: {
-          x: 700,
-          y: 580
-        },
-        mc: {
-          x: 400,
-          y: 395
-        },
-        mo1: {
-          x: 220,
-          y: 280
-        },
-        mo2: {
-          x: 580,
-          y: 280
-        },
-        ee: {
-          x: 110,
-          y: 100
-        },
-        pl: {
-          x: 400,
-          y: 95
-        },
-        ed: {
-          x: 690,
-          y: 100
-        }
+        gr:  { x: 400, y: 705 },
+        le:  { x: 100, y: 580 },
+        dc1: { x: 270, y: 565 },
+        dc2: { x: 530, y: 565 },
+        ld:  { x: 700, y: 580 },
+        mc:  { x: 400, y: 395 },
+        mo1: { x: 220, y: 280 },
+        mo2: { x: 580, y: 280 },
+        ee:  { x: 110, y: 100 },
+        pl:  { x: 400, y: 95 },
+        ed:  { x: 690, y: 100 }
       };
 
       const promessas = [];
@@ -1929,7 +2097,8 @@ app.get(
           filtrados[i + 1];
 
         const nome1 =
-          j1.nomeFormatado.length > 13
+          j1.nomeFormatado.length >
+          13
             ? j1.nomeFormatado.slice(
                 0,
                 11
@@ -1947,7 +2116,8 @@ app.get(
 
         if (j2) {
           const nome2 =
-            j2.nomeFormatado.length > 13
+            j2.nomeFormatado.length >
+            13
               ? j2.nomeFormatado.slice(
                   0,
                   11
