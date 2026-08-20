@@ -152,7 +152,7 @@ const BANCO_DE_CARTAS = {
   "wilfried singo 75": { img: "WILFRIED-SINGO75.png", pos: "ld" },
   "endrick 74": { img: "endrick74.png", pos: "pl" },
   "ricardo mangas 74": { img: "ricardomangas74.png", pos: "ed" },
-  "estevão 74": { img: "estevao74.png", pos: "ed" },
+  "estevão 74": { img: "estevao74.png", pos: "le" },
   "joão mário 74": { img: "joaomario74.png", pos: "ld" },
   "nuno tavares 74": { img: "nunotavares74.png", pos: "le" },
   "josé sá 73": { img: "joseja73.png", pos: "gr" },
@@ -593,7 +593,7 @@ async function enviarLigaInicial(dados) {
 
   const resposta = await discordWebhookRequest("POST", url.toString(), {
     username: "ES League",
-    avatar_url: "https://i.ibb.co/993xTqVb/ligaa.png",
+    avatar_url: "https://i.ibb.co/jv90cK31/ESLeague.png",
     embeds: [criarEmbedLiga(dados, 0)],
     allowed_mentions: { parse: [] }
   });
@@ -693,8 +693,8 @@ async function enviarPartidaInicial(dados) {
   url.searchParams.set("wait", "true");
 
   const resposta = await discordWebhookRequest("POST", url.toString(), {
-    username: "Partida ES League",
-    avatar_url: "https://i.ibb.co/zWhWZVy4/partida2.png",
+    username: "Eleven Squad - Motor",
+    avatar_url: "https://i.ibb.co/Qjq9d3mZ/ESMotor-Partida.png",
     content: dados.mencoes || "",
     embeds: [criarEmbedPartida(dados, 0)],
     allowed_mentions: { parse: [], users: dados.mencaoIDs || [] }
