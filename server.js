@@ -133,7 +133,7 @@ const BANCO_DE_CARTAS = {
   "wilfried singo 75": { img: "WILFRIED-SINGO75.png", pos: "ld" },
   "endrick 74": { img: "endrick74.png", pos: "pl" },
   "ricardo mangas 74": { img: "ricardomangas74.png", pos: "ed" },
-  "estevão 74": { img: "estevao74.png", pos: "le" },
+  "estevão 74": { img: "estevao74.png", pos: "ed" },
   "joão mário 74": { img: "joaomario74.png", pos: "ld" },
   "nuno tavares 74": { img: "nunotavares74.png", pos: "le" },
   "josé sá 73": { img: "joseja73.png", pos: "gr" },
