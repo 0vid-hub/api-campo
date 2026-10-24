@@ -73,7 +73,7 @@ const BANCO_DE_CARTAS = {
   "william saliba 86": { img: "williamsaliba86.png", pos: "dc" },
   "lamine yamal 86": { img: "yamal86.png", pos: "ed" },
   "alexander isak 85": { img: "alexanderisak85.png", pos: "pl" },
-  "courtois 85": { img: "COURTOIS85.png", pos: "gr" },
+  "courtois 86": { img: "COURTOIS85.png", pos: "gr" },
   "gabriel magalhães 85": { img: "GABRIELmAGALHÃES85.png", pos: "pl" },
   "jan oblak 85": { img: "janoblak85.png", pos: "gr" },
   "jamal musiala 85": { img: "musiala85.png", pos: "mo" },
